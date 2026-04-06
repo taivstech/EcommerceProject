@@ -1,0 +1,109 @@
+{
+  "analysis": {
+    "analyzer": {
+      "product_index_analyzer": {
+        "type": "custom",
+        "tokenizer": "standard",
+        "filter": [
+          "lowercase",
+          "asciifolding",
+          "vietnamese_stop",
+          "product_synonym",
+          "word_delimiter_filter",
+          "edge_ngram_filter"
+        ]
+      },
+      "product_search_analyzer": {
+        "type": "custom",
+        "tokenizer": "standard",
+        "filter": [
+          "lowercase",
+          "asciifolding",
+          "vietnamese_stop",
+          "product_synonym"
+        ]
+      },
+      "suggest_index_analyzer": {
+        "type": "custom",
+        "tokenizer": "standard",
+        "filter": [
+          "lowercase",
+          "asciifolding",
+          "edge_ngram_filter"
+        ]
+      },
+      "suggest_search_analyzer": {
+        "type": "custom",
+        "tokenizer": "standard",
+        "filter": [
+          "lowercase",
+          "asciifolding"
+        ]
+      },
+      "keyword_lowercase": {
+        "type": "custom",
+        "tokenizer": "keyword",
+        "filter": [
+          "lowercase",
+          "asciifolding"
+        ]
+      }
+    },
+    "filter": {
+      "edge_ngram_filter": {
+        "type": "edge_ngram",
+        "min_gram": 2,
+        "max_gram": 25
+      },
+      "vietnamese_stop": {
+        "type": "stop",
+        "stopwords": [
+          "và", "của", "là", "các", "có", "được", "cho", "với", "này",
+          "trong", "để", "một", "những", "không", "đã", "từ", "còn",
+          "rất", "bởi", "theo", "tại", "cũng", "về", "thì", "nên",
+          "khi", "nếu", "nhưng", "mà", "sẽ", "đang", "vì", "bị",
+          "the", "a", "an", "and", "or", "but", "in", "on", "at",
+          "to", "for", "of", "with", "by", "is", "are", "was", "were"
+        ]
+      },
+      "product_synonym": {
+        "type": "synonym",
+        "synonyms": [
+          "dt, dien thoai, điện thoại, phone, smartphone",
+          "mtb, may tinh bang, máy tính bảng, tablet, ipad",
+          "mtxt, may tinh xach tay, máy tính xách tay, laptop, notebook",
+          "tai nghe, headphone, earphone, earbud, airpod",
+          "sac, charger, củ sạc, bộ sạc",
+          "op lung, ốp lưng, case, vỏ điện thoại",
+          "ao, áo, shirt, top",
+          "quan, quần, pants, trousers",
+          "giay, giày, shoes, sneaker",
+          "dep, dép, sandal, slipper",
+          "tui, túi, bag, balo, backpack",
+          "dong ho, đồng hồ, watch, smartwatch",
+          "may giat, máy giặt, washing machine",
+          "tu lanh, tủ lạnh, refrigerator, fridge",
+          "dieu hoa, điều hòa, air conditioner, ac",
+          "ban phim, bàn phím, keyboard",
+          "chuot, chuột, mouse",
+          "man hinh, màn hình, monitor, screen, display",
+          "loa, speaker, bluetooth speaker",
+          "camera, webcam, may anh, máy ảnh",
+          "son, son môi, lipstick",
+          "kem, kem dưỡng, cream, moisturizer",
+          "sua rua mat, sữa rửa mặt, cleanser, face wash",
+          "nuoc hoa, nước hoa, perfume, fragrance",
+          "re, rẻ, giá rẻ, cheap, affordable, sale",
+          "dep, đẹp, xinh, beautiful, pretty",
+          "tot, tốt, chất lượng, quality, good"
+        ]
+      },
+      "word_delimiter_filter": {
+        "type": "word_delimiter_graph",
+        "preserve_original": true,
+        "catenate_words": true,
+        "split_on_numerics": false
+      }
+    }
+  }
+}

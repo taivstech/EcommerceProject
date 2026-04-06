@@ -1,0 +1,29 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "type": "java",
+      "name": "Debug EcommerceWeb (dev)",
+      "request": "launch",
+      "mainClass": "com.taivs.EcommerceWeb.EcommerceWebApplication",
+      "projectName": "EcommerceWeb",
+      "cwd": "${workspaceFolder}/backend/EcommerceWeb",
+      "envFile": "${workspaceFolder}/backend/EcommerceWeb/.env",
+      "env": {
+        "SPRING_PROFILES_ACTIVE": "dev"
+      }
+    },
+    {
+      "type": "java",
+      "name": "Debug EcommerceWeb (prod)",
+      "request": "launch",
+      "mainClass": "com.taivs.EcommerceWeb.EcommerceWebApplication",
+      "projectName": "EcommerceWeb",
+      "cwd": "${workspaceFolder}/backend/EcommerceWeb",
+      "envFile": "${workspaceFolder}/backend/EcommerceWeb/.env",
+      "env": {
+        "SPRING_PROFILES_ACTIVE": "prod"
+      }
+    }
+  ]
+}

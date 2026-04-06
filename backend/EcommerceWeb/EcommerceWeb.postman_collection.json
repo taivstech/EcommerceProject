@@ -1,0 +1,1198 @@
+{
+  "info": {
+    "name": "EcommerceWeb API",
+    "description": "Full API collection for EcommerceWeb — Spring Boot backend.\nBase URL: http://localhost:8080/api\n\nAuthentication: Bearer token in Authorization header.\nLogin via POST /auth/token to get access_token.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:8080/api" },
+    { "key": "accessToken", "value": "" }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [{ "key": "token", "value": "{{accessToken}}", "type": "string" }]
+  },
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var json = pm.response.json();",
+                  "if (json.result && json.result.access_token) {",
+                  "    pm.collectionVariables.set('accessToken', json.result.access_token);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"admin\",\n  \"password\": \"Admin@123\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/auth/token", "host": ["{{baseUrl}}"], "path": ["auth", "token"] }
+          }
+        },
+        {
+          "name": "Introspect Token",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"token\": \"{{accessToken}}\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/auth/introspect", "host": ["{{baseUrl}}"], "path": ["auth", "introspect"] }
+          }
+        },
+        {
+          "name": "Refresh Token",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{}" },
+            "url": { "raw": "{{baseUrl}}/auth/refresh", "host": ["{{baseUrl}}"], "path": ["auth", "refresh"] },
+            "description": "Refresh token is read from HttpOnly cookie. Access token from Authorization header."
+          }
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/auth/logout", "host": ["{{baseUrl}}"], "path": ["auth", "logout"] },
+            "description": "Requires Authorization header + refresh token cookie."
+          }
+        },
+        {
+          "name": "Forgot Password",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"email\": \"user@example.com\"\n}" },
+            "url": { "raw": "{{baseUrl}}/auth/forgot-password", "host": ["{{baseUrl}}"], "path": ["auth", "forgot-password"] }
+          }
+        },
+        {
+          "name": "Reset Password",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"token\": \"reset-token-from-email\",\n  \"new_password\": \"NewPass@123\"\n}" },
+            "url": { "raw": "{{baseUrl}}/auth/reset-password", "host": ["{{baseUrl}}"], "path": ["auth", "reset-password"] }
+          }
+        },
+        {
+          "name": "OAuth2 - Get State",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/auth/outbound/state", "host": ["{{baseUrl}}"], "path": ["auth", "outbound", "state"] }
+          }
+        },
+        {
+          "name": "OAuth2 - Exchange Code",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"code\": \"google-auth-code\",\n  \"state\": \"state-value\",\n  \"state_signature\": \"sig\",\n  \"redirect_uri\": \"http://localhost:3000/authenticate\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/auth/outbound/authentication", "host": ["{{baseUrl}}"], "path": ["auth", "outbound", "authentication"] }
+          }
+        },
+        {
+          "name": "Register User",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"newuser\",\n  \"password\": \"Pass@123\",\n  \"confirm_password\": \"Pass@123\",\n  \"full_name\": \"New User\",\n  \"email\": \"new@example.com\",\n  \"phone\": \"0901234567\",\n  \"dob\": \"2000-01-15\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/users/registration", "host": ["{{baseUrl}}"], "path": ["users", "registration"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Users",
+      "item": [
+        {
+          "name": "Get My Info",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/users/me", "host": ["{{baseUrl}}"], "path": ["users", "me"] }
+          }
+        },
+        {
+          "name": "Update My Profile (JSON only)",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"myuser\",\n  \"full_name\": \"Updated Name\",\n  \"phone\": \"0909876543\",\n  \"dob\": \"1999-05-20\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/users/me", "host": ["{{baseUrl}}"], "path": ["users", "me"] }
+          }
+        },
+        {
+          "name": "Update My Profile (with avatar)",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "profile",
+                  "value": "{\n  \"username\": \"myuser\",\n  \"full_name\": \"Updated Name\",\n  \"phone\": \"0909876543\",\n  \"dob\": \"1999-05-20\"\n}",
+                  "type": "text",
+                  "contentType": "application/json"
+                },
+                { "key": "file", "type": "file", "src": "", "description": "Avatar image file (optional)" }
+              ]
+            },
+            "url": { "raw": "{{baseUrl}}/users/me", "host": ["{{baseUrl}}"], "path": ["users", "me"] },
+            "description": "Update profile with optional avatar upload. Send 'profile' part as JSON + 'file' part as image."
+          }
+        },
+        {
+          "name": "Upgrade to Seller",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"shop_name\": \"My Shop\"\n}" },
+            "url": { "raw": "{{baseUrl}}/users/me/upgrade-to-seller", "host": ["{{baseUrl}}"], "path": ["users", "me", "upgrade-to-seller"] }
+          }
+        },
+        {
+          "name": "[Admin] Get All Users",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/users", "host": ["{{baseUrl}}"], "path": ["users"] }
+          }
+        },
+        {
+          "name": "[Admin] Get User By ID",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/users/:id", "host": ["{{baseUrl}}"], "path": ["users", ":id"], "variable": [{ "key": "id", "value": "user-uuid" }] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "User Addresses",
+      "item": [
+        {
+          "name": "Get My Addresses",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/users/me/addresses", "host": ["{{baseUrl}}"], "path": ["users", "me", "addresses"] }
+          }
+        },
+        {
+          "name": "Get Address By ID",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/users/me/addresses/:id", "host": ["{{baseUrl}}"], "path": ["users", "me", "addresses", ":id"], "variable": [{ "key": "id", "value": "address-uuid" }] }
+          }
+        },
+        {
+          "name": "Create Address",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"receiverName\": \"Nguyen Van A\",\n  \"phoneNumber\": \"0901234567\",\n  \"fullAddress\": \"123 ABC Street, Quan 1, HCM\",\n  \"detailAddress\": \"123 ABC Street\",\n  \"ward\": \"Phuong Ben Nghe\",\n  \"wardCode\": \"20308\",\n  \"district\": \"Quan 1\",\n  \"districtId\": 1442,\n  \"province\": \"Ho Chi Minh\",\n  \"provinceId\": \"202\",\n  \"defaultAddress\": true\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/users/me/addresses", "host": ["{{baseUrl}}"], "path": ["users", "me", "addresses"] }
+          }
+        },
+        {
+          "name": "Update Address",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"receiverName\": \"Nguyen Van B\",\n  \"phoneNumber\": \"0909999999\",\n  \"fullAddress\": \"456 XYZ, Quan 3, HCM\",\n  \"detailAddress\": \"456 XYZ\",\n  \"ward\": \"Phuong 1\",\n  \"wardCode\": \"20401\",\n  \"district\": \"Quan 3\",\n  \"districtId\": 1443,\n  \"province\": \"Ho Chi Minh\",\n  \"provinceId\": \"202\",\n  \"defaultAddress\": false\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/users/me/addresses/:id", "host": ["{{baseUrl}}"], "path": ["users", "me", "addresses", ":id"], "variable": [{ "key": "id", "value": "address-uuid" }] }
+          }
+        },
+        {
+          "name": "Delete Address",
+          "request": {
+            "method": "DELETE",
+            "url": { "raw": "{{baseUrl}}/users/me/addresses/:id", "host": ["{{baseUrl}}"], "path": ["users", "me", "addresses", ":id"], "variable": [{ "key": "id", "value": "address-uuid" }] }
+          }
+        },
+        {
+          "name": "Set Default Address",
+          "request": {
+            "method": "PATCH",
+            "url": { "raw": "{{baseUrl}}/users/me/addresses/:id/default", "host": ["{{baseUrl}}"], "path": ["users", "me", "addresses", ":id", "default"], "variable": [{ "key": "id", "value": "address-uuid" }] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "User Coupons",
+      "item": [
+        {
+          "name": "Get My Coupons",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/users/me/coupons", "host": ["{{baseUrl}}"], "path": ["users", "me", "coupons"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Roles (Admin)",
+      "item": [
+        {
+          "name": "Get All Roles",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/roles", "host": ["{{baseUrl}}"], "path": ["roles"] }
+          }
+        },
+        {
+          "name": "Create Role",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"id\": \"MODERATOR\",\n  \"description\": \"Content moderator\"\n}" },
+            "url": { "raw": "{{baseUrl}}/roles", "host": ["{{baseUrl}}"], "path": ["roles"] }
+          }
+        },
+        {
+          "name": "Delete Role",
+          "request": {
+            "method": "DELETE",
+            "url": { "raw": "{{baseUrl}}/roles/:name", "host": ["{{baseUrl}}"], "path": ["roles", ":name"], "variable": [{ "key": "name", "value": "MODERATOR" }] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Categories",
+      "item": [
+        {
+          "name": "Get All Categories",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/categories", "host": ["{{baseUrl}}"], "path": ["categories"] }
+          }
+        },
+        {
+          "name": "Get Category By ID",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/categories/:id", "host": ["{{baseUrl}}"], "path": ["categories", ":id"], "variable": [{ "key": "id", "value": "category-uuid" }] }
+          }
+        },
+        {
+          "name": "[Admin] Create Category",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"name\": \"Electronics\",\n  \"description\": \"Electronic devices\"\n}" },
+            "url": { "raw": "{{baseUrl}}/categories", "host": ["{{baseUrl}}"], "path": ["categories"] }
+          }
+        },
+        {
+          "name": "[Admin] Update Category",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"name\": \"Updated Category\",\n  \"description\": \"Updated desc\"\n}" },
+            "url": { "raw": "{{baseUrl}}/categories/:id", "host": ["{{baseUrl}}"], "path": ["categories", ":id"], "variable": [{ "key": "id", "value": "category-uuid" }] }
+          }
+        },
+        {
+          "name": "[Admin] Delete Category",
+          "request": {
+            "method": "DELETE",
+            "url": { "raw": "{{baseUrl}}/categories/:id", "host": ["{{baseUrl}}"], "path": ["categories", ":id"], "variable": [{ "key": "id", "value": "category-uuid" }] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Products (Public)",
+      "item": [
+        {
+          "name": "Get All Products",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/products", "host": ["{{baseUrl}}"], "path": ["products"] }
+          }
+        },
+        {
+          "name": "Get Product By ID",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/products/:id", "host": ["{{baseUrl}}"], "path": ["products", ":id"], "variable": [{ "key": "id", "value": "product-uuid" }] }
+          }
+        },
+        {
+          "name": "Search Products",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/products/search?keyword=phone&categoryId=&shopId=&minPrice=&maxPrice=&sortBy=createdAt&sortDir=desc&page=0&size=20",
+              "host": ["{{baseUrl}}"],
+              "path": ["products", "search"],
+              "query": [
+                { "key": "keyword", "value": "phone" },
+                { "key": "categoryId", "value": "", "disabled": true },
+                { "key": "shopId", "value": "", "disabled": true },
+                { "key": "minPrice", "value": "", "disabled": true },
+                { "key": "maxPrice", "value": "", "disabled": true },
+                { "key": "sortBy", "value": "createdAt" },
+                { "key": "sortDir", "value": "desc" },
+                { "key": "page", "value": "0" },
+                { "key": "size", "value": "20" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Newest Products",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/products/newest?limit=10",
+              "host": ["{{baseUrl}}"],
+              "path": ["products", "newest"],
+              "query": [{ "key": "limit", "value": "10" }]
+            }
+          }
+        },
+        {
+          "name": "Get Products By Shop",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/products/shop/:shopId?keyword=&page=0&size=20",
+              "host": ["{{baseUrl}}"],
+              "path": ["products", "shop", ":shopId"],
+              "query": [
+                { "key": "keyword", "value": "", "disabled": true },
+                { "key": "page", "value": "0" },
+                { "key": "size", "value": "20" }
+              ],
+              "variable": [{ "key": "shopId", "value": "shop-uuid" }]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Seller Products",
+      "item": [
+        {
+          "name": "Get My Products",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/seller/products", "host": ["{{baseUrl}}"], "path": ["seller", "products"] }
+          }
+        },
+        {
+          "name": "Create Product (multipart: files + JSON)",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "product",
+                  "value": "{\n  \"name\": \"Sample Product\",\n  \"description\": \"A great product\",\n  \"price\": 100000,\n  \"categoryId\": \"category-uuid\",\n  \"weight\": 500,\n  \"length\": 20,\n  \"width\": 15,\n  \"height\": 10,\n  \"variants\": [\n    {\n      \"price\": 100000,\n      \"stock\": 50,\n      \"status\": \"ACTIVE\",\n      \"detailAttributeIds\": []\n    }\n  ]\n}",
+                  "type": "text",
+                  "contentType": "application/json"
+                },
+                { "key": "files", "type": "file", "src": "", "description": "Product image 1" },
+                { "key": "files", "type": "file", "src": "", "description": "Product image 2 (optional)" }
+              ]
+            },
+            "url": { "raw": "{{baseUrl}}/seller/products", "host": ["{{baseUrl}}"], "path": ["seller", "products"] },
+            "description": "Create product: send product JSON as 'product' part (Content-Type: application/json) + image files as 'files' parts. Backend uploads images to ImageKit and saves URLs."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Reviews",
+      "item": [
+        {
+          "name": "Get Product Reviews",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/reviews/product/:productId", "host": ["{{baseUrl}}"], "path": ["reviews", "product", ":productId"], "variable": [{ "key": "productId", "value": "product-uuid" }] }
+          }
+        },
+        {
+          "name": "Get Product Rating Stats",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/reviews/product/:productId/stats", "host": ["{{baseUrl}}"], "path": ["reviews", "product", ":productId", "stats"], "variable": [{ "key": "productId", "value": "product-uuid" }] }
+          }
+        },
+        {
+          "name": "Create Review",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"orderItemId\": \"order-item-uuid\",\n  \"rating\": 5,\n  \"comment\": \"Great product!\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/reviews", "host": ["{{baseUrl}}"], "path": ["reviews"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Wishlist",
+      "item": [
+        {
+          "name": "Get My Wishlist",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/wishlist", "host": ["{{baseUrl}}"], "path": ["wishlist"] }
+          }
+        },
+        {
+          "name": "Add to Wishlist",
+          "request": {
+            "method": "POST",
+            "url": { "raw": "{{baseUrl}}/wishlist/products/:productId", "host": ["{{baseUrl}}"], "path": ["wishlist", "products", ":productId"], "variable": [{ "key": "productId", "value": "product-uuid" }] }
+          }
+        },
+        {
+          "name": "Remove from Wishlist",
+          "request": {
+            "method": "DELETE",
+            "url": { "raw": "{{baseUrl}}/wishlist/products/:productId", "host": ["{{baseUrl}}"], "path": ["wishlist", "products", ":productId"], "variable": [{ "key": "productId", "value": "product-uuid" }] }
+          }
+        },
+        {
+          "name": "Check In Wishlist",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/wishlist/check/:productId", "host": ["{{baseUrl}}"], "path": ["wishlist", "check", ":productId"], "variable": [{ "key": "productId", "value": "product-uuid" }] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Cart",
+      "item": [
+        {
+          "name": "Get My Cart",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/cart", "host": ["{{baseUrl}}"], "path": ["cart"] }
+          }
+        },
+        {
+          "name": "Add to Cart",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"productVariantId\": \"variant-uuid\",\n  \"quantity\": 1\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/cart/items", "host": ["{{baseUrl}}"], "path": ["cart", "items"] }
+          }
+        },
+        {
+          "name": "Update Cart Item Quantity",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"quantity\": 3\n}" },
+            "url": { "raw": "{{baseUrl}}/cart/items/:id", "host": ["{{baseUrl}}"], "path": ["cart", "items", ":id"], "variable": [{ "key": "id", "value": "cart-item-uuid" }] }
+          }
+        },
+        {
+          "name": "Remove Cart Item",
+          "request": {
+            "method": "DELETE",
+            "url": { "raw": "{{baseUrl}}/cart/items/:id", "host": ["{{baseUrl}}"], "path": ["cart", "items", ":id"], "variable": [{ "key": "id", "value": "cart-item-uuid" }] }
+          }
+        },
+        {
+          "name": "Clear Cart",
+          "request": {
+            "method": "DELETE",
+            "url": { "raw": "{{baseUrl}}/cart", "host": ["{{baseUrl}}"], "path": ["cart"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Orders",
+      "item": [
+        {
+          "name": "Checkout",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"receiverName\": \"Nguyen Van A\",\n  \"phoneNumber\": \"0901234567\",\n  \"fullAddress\": \"123 ABC, Quan 1, HCM\",\n  \"detailAddress\": \"123 ABC\",\n  \"ward\": \"Phuong Ben Nghe\",\n  \"wardCode\": \"20308\",\n  \"district\": \"Quan 1\",\n  \"districtId\": 1442,\n  \"province\": \"Ho Chi Minh\",\n  \"provinceId\": \"202\",\n  \"payment\": \"COD\",\n  \"couponCode\": null\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/orders/checkout", "host": ["{{baseUrl}}"], "path": ["orders", "checkout"] }
+          }
+        },
+        {
+          "name": "Get My Orders",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/orders/me", "host": ["{{baseUrl}}"], "path": ["orders", "me"] }
+          }
+        },
+        {
+          "name": "Get My Order By ID",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/orders/me/:id", "host": ["{{baseUrl}}"], "path": ["orders", "me", ":id"], "variable": [{ "key": "id", "value": "order-uuid" }] }
+          }
+        },
+        {
+          "name": "Cancel My Order",
+          "request": {
+            "method": "PUT",
+            "url": {
+              "raw": "{{baseUrl}}/orders/:id/cancel?reason=Changed my mind",
+              "host": ["{{baseUrl}}"],
+              "path": ["orders", ":id", "cancel"],
+              "query": [{ "key": "reason", "value": "Changed my mind" }],
+              "variable": [{ "key": "id", "value": "order-uuid" }]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Seller Orders",
+      "item": [
+        {
+          "name": "Get My Shop Orders",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/seller/orders", "host": ["{{baseUrl}}"], "path": ["seller", "orders"] }
+          }
+        },
+        {
+          "name": "Confirm Order",
+          "request": {
+            "method": "PUT",
+            "url": { "raw": "{{baseUrl}}/seller/orders/:id/confirm", "host": ["{{baseUrl}}"], "path": ["seller", "orders", ":id", "confirm"], "variable": [{ "key": "id", "value": "order-uuid" }] }
+          }
+        },
+        {
+          "name": "Ship Order",
+          "request": {
+            "method": "PUT",
+            "url": { "raw": "{{baseUrl}}/seller/orders/:id/ship", "host": ["{{baseUrl}}"], "path": ["seller", "orders", ":id", "ship"], "variable": [{ "key": "id", "value": "order-uuid" }] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Admin Orders",
+      "item": [
+        {
+          "name": "Get All Orders",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/admin/orders?status=",
+              "host": ["{{baseUrl}}"],
+              "path": ["admin", "orders"],
+              "query": [{ "key": "status", "value": "", "disabled": true }]
+            }
+          }
+        },
+        {
+          "name": "Update Order Status",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"status\": \"DELIVERED\",\n  \"cancelReason\": null\n}" },
+            "url": { "raw": "{{baseUrl}}/admin/orders/:id/status", "host": ["{{baseUrl}}"], "path": ["admin", "orders", ":id", "status"], "variable": [{ "key": "id", "value": "order-uuid" }] }
+          }
+        },
+        {
+          "name": "Deliver Order",
+          "request": {
+            "method": "PUT",
+            "url": { "raw": "{{baseUrl}}/admin/orders/:id/deliver", "host": ["{{baseUrl}}"], "path": ["admin", "orders", ":id", "deliver"], "variable": [{ "key": "id", "value": "order-uuid" }] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Shops",
+      "item": [
+        {
+          "name": "Get My Shop",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/shops", "host": ["{{baseUrl}}"], "path": ["shops"] }
+          }
+        },
+        {
+          "name": "Create Shop (JSON only)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"My New Shop\",\n  \"description\": \"Best shop ever\",\n  \"fullAddress\": \"123 Street, HCM\",\n  \"province\": \"Ho Chi Minh\",\n  \"provinceId\": \"202\",\n  \"district\": \"Quan 1\",\n  \"districtId\": 1442,\n  \"ward\": \"Phuong Ben Nghe\",\n  \"wardCode\": \"20308\",\n  \"detailAddress\": \"123 Street\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/shops/create", "host": ["{{baseUrl}}"], "path": ["shops", "create"] }
+          }
+        },
+        {
+          "name": "Create Shop (with logo)",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "shop",
+                  "value": "{\n  \"name\": \"My New Shop\",\n  \"description\": \"Best shop ever\",\n  \"fullAddress\": \"123 Street, HCM\"\n}",
+                  "type": "text",
+                  "contentType": "application/json"
+                },
+                { "key": "file", "type": "file", "src": "", "description": "Shop logo image (optional)" }
+              ]
+            },
+            "url": { "raw": "{{baseUrl}}/shops/create", "host": ["{{baseUrl}}"], "path": ["shops", "create"] },
+            "description": "Create shop with optional logo. Send 'shop' part as JSON + 'file' part as image."
+          }
+        },
+        {
+          "name": "Update My Shop (JSON only)",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Updated Shop Name\",\n  \"description\": \"Updated description\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/shops", "host": ["{{baseUrl}}"], "path": ["shops"] }
+          }
+        },
+        {
+          "name": "Update My Shop (with logo)",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "shop",
+                  "value": "{\n  \"name\": \"Updated Shop Name\",\n  \"description\": \"Updated description\"\n}",
+                  "type": "text",
+                  "contentType": "application/json"
+                },
+                { "key": "file", "type": "file", "src": "", "description": "New shop logo (optional)" }
+              ]
+            },
+            "url": { "raw": "{{baseUrl}}/shops", "host": ["{{baseUrl}}"], "path": ["shops"] },
+            "description": "Update shop info with optional new logo. Send 'shop' part as JSON + 'file' part as image."
+          }
+        },
+        {
+          "name": "[Public] Get All Approved Shops",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/shops/public", "host": ["{{baseUrl}}"], "path": ["shops", "public"] }
+          }
+        },
+        {
+          "name": "[Public] Get Shop By ID",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/shops/:id", "host": ["{{baseUrl}}"], "path": ["shops", ":id"], "variable": [{ "key": "id", "value": "shop-uuid" }] }
+          }
+        },
+        {
+          "name": "[Public] Get Shop IDs By Province",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/shops/byProvinceId/:provinceId", "host": ["{{baseUrl}}"], "path": ["shops", "byProvinceId", ":provinceId"], "variable": [{ "key": "provinceId", "value": "202" }] }
+          }
+        },
+        {
+          "name": "[Public] Get UserId By ShopId",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/shops/getUserId/:shopId", "host": ["{{baseUrl}}"], "path": ["shops", "getUserId", ":shopId"], "variable": [{ "key": "shopId", "value": "shop-uuid" }] }
+          }
+        },
+        {
+          "name": "[Public] Get ShopId By UserId",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/shops/getShopId/:userId", "host": ["{{baseUrl}}"], "path": ["shops", "getShopId", ":userId"], "variable": [{ "key": "userId", "value": "user-uuid" }] }
+          }
+        },
+        {
+          "name": "Follow Shop",
+          "request": {
+            "method": "POST",
+            "url": { "raw": "{{baseUrl}}/shops/:id/follow", "host": ["{{baseUrl}}"], "path": ["shops", ":id", "follow"], "variable": [{ "key": "id", "value": "shop-uuid" }] }
+          }
+        },
+        {
+          "name": "Unfollow Shop",
+          "request": {
+            "method": "DELETE",
+            "url": { "raw": "{{baseUrl}}/shops/:id/follow", "host": ["{{baseUrl}}"], "path": ["shops", ":id", "follow"], "variable": [{ "key": "id", "value": "shop-uuid" }] }
+          }
+        },
+        {
+          "name": "[Public] Get Follower Count",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/shops/:id/follower-count", "host": ["{{baseUrl}}"], "path": ["shops", ":id", "follower-count"], "variable": [{ "key": "id", "value": "shop-uuid" }] }
+          }
+        },
+        {
+          "name": "Check Is Following",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/shops/:id/is-following", "host": ["{{baseUrl}}"], "path": ["shops", ":id", "is-following"], "variable": [{ "key": "id", "value": "shop-uuid" }] }
+          }
+        },
+        {
+          "name": "Get My Followed Shops",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/shops/followed", "host": ["{{baseUrl}}"], "path": ["shops", "followed"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Admin Shops",
+      "item": [
+        {
+          "name": "Get All Shops",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/admin/shops?status=",
+              "host": ["{{baseUrl}}"],
+              "path": ["admin", "shops"],
+              "query": [{ "key": "status", "value": "", "description": "PENDING, APPROVED, REJECTED, SUSPENDED", "disabled": true }]
+            }
+          }
+        },
+        {
+          "name": "Approve Shop",
+          "request": {
+            "method": "PATCH",
+            "url": { "raw": "{{baseUrl}}/admin/shops/:id/approve", "host": ["{{baseUrl}}"], "path": ["admin", "shops", ":id", "approve"], "variable": [{ "key": "id", "value": "shop-uuid" }] }
+          }
+        },
+        {
+          "name": "Reject Shop",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"reason\": \"Incomplete information\"\n}" },
+            "url": { "raw": "{{baseUrl}}/admin/shops/:id/reject", "host": ["{{baseUrl}}"], "path": ["admin", "shops", ":id", "reject"], "variable": [{ "key": "id", "value": "shop-uuid" }] }
+          }
+        },
+        {
+          "name": "Suspend Shop",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"reason\": \"Policy violation\"\n}" },
+            "url": { "raw": "{{baseUrl}}/admin/shops/:id/suspend", "host": ["{{baseUrl}}"], "path": ["admin", "shops", ":id", "suspend"], "variable": [{ "key": "id", "value": "shop-uuid" }] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Admin Stats",
+      "item": [
+        {
+          "name": "Get Dashboard Stats",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/admin/stats/dashboard", "host": ["{{baseUrl}}"], "path": ["admin", "stats", "dashboard"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Shop Addresses",
+      "item": [
+        {
+          "name": "Get Shop Addresses By IDs",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/shop-addresses?ids=shop-uuid-1&ids=shop-uuid-2",
+              "host": ["{{baseUrl}}"],
+              "path": ["shop-addresses"],
+              "query": [
+                { "key": "ids", "value": "shop-uuid-1" },
+                { "key": "ids", "value": "shop-uuid-2" }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Notifications",
+      "item": [
+        {
+          "name": "Get My Notifications",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/notifications", "host": ["{{baseUrl}}"], "path": ["notifications"] }
+          }
+        },
+        {
+          "name": "Get Unread Count",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/notifications/unread-count", "host": ["{{baseUrl}}"], "path": ["notifications", "unread-count"] }
+          }
+        },
+        {
+          "name": "Mark As Read",
+          "request": {
+            "method": "PUT",
+            "url": { "raw": "{{baseUrl}}/notifications/:id/read", "host": ["{{baseUrl}}"], "path": ["notifications", ":id", "read"], "variable": [{ "key": "id", "value": "notification-uuid" }] }
+          }
+        },
+        {
+          "name": "Mark All As Read",
+          "request": {
+            "method": "PUT",
+            "url": { "raw": "{{baseUrl}}/notifications/read-all", "host": ["{{baseUrl}}"], "path": ["notifications", "read-all"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Messages",
+      "item": [
+        {
+          "name": "Create/Get Private Chat",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"otherUserId\": \"other-user-uuid\"\n}" },
+            "url": { "raw": "{{baseUrl}}/messages/private-chats", "host": ["{{baseUrl}}"], "path": ["messages", "private-chats"] }
+          }
+        },
+        {
+          "name": "Get My Private Chats",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/messages/private-chats", "host": ["{{baseUrl}}"], "path": ["messages", "private-chats"] }
+          }
+        },
+        {
+          "name": "Get Room Messages",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/messages/rooms/:roomId/messages", "host": ["{{baseUrl}}"], "path": ["messages", "rooms", ":roomId", "messages"], "variable": [{ "key": "roomId", "value": "room-uuid" }] }
+          }
+        },
+        {
+          "name": "Send Text Message",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"content\": \"Hello!\",\n  \"type\": \"TEXT\"\n}" },
+            "url": { "raw": "{{baseUrl}}/messages/rooms/:roomId/messages", "host": ["{{baseUrl}}"], "path": ["messages", "rooms", ":roomId", "messages"], "variable": [{ "key": "roomId", "value": "room-uuid" }] }
+          }
+        },
+        {
+          "name": "Send Image Message",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "file", "type": "file", "src": "", "description": "Image file to send as message" }
+              ]
+            },
+            "url": { "raw": "{{baseUrl}}/messages/rooms/:roomId/messages", "host": ["{{baseUrl}}"], "path": ["messages", "rooms", ":roomId", "messages"], "variable": [{ "key": "roomId", "value": "room-uuid" }] },
+            "description": "Send image message. Backend uploads file to ImageKit and stores URL as message content with type=IMAGE."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Coupons",
+      "item": [
+        {
+          "name": "[Admin] Create Coupon",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"code\": \"SUMMER2025\",\n  \"couponType\": \"PLATFORM\",\n  \"discountType\": \"PERCENTAGE\",\n  \"discountValue\": 10,\n  \"maxDiscount\": 50000,\n  \"minOrderAmount\": 200000,\n  \"maxUsage\": 100,\n  \"validFrom\": \"2025-06-01T00:00:00\",\n  \"validTo\": \"2025-08-31T23:59:59\",\n  \"description\": \"Summer sale 10% off\",\n  \"shopId\": null\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/coupons", "host": ["{{baseUrl}}"], "path": ["coupons"] }
+          }
+        },
+        {
+          "name": "[Public] Get Platform Coupons",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/coupons/platform", "host": ["{{baseUrl}}"], "path": ["coupons", "platform"] }
+          }
+        },
+        {
+          "name": "[Public] Get Shop Coupons",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/coupons/shop/:shopId", "host": ["{{baseUrl}}"], "path": ["coupons", "shop", ":shopId"], "variable": [{ "key": "shopId", "value": "shop-uuid" }] }
+          }
+        },
+        {
+          "name": "[Public] Get Coupon By Code",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/coupons/:code", "host": ["{{baseUrl}}"], "path": ["coupons", ":code"], "variable": [{ "key": "code", "value": "SUMMER2025" }] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "GHN (Shipping)",
+      "item": [
+        {
+          "name": "Get Provinces",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/ghn/provinces", "host": ["{{baseUrl}}"], "path": ["ghn", "provinces"] }
+          }
+        },
+        {
+          "name": "Get Districts",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/ghn/districts?province_id=202",
+              "host": ["{{baseUrl}}"],
+              "path": ["ghn", "districts"],
+              "query": [{ "key": "province_id", "value": "202" }]
+            }
+          }
+        },
+        {
+          "name": "Get Wards",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/ghn/wards?district_id=1442",
+              "host": ["{{baseUrl}}"],
+              "path": ["ghn", "wards"],
+              "query": [{ "key": "district_id", "value": "1442" }]
+            }
+          }
+        },
+        {
+          "name": "Get Available Services",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"from_district_id\": 1442,\n  \"to_district_id\": 1820\n}" },
+            "url": { "raw": "{{baseUrl}}/ghn/available-services", "host": ["{{baseUrl}}"], "path": ["ghn", "available-services"] }
+          }
+        },
+        {
+          "name": "Calculate Shipping Fee",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"shopId\": \"shop-uuid\",\n  \"serviceTypeId\": 2,\n  \"fromDistrictId\": 1442,\n  \"fromWardCode\": \"20308\",\n  \"toDistrictId\": 1820,\n  \"toWardCode\": \"30101\",\n  \"weight\": 500,\n  \"length\": 20,\n  \"width\": 15,\n  \"height\": 10,\n  \"insuranceValue\": 100000,\n  \"items\": [\n    {\n      \"name\": \"Product\",\n      \"quantity\": 1,\n      \"length\": 20,\n      \"width\": 15,\n      \"height\": 10,\n      \"weight\": 500\n    }\n  ]\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/ghn/calculate-fee", "host": ["{{baseUrl}}"], "path": ["ghn", "calculate-fee"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Order Items (Utility)",
+      "item": [
+        {
+          "name": "Check Orders Exist for Variants",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/orderItems/exists?variantIds=variant-1&variantIds=variant-2",
+              "host": ["{{baseUrl}}"],
+              "path": ["orderItems", "exists"],
+              "query": [
+                { "key": "variantIds", "value": "variant-1" },
+                { "key": "variantIds", "value": "variant-2" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Order Count for Variants",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/orderItems/count?variantIds=variant-1",
+              "host": ["{{baseUrl}}"],
+              "path": ["orderItems", "count"],
+              "query": [{ "key": "variantIds", "value": "variant-1" }]
+            }
+          }
+        },
+        {
+          "name": "Get Owner of Order Item",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/orderItems/owner?orderItemId=order-item-uuid",
+              "host": ["{{baseUrl}}"],
+              "path": ["orderItems", "owner"],
+              "query": [{ "key": "orderItemId", "value": "order-item-uuid" }]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "VNPay Payment",
+      "item": [
+        {
+          "name": "Create Payment URL",
+          "request": {
+            "method": "POST",
+            "url": { "raw": "{{baseUrl}}/payment/vnpay/create-payment-url/:orderId", "host": ["{{baseUrl}}"], "path": ["payment", "vnpay", "create-payment-url", ":orderId"], "variable": [{ "key": "orderId", "value": "order-uuid" }] }
+          }
+        },
+        {
+          "name": "VNPay IPN Callback",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/payment/vnpay/ipn?vnp_ResponseCode=00&vnp_TxnRef=order-uuid",
+              "host": ["{{baseUrl}}"],
+              "path": ["payment", "vnpay", "ipn"],
+              "query": [
+                { "key": "vnp_ResponseCode", "value": "00" },
+                { "key": "vnp_TxnRef", "value": "order-uuid" }
+              ]
+            },
+            "description": "Called by VNPay gateway. Params vary."
+          }
+        }
+      ]
+    },
+    {
+      "name": "ImageKit",
+      "item": [
+        {
+          "name": "Upload Single File",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "file", "type": "file", "src": "" },
+                { "key": "folder", "value": "/products", "type": "text" }
+              ]
+            },
+            "url": { "raw": "{{baseUrl}}/imagekit/upload?folder=/products", "host": ["{{baseUrl}}"], "path": ["imagekit", "upload"], "query": [{ "key": "folder", "value": "/products" }] },
+            "description": "Upload file via backend → ImageKit. Returns {url, fileId, thumbnailUrl}."
+          }
+        },
+        {
+          "name": "Upload Multiple Files",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "files", "type": "file", "src": "" },
+                { "key": "files", "type": "file", "src": "" },
+                { "key": "folder", "value": "/products", "type": "text" }
+              ]
+            },
+            "url": { "raw": "{{baseUrl}}/imagekit/upload-multiple?folder=/products", "host": ["{{baseUrl}}"], "path": ["imagekit", "upload-multiple"], "query": [{ "key": "folder", "value": "/products" }] },
+            "description": "Upload multiple files via backend → ImageKit. Returns [{url, fileId, thumbnailUrl}, ...]."
+          }
+        }
+      ]
+    }
+  ]
+}
