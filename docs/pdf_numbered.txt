@@ -1,0 +1,142 @@
+000: BÁO CÁO PHÂN TÍCH & THIẾT KẾ HỆ THỐNG THƯƠNG MẠI ĐIỆN
+001: TỬ
+002: Mỗi nhóm sinh viên phải nộp một cuốn báo cáo phân tích và thiết kế hệ thống hoàn chỉnh,
+003: bao gồm các phần sau theo đúng thứ tự:
+004: 1. Trang bìa
+005: o Ghi rõ tên đề tài
+006: o Tên đầy đủ các thành viên trong nhóm cùng mã số sinh viên
+007: 2. Trang đánh giá mức độ hoàn thành của các thành viên
+008: o Đánh giá phần trăm (%) mức độ hoàn thành công việc của từng thành viên
+009: o Mức độ hoàn thành phải được các thành viên trong nhóm thống nhất và đồng
+010: ý, VD như sau:
+011: STT Họ và tên Mã số Vai trò Mức độ hoàn thành
+012: 1 Nguyễn Văn An B21DCCN219 Trưởng nhóm 100%
+013: 2 Lê Thị B B21DCCN918 Thành viên 60%
+014: …
+015: …
+016: 3. Trang mục lục
+017: o Liệt kê các chương, mục, tiểu mục với số trang tương ứng để tiện tra cứu
+018: 4. Trang ký hiệu và chữ viết tắt
+019: o Liệt kê các ký hiệu, thuật ngữ viết tắt sử dụng trong báo cáo
+020: o Sắp xếp theo thứ tự bảng chữ cái (ABC) để dễ tham khảo
+021: 5. Tiếp theo là phần nội dung theo bố cục (bắt buộc) sau:
+022: CHƯƠNG 1: TÁC NHÂN VÀ BIỂU ĐỒ USECASE TỔNG QUÁT
+023: 1.1. Danh sách tác nhân (Actors)
+024: Bảng liệt kê các tác nhân (tên, mô tả chi tiết về vai trò, đối tượng đại diện)
+025: Các tác nhân điển hình: Khách hàng (chưa đăng nhập/đã đăng nhập), Quản trị viên, Nhân viên
+026: kho, Cổng thanh toán, Đơn vị vận chuyển…
+027: 1.2. Biểu đồ Usecase tổng quát
+028: Hình vẽ (UML) thể hiện tất cả các usecase và mối quan hệ với tác nhân
+029: Chú thích rõ các khối usecase theo từng tác nhân (có thể phân vùng)
+030: CHƯƠNG 2: MÔ TẢ VÀ ĐẶC TẢ USECASE CHI TIẾT
+031: 2.1. Bảng danh mục Usecase
+032: Bảng liệt kê tất cả các usecase đã xác định, phân loại theo tác nhân, kèm mô tả ngắn gọn
+033: 2.2. Đặc tả Usecase chi tiết
+034: Với mỗi usecase, trình bày theo cấu trúc bảng thống nhất gồm:
+035: • Tên Usecase
+036: • Tác nhân chính
+037: • Mô tả ngắn
+038: • Điều kiện tiên quyết
+039: • Điều kiện kết thúc (thành công / thất bại)
+040: 1
+041: • Luồng sự kiện chính (từng bước)
+042: • Luồng sự kiện phụ (các ngoại lệ, rẽ nhánh)
+043: Ghi chú: Nên đặc tả lần lượt cho tất cả usecase trong bảng 2.1.
+044: CHƯƠNG 3: BIỂU ĐỒ TUẦN TỰ CHI TIẾT
+045: 3.1. Nguyên tắc xây dựng biểu đồ tuần tự
+046: Xác định các đối tượng (Actor, Boundary, Control, Entity)
+047: Các ký hiệu UML: lifeline, message, alt, loop, opt…
+048: 3.2. Biểu đồ tuần tự cho từng Usecase
+049: Với mỗi usecase trong danh mục, vẽ một biểu đồ tuần tự tương ứng (hình UML)
+050: Thể hiện rõ thứ tự thông điệp, các điều kiện rẽ nhánh (nếu có) dựa trên luồng sự kiện đã đặc
+051: tả
+052: Có thể nhóm các usecase có luồng tương tự nhau, nhưng nên vẽ riêng để đảm bảo chi tiết.
+053: CHƯƠNG 4: BIỂU ĐỒ LỚP VÀ THIẾT KẾ CƠ SỞ DỮ LIỆU
+054: 4.1. Biểu đồ lớp (Class Diagram) tổng quát
+055: Hình vẽ UML thể hiện các lớp chính (thực thể, điều khiển, biên giới nếu cần)
+056: Các thuộc tính (kèm kiểu dữ liệu)
+057: Các phương thức quan trọng
+058: Mối quan hệ (kế thừa, kết hợp, bội số)
+059: 4.2. Thiết kế cơ sở dữ liệu quan hệ
+060: Chuyển đổi từ biểu đồ lớp sang mô hình CSDL
+061: Bảng mô tả chi tiết từng bảng gồm:
+062: • Tên bảng
+063: • Các cột (tên, kiểu dữ liệu, ràng buộc: PK, FK, NOT NULL, UNIQUE,
+064: DEFAULT…)
+065: • Mô tả ý nghĩa
+066: Có thể kèm theo sơ đồ quan hệ giữa các bảng (ERD)
+067: CHƯƠNG 5: THIẾT KẾ GIAO DIỆN (UI/UX – WIREFRAME /
+068: MOCKUP)
+069: 5.1. Danh sách các trang giao diện chính
+070: • Trang chủ
+071: • Danh sách sản phẩm (có bộ lọc, tìm kiếm)
+072: • Chi tiết sản phẩm
+073: • Giỏ hàng
+074: • Thanh toán
+075: • Lịch sử đơn hàng / Hồ sơ cá nhân
+076: • Các trang quản trị (Dashboard, Quản lý sản phẩm, Quản lý đơn hàng, Quản lý
+077: người dùng…)
+078: 5.2. Wireframe / Mockup từng trang
+079: Hình ảnh phác thảo (Figma, Balsamiq, vẽ tay)
+080: Mỗi hình có chú thích bố cục (header, footer, sidebar, nội dung chính)
+081: Xác định các thành phần tương tác: nút bấm, form nhập liệu, bảng dữ liệu, menu…
+082: 2
+083: 5.3. Nguyên tắc thiết kế
+084: Tính nhất quán giữa các trang
+085: Trải nghiệm người dùng hợp lý (dễ thao tác, thông báo rõ ràng)
+086: Dễ dàng triển khai thành HTML/CSS/JS
+087: CHƯƠNG 6: LỰA CHỌN CÔNG CỤ PHÁT TRIỂN HỆ THỐNG
+088: 6.1. Giới thiệu các công nghệ dự kiến
+089: • Backend: [Ví dụ: Java Spring Boot, Node.js, PHP Laravel…]
+090: • Frontend: [Ví dụ: React, Vue, Angular, hoặc HTML/CSS/JS thuần]
+091: • Cơ sở dữ liệu: [Ví dụ: MySQL, PostgreSQL, MongoDB]
+092: • Cổng thanh toán: [VNPAY, PayPal, Stripe…]
+093: • Vận chuyển: [Giao Hàng Nhanh, Viettel Post, GHTK…]
+094: • Công cụ hỗ trợ: Git, Figma, Postman, Docker (nếu có)
+095: 6.2. Lý do lựa chọn và sự phù hợp
+096: Phân tích ưu điểm từng công cụ đối với yêu cầu của hệ thống (bảo mật, hiệu năng, dễ học,
+097: cộng đồng, chi phí…)
+098: Giải thích tại sao bộ công nghệ này phù hợp với quy mô đồ án / dự án thực tế
+099: 6.3. Kiến trúc tổng thể dự kiến (nếu cần)
+100: Sơ đồ các thành phần (client – server – database – third-party services)
+101: Giao tiếp REST API hoặc GraphQL…
+102: YÊU CẦU VỀ TRÌNH BÀY BÁO CÁO
+103: 1. Yêu cầu chung
+104: • Báo cáo phải được trình bày rõ ràng, mạch lạc, không mắc lỗi chính tả hoặc ngữ
+105: pháp.
+106: • Nội dung cần thống nhất về định dạng, cách đánh số đề mục, bảng biểu và hình
+107: ảnh.
+108: 2. Định dạng trang giấy
+109: • Khổ giấy: A4
+110: • Lề trang (Margins):
+111: o Trên: 2.0 cm
+112: o Dưới: 2.0 cm
+113: o Trái: 3.0 cm
+114: o Phải: 2.0 cm
+115: • Header / Footer: cách mép giấy 1.0 cm
+116: • Căn lề (Alignment): Justified (canh đều 2 bên)
+117: • Khoảng cách đoạn (Paragraph spacing):
+118: o Before: 3 pt
+119: o After: 3 pt
+120: • Giãn dòng (Line spacing): Multiple 1.3
+121: 3. Định dạng chữ
+122: • Font chữ: Times New Roman
+123: • Cỡ chữ:
+124: o Nội dung thông thường: Size 13
+125: o Tiêu đề chương: In hoa, in đậm, size 14
+126: o Tiêu đề mục lớn trong chương: In đậm, size 13
+127: 3
+128: • Phải thống nhất toàn bộ font chữ, cỡ chữ và kiểu chữ trong toàn bộ báo cáo.
+129: 4. Đánh số hình, bảng và đề mục
+130: • Hình vẽ và bảng biểu phải được đánh số theo chương, ví dụ:
+131: o Hình 2.1: Hình thứ nhất trong Chương 2
+132: o Bảng 3.5: Bảng thứ năm trong Chương 3
+133: • Cách đánh số đề mục: sử dụng hệ thống phân cấp như sau:
+134: o Cấp chương: 1, 2, 3, ...
+135: o Cấp mục: 1.1, 1.2, ...
+136: o Cấp tiểu mục: 1.1.1, 1.1.2, ...
+137: o (nếu cần sâu hơn): 1.1.1.1, ...
+138: 5. Header và Footer trên mỗi trang
+139: • Header (góc trên trái): Ghi tên đề tài bài tập lớn
+140: • Footer (góc dưới phải): Ghi số thứ tự trang (Page number)
+141: 4

@@ -1,0 +1,1927 @@
+HỌC VIỆN CÔNG NGHỆ BƯU CHÍNH VIỄN THÔNG
+KHOA CÔNG NGHỆ THÔNG TIN
+—------------------------
+BÁO CÁO BÀI TẬP LỚN
+PHÁT TRIỂN HỆ THỐNG TMĐT
+Đề tài: Website TMĐT
+Nhóm lớp: 5 - Nhóm BTL: 6
+Giảng viên: Đỗ Quang Hưng
+Thành viên: Nguyễn Duy Hoàng  - B22DCCN334
+Trần Trọng Đại          - B22DCCN178
+Lê Đức Toàn              - B22DCCN730
+Võ Sỹ Tài                   - B22DCCN706
+Hà Nội - 2026
+1. Danh sách các tác nhân (Actors) và mô tả:
+STT
+Tên tác nhân
+Mô tả chi tiết
+1
+Quản trị viên (Admin)
+Người quản lý toàn bộ hệ thống với quyền cao nhất.
+- Duyệt hoặc từ chối shop đăng ký.
+- Quản lý người dùng.
+- Quản lý danh mục sản phẩm (category).
+- Xem và quản lý tất cả đơn hàng trên hệ thống.
+- Quản lý role và permission.
+- Xem analytics và báo cáo toàn hệ thống.
+2
+Người bán hàng (Seller)
+Chủ shop - đăng ký và quản lý thông tin shop.
+- Quản lý sản phẩm và xử lý đơn hàng.
+- Tạo và quản lý mã giảm giá.
+- Quản lý hệ thống kho hàng, thêm/xóa nhân viên kho.
+- Xem dashboard thống kê doanh thu và hoạt động.
+- Nhắn tin với khách hàng.
+3
+Nhân viên kho (Warehouse Employee)
+Nhân viên được Seller thêm vào để quản lý một hoặc nhiều kho hàng cụ thể.
+- Có quyền xem các đơn hàng được phân về kho mình phụ trách, xác nhận đóng gói đơn hàng, cập nhật trạng thái đơn.
+- Quản lý tồn kho (stock) trong kho được phân công.
+4
+Khách hàng (Customer)
+Người dùng cuối của hệ thống.
+- Truy cập website để duyệt, tìm kiếm sản phẩm, xem chi tiết sản phẩm.
+- Quản lý giỏ hàng, đặt hàng, sử dụng mã giảm giá (voucher), thanh toán, theo dõi trạng thái đơn hàng, đánh giá sản phẩm sau khi nhận hàng.
+- Nhắn tin trực tiếp với shop.
+5
+Cổng thanh toán (Payment Gateway)
+Các hệ thống thanh toán bên ngoài hỗ trợ xử lý giao dịch trực tuyến (VNPAY, MoMo, PayPal).
+- Mỗi cổng nhận yêu cầu thanh toán từ hệ thống, xử lý giao dịch, gửi callback (IPN - Instant Payment Notification) về kết quả thanh toán thành công hoặc thất bại, và redirect người dùng về trang kết quả đặt hàng.
+- Ngoài ra hệ thống còn hỗ trợ COD (thanh toán khi nhận hàng).
+6
+Đơn vị vận chuyển (Shipping Carrier)
+Hệ thống bên ngoài (Giao Hàng Nhanh - GHN) cung cấp dịch vụ vận chuyển.
+- Cung cấp API tra cứu địa chỉ, tính phí vận chuyển từ kho đến khách hàng.
+2. Biểu đồ Usecase tổng quát của hệ thống:
+1. Mô tả Usecase tổng quát (Bảng danh mục Usecase):
+Tác nhân
+Tên Usecase
+Mô tả ngắn gọn
+Người xem
+Tìm kiếm sản phẩm (SP)
+Tìm kiếm sản phẩm theo từ khóa, danh mục, giá và bộ lọc.
+Quản lý giỏ hàng
+Thêm, sửa số lượng hoặc xóa sản phẩm trong giỏ hàng.
+Khách hàng (Customer)
+Đăng ký tài khoản
+Cho phép người dùng mới tạo tài khoản trên hệ thống.
+Quản lý thông tin cá nhân
+Cập nhật thông tin cá nhân và quản lý địa chỉ giao hàng.
+Đặt hàng
+Tạo đơn hàng, chọn địa chỉ, chi phí và xác nhận mua.
+Đánh giá SP
+Gửi điểm đánh giá và nhận xét sau khi nhận hàng.
+Nhắn tin
+Trao đổi trực tiếp với shop qua chat realtime.
+Quản trị viên (Admin)
+Quản lý shop
+Duyệt shop mới, theo dõi và đình chỉ shop vi phạm.
+Quản lý người dùng
+Xem danh sách, khóa / mở khóa tài khoản và phân quyền.
+Quản lý danh mục SP
+Tạo / sửa / xóa danh mục sản phẩm cho hệ thống.
+Người bán (Seller)
+Đăng ký shop
+Gửi yêu cầu mở shop và chờ quản trị viên duyệt.
+Quản lý thông tin shop
+Cập nhật tên, mô tả, logo, kho và địa chỉ shop.
+Quản lý SP
+Tạo / sửa / xóa sản phẩm, mô tả, thuộc tính và ảnh.
+Quản lý đơn hàng
+Xem, xác nhận, cập nhật trạng thái và hủy đơn của shop.
+Quản lý mã giảm giá
+Tạo, chỉnh sửa và vô hiệu hóa voucher của shop.
+Quản lý nhân viên kho
+Đăng ký, phân công hoặc gỡ nhân viên khỏi kho hàng.
+Nhân viên kho
+Quản lý tồn kho
+Theo dõi và cập nhật số lượng tồn theo biến thể.
+Quản lý đơn hàng theo kho
+Xem danh sách đơn được gán cho kho, đóng gói, tạo vận đơn và cập nhật trạng thái giao hàng.
+2. Đặc tả Usecase chi tiết:
+2.1. UC01 - Tìm kiếm sản phẩm
+Mục
+Nội dung chi tiết
+Tác nhân chính
+Người xem
+Mô tả
+Tìm kiếm sản phẩm theo từ khóa, danh mục, giá và bộ lọc.
+Điều kiện tiên quyết
+1. Hệ thống và các dịch vụ liên quan đang hoạt động.2. Dữ liệu đầu vào cần thiết đã sẵn sàng.
+Điều kiện kết thúc
+Người xem tìm kiếm được sản phẩm theo nhu cầu.
+Luồng sự kiện chính
+1. Người dùng truy cập chức năng Tìm kiếm sản phẩm.2. Hệ thống hiển thị thanh tìm kiếm.3. Người dùng nhập tên, điều kiện, lọc và chọn Tìm kiếm.4. Hệ thống hiển thị thông tin chi tiết cho người dùng.
+5. Người dùng chọn vào sản phẩm.
+6. Hệ thống hiển thị trang giao diện chi tiết về sản phẩm mà người dùng đã chọn.
+Luồng sự kiện phụ
+A1: Không tìm thấy sản phẩm
+Tại bước 3, hệ thống hiển thị thông báo sản phẩm không tồn tại và yêu cầu nhập lại.
+A2: Hủy bỏ thao tác
+Người dùng nhấn nút "Hủy" hoặc đóng trình duyệt -> Hệ thống không thực hiện thay đổi nào.
+2.2. UC02 - Quản lý giỏ hàng
+Mục
+Nội dung chi tiết
+Tác nhân chính
+Người xem
+Mô tả
+Thêm, sửa số lượng hoặc xóa sản phẩm trong giỏ hàng.
+Điều kiện tiên quyết
+1. Hệ thống và các dịch vụ liên quan đang hoạt động.2. Dữ liệu đầu vào cần thiết đã sẵn sàng.
+Điều kiện kết thúc
+Giỏ hàng hiển thị thông tin các sản phẩm được thêm vào.
+Luồng sự kiện chính
+1. Người dùng truy cập trang sản phẩm cần thêm vào giỏ và chọn số lượng cần thêm.2. Người dùng chọn chức năng “Thêm vào giỏ hàng”3. Hệ thống hiển thị thông báo thêm vào giỏ thành công.4. Người dùng chọn chức năng Giỏ hàng5. Hệ thống hiển thị trang Giỏ hàng với thông tin sản phẩm đã được thêm, cùng với thông tin hiện tại của mỗi sản phẩm (Trạng thái, số lượng còn lại).
+Luồng sự kiện phụ
+A1: Quá số lượng hiện tại của sản phẩm
+Tại bước 2, nếu số lượng hiện tại < số lượng thêm vào giỏ -> Hệ thống hiển thị thông báo quá số lượng đang có.
+A2: Hủy bỏ thao tác
+Người dùng nhấn nút "Hủy" hoặc đóng trình duyệt -> Hệ thống không thực hiện thay đổi nào.
+2.3. UC03 - Đăng ký tài khoản
+Mục
+Nội dung chi tiết
+Tác nhân chính
+Khách hàng
+Mô tả
+Người dùng mới tạo tài khoản trên hệ thống.
+Điều kiện tiên quyết
+1. Hệ thống và các dịch vụ liên quan đang hoạt động.2. Dữ liệu đầu vào cần thiết đã sẵn sàng.
+Điều kiện kết thúc
+Đăng ký tài khoản thành công.
+Luồng sự kiện chính
+1. Người dùng chọn chức năng Đăng ký.2. Hệ thống hiển thị trang Đăng ký với thông tin cần điền.3. Người dùng nhập thông tin cần thiết và chọn Đăng ký.4. Hệ thống hiển thị thông báo đăng ký thành công.
+Luồng sự kiện phụ
+A1: Thông tin không hợp lệ
+Tại bước 4, nếu thông tin không hợp lệ -> Hệ thống hiển thị thông báo lỗi.
+A2: Hủy bỏ thao tác
+Người dùng nhấn nút "Hủy" hoặc đóng trình duyệt -> Hệ thống không thực hiện thay đổi nào.
+2.4. UC04 - Quản lý thông tin cá nhân
+Mục
+Nội dung chi tiết
+Tác nhân chính
+Khách hàng
+Mô tả
+Cập nhật thông tin cá nhân và quản lý địa chỉ giao hàng.
+Điều kiện tiên quyết
+1. Hệ thống và các dịch vụ liên quan đang hoạt động.2. Dữ liệu đầu vào cần thiết đã sẵn sàng.
+3. Khách hàng đã đăng nhập vào hệ thống.
+Điều kiện kết thúc
+Cập nhật thông tin khách hàng thành công.
+Luồng sự kiện chính
+1. Người dùng chọn chức năng Thông tin khách hàng.2. Hệ thống hiển thị trang Thông tin khách hàng với thông tin đã có.3. Người dùng chọn chức năng Cập nhật.4. Hệ thống hiển thị trang Chỉnh sửa với thông tin cần điền.5. Người dùng nhập thông tin cần thiết và chọn Cập nhật.6. Hệ thống hiển thị thông báo cập nhật thành công.
+Luồng sự kiện phụ
+A1: Thông tin không hợp lệ
+Tại bước 6, nếu thông tin không hợp lệ -> Hệ thống hiển thị thông báo lỗi.
+A2: Hủy bỏ thao tác
+Người dùng nhấn nút "Hủy" hoặc đóng trình duyệt -> Hệ thống không thực hiện thay đổi nào.
+2.5. UC05 - Đặt hàng
+Mục
+Nội dung chi tiết
+Tác nhân chính
+Khách hàng
+Mô tả
+Tạo đơn hàng, chọn địa chỉ, chi phí và xác nhận mua.
+Điều kiện tiên quyết
+1. Hệ thống và các dịch vụ liên quan đang hoạt động.2. Dữ liệu đầu vào cần thiết đã sẵn sàng.
+3. Khách hàng đã đăng nhập vào hệ thống.
+Điều kiện kết thúc
+Đặt hàng thành công.
+Luồng sự kiện chính
+1. Người dùng chọn sản phẩm cần mua và chọn chức năng Đặt hàng.2. Hệ thống hiển thị trang Đặt hàng với địa chỉ nhận hàng, phí ship và phương thức thanh toán..3. Khách hàng chọn voucher (nếu có) và Tạo đơn thanh toán.4. Hệ thống chuyển sang trang thanh toán.
+5. Khách hàng xác nhận thông tin và chọn phương thức thanh toán.
+6. Hệ thống ghi nhận yêu cầu và chuyển hướng sang cổng thanh toán.
+7. Hệ thống nhận kết quả thanh toán thành công từ cổng thanh toán.
+8. Hệ thống tạo phiếu đơn hàng (mã giao dịch, thông tin đơn hàng, thông tin khách) và lưu vào CSDL.
+9. Hệ thống thông báo kết quả thành công đến khách hàng.
+Luồng sự kiện phụ
+A1: Hủy bỏ thao tác
+Tại bước 2,3 hoặc 5, khách hàng nhấn nút "Hủy" hoặc đóng trình duyệt. Hệ thống không thực hiện thay đổi nào.
+A2: Thanh toán thất bại
+Tại bước 5, cổng thanh toán trả về kết quả thất bại (ví dụ: số dư không đủ). -> Hệ thống hiển thị thông báo lỗi cho khách hàng, đề nghị thử lại hoặc chọn phương thức khác.
+A3: Sản phẩm vừa được mua bởi người khác
+Trong lúc khách hàng đang thao tác thanh toán, một người khác đã đặt hàng thành công sản phẩm này. Khi hệ thống chuẩn bị lưu đơn hàng (bước 6) sẽ phát hiện trạng
+thái sản phẩm đã thay đổi. -> Hệ thống hủy giao dịch, thông báo lỗi "Sản phẩm đã có người đặt trước đó" và hoàn tiền lại cho khách hàng (nếu có).
+2.6. UC06 - Đánh giá sản phẩm
+Mục
+Nội dung chi tiết
+Tác nhân chính
+Khách hàng
+Mô tả
+Gửi điểm đánh giá và nhận xét sau khi nhận hàng.
+Điều kiện tiên quyết
+1. Hệ thống và các dịch vụ liên quan đang hoạt động.2. Dữ liệu đầu vào cần thiết đã sẵn sàng.
+3. Khách hàng đã đăng nhập vào hệ thống.
+Điều kiện kết thúc
+Khách hàng đánh giá sản phẩm thành công.
+Luồng sự kiện chính
+1. Người dùng chọn chức năng Thông tin đơn hàng.2. Hệ thống hiển thị trang Thông tin đơn hàng với các đơn hàng đã, đang và chưa được nhận.3. Người dùng chọn đơn hàng đã nhận và chọn sản phẩm cần đánh giá.4. Hệ thống hiển thị trang Đánh giá sản phẩm với thông tin cần điền.5. Người dùng nhập thông tin đánh giá và chọn Cập nhật.6. Hệ thống hiển thị thông báo đánh giá thành công.
+Luồng sự kiện phụ
+A1: Hủy bỏ thao tác
+Người dùng nhấn nút "Hủy" hoặc đóng trình duyệt -> Hệ thống không thực hiện thay đổi nào.
+2.7. UC07 - Nhắn tin
+Mục
+Nội dung chi tiết
+Tác nhân chính
+Khách hàng
+Mô tả
+Trao đổi trực tiếp với shop qua chat realtime.
+Điều kiện tiên quyết
+1. Hệ thống và các dịch vụ liên quan đang hoạt động.2. Dữ liệu đầu vào cần thiết đã sẵn sàng.
+3. Khách hàng đã đăng nhập vào hệ thống.
+Điều kiện kết thúc
+Khách hàng chat được với shop thành công.
+Luồng sự kiện chính
+1. Người dùng chọn tên shop qua trang thông tin sản phẩm.2. Hệ thống hiển thị trang Thông tin shop.3. Người dùng chọn chức năng Chat với shop.4. Hệ thống hiển thị trang Chat.5. Người dùng nhập thông tin cần trao đổi và chọn gửi.6. Hệ thống hiển thị thông tin trên lịch sử Chat và thông báo gửi thành công.
+Luồng sự kiện phụ
+A1: Hủy bỏ thao tác
+Người dùng nhấn nút "Hủy" hoặc đóng trình duyệt -> Hệ thống không thực hiện thay đổi nào.
+2.8. UC08 - Quản lý shop
+Mục
+Nội dung chi tiết
+Tác nhân chính
+Quản trị viên (Admin)
+Mô tả
+Duyệt shop mới, theo dõi và đình chỉ shop vi phạm.
+Điều kiện tiên quyết
+1. Hệ thống và các dịch vụ liên quan đang hoạt động.2. Dữ liệu đầu vào cần thiết đã sẵn sàng.
+3. Admin đã đăng nhập vào hệ thống.
+Điều kiện kết thúc
+Duyệt shop thành công.
+Luồng sự kiện chính
+1. Admin chọn chức năng Quản lý shop.2. Hệ thống hiển thị trang Danh sách shop, mỗi shop đều có chức năng Duyệt và Đình chỉ hoạt động.3. Admin tìm tên shop trên thanh tìm kiếm và chọn chức năng tìm kiếm.
+4. Hệ thống hiển thị shop phù hợp với thông tin tìm kiếm.
+5. Admin chọn shop cần duyệt.6. Hệ thống hiển thị trang Thông tin của shop chưa được duyệt.7. Admin xác nhận thông tin shop và chọn Duyệt.8. Hệ thống thông báo shop đã duyệt thành công.
+Luồng sự kiện phụ
+A1: Không tìm thấy shop
+Tại bước 3, hệ thống hiển thị thông báo shop không tồn tại và yêu cầu nhập lại.
+A2: Hủy bỏ thao tác
+Người dùng nhấn nút "Hủy" hoặc đóng trình duyệt -> Hệ thống không thực hiện thay đổi nào.
+2.9. UC09 - Quản lý người dùng
+Mục
+Nội dung chi tiết
+Tác nhân chính
+Quản trị viên (Admin)
+Mô tả
+Xem danh sách, khóa / mở khóa tài khoản và phân quyền.
+Điều kiện tiên quyết
+1. Hệ thống và các dịch vụ liên quan đang hoạt động.2. Dữ liệu đầu vào cần thiết đã sẵn sàng.
+3. Admin đã đăng nhập vào hệ thống.
+Điều kiện kết thúc
+Admin thao tác thành công.
+Luồng sự kiện chính
+1. Admin chọn chức năng Quản lý người dùng.2. Hệ thống hiển thị trang Danh sách khách hàng, mỗi khách hàng đều có chức năng Khóa và Mở khóa tài khoản.
+3. Admin tìm tên khách hàng trên thanh tìm kiếm và chọn chức năng tìm kiếm.
+4. Hệ thống hiển thị khách hàng phù hợp với thông tin tìm kiếm.5. Admin chọn khách hàng cần thao tác.6. Hệ thống hiển thị trang Thông tin khách hàng.7. Admin xác nhận thông tin khách hàng.
+Luồng sự kiện phụ
+A1: Không tìm thấy khách hàng
+Tại bước 3, hệ thống hiển thị thông báo khách hàng không tồn tại và yêu cầu nhập lại.
+A2: Hủy bỏ thao tác
+Người dùng nhấn nút "Hủy" hoặc đóng trình duyệt -> Hệ thống không thực hiện thay đổi nào.
+2.10. UC10 - Quản lý danh mục sản phẩm
+Mục
+Nội dung chi tiết
+Tác nhân chính
+Quản trị viên (Admin)
+Mô tả
+Tạo / sửa / xóa danh mục sản phẩm cho hệ thống.
+Điều kiện tiên quyết
+1. Hệ thống và các dịch vụ liên quan đang hoạt động.2. Dữ liệu đầu vào cần thiết đã sẵn sàng.
+3. Admin đã đăng nhập vào hệ thống.
+Điều kiện kết thúc
+Thêm danh mục sản phẩm thành công.
+Luồng sự kiện chính
+1. Admin chọn chức năng Quản lý danh mục.2. Hệ thống hiển thị trang Danh sách danh mục, mỗi danh mục đều có chức năng Sửa và Xóa.3. Admin chọn chức năng Thêm danh mục.
+4. Hệ thống hiển thị trang Thông tin danh mục với mô tả.
+5. Admin nhập tên danh mục, mô tả và chọn Xác nhận.6. Hệ thống thông báo Danh mục đã được thêm.
+Luồng sự kiện phụ
+A1: Hủy bỏ thao tác
+Người dùng nhấn nút "Hủy" hoặc đóng trình duyệt -> Hệ thống không thực hiện thay đổi nào.
+2.11. UC11 - Đăng ký shop
+Mục
+Nội dung chi tiết
+Tác nhân chính
+Người bán (Seller)
+Mô tả
+Gửi yêu cầu mở shop và chờ quản trị viên duyệt.
+Điều kiện tiên quyết
+1. Hệ thống và các dịch vụ liên quan đang hoạt động.2. Dữ liệu đầu vào cần thiết đã sẵn sàng.
+3. Seller đã đăng nhập vào hệ thống.
+Điều kiện kết thúc
+Gửi yêu cầu mở shop thành công.
+Luồng sự kiện chính
+1. Seller chọn chức năng Đăng ký shop.2. Hệ thống hiển thị trang Đăng ký shop với các thông tin cần điền.3. Seller nhập thông tin cần thiết và chọn chức năng Gửi yêu cầu.
+4. Hệ thống hiển thị thông báo Gửi yêu cầu thành công.
+Luồng sự kiện phụ
+A1: Thông tin không hợp lệ
+Tại bước 4, nếu thông tin không hợp lệ -> Hệ thống hiển thị thông báo lỗi.
+A2: Hủy bỏ thao tác
+Người dùng nhấn nút "Hủy" hoặc đóng trình duyệt -> Hệ thống không thực hiện thay đổi nào.
+2.12. UC12 - Quản lý thông tin shop
+Mục
+Nội dung chi tiết
+Tác nhân chính
+Người bán (Seller)
+Mô tả
+Cập nhật tên, mô tả, logo, kho và địa chỉ shop.
+Điều kiện tiên quyết
+1. Hệ thống và các dịch vụ liên quan đang hoạt động.2. Dữ liệu đầu vào cần thiết đã sẵn sàng.
+3. Seller đã đăng nhập vào hệ thống.
+Điều kiện kết thúc
+Cập nhật thông tin shop thành công.
+Luồng sự kiện chính
+1. Seller chọn chức năng Thông tin shop.2. Hệ thống hiển thị trang Thông tin Shop với thông tin đã có từ trước.3. Seller chọn chức năng Cập nhật.4. Hệ thống hiển thị trang Chỉnh sửa với thông tin cần điền.5. Seller nhập thông tin cần thiết và chọn Cập nhật.6. Hệ thống hiển thị thông báo cập nhật thành công.
+Luồng sự kiện phụ
+A1: Thông tin không hợp lệ
+Tại bước 6, nếu thông tin không hợp lệ -> Hệ thống hiển thị thông báo lỗi.
+A2: Hủy bỏ thao tác
+Người dùng nhấn nút "Hủy" hoặc đóng trình duyệt -> Hệ thống không thực hiện thay đổi nào.
+2.13. UC13 - Quản lý sản phẩm
+Mục
+Nội dung chi tiết
+Tác nhân chính
+Người bán (Seller)
+Mô tả
+Tạo / sửa / xóa sản phẩm, mô tả, thuộc tính và ảnh.
+Điều kiện tiên quyết
+1. Hệ thống và các dịch vụ liên quan đang hoạt động.2. Dữ liệu đầu vào cần thiết đã sẵn sàng.
+3. Seller đã đăng nhập vào hệ thống.
+Điều kiện kết thúc
+Thêm sản phẩm thành công.
+Luồng sự kiện chính
+1. Seller chọn chức năng Quản lý sản phẩm.2. Hệ thống hiển thị trang Danh sách sản phẩm, mỗi danh mục đều có chức năng Sửa và Xóa.3. Seller chọn chức năng Thêm sản phẩm.
+4. Hệ thống hiển thị trang Thông tin sản phẩm với các thông tin cần nhập.
+5. Seller nhập thông tin sản phẩm và chọn Xác nhận.6. Hệ thống thông báo sản phẩm đã được thêm.
+Luồng sự kiện phụ
+A1: Thông tin không hợp lệ
+Tại bước 6, nếu thông tin không hợp lệ -> Hệ thống hiển thị thông báo lỗi.
+A2: Hủy bỏ thao tác
+Người dùng nhấn nút "Hủy" hoặc đóng trình duyệt -> Hệ thống không thực hiện thay đổi nào.
+2.14. UC14 - Quản lý đơn hàng
+Mục
+Nội dung chi tiết
+Tác nhân chính
+Người bán (Seller)
+Mô tả
+Xem, xác nhận, cập nhật trạng thái và hủy đơn của shop.
+Điều kiện tiên quyết
+1. Hệ thống và các dịch vụ liên quan đang hoạt động.2. Dữ liệu đầu vào cần thiết đã sẵn sàng.
+3. Seller đã đăng nhập vào hệ thống.
+Điều kiện kết thúc
+Xác nhận đơn hàng thành công.
+Luồng sự kiện chính
+1. Seller chọn chức năng Quản lý đơn hàng.2. Hệ thống hiển thị trang Danh sách đơn hàng.3. Seller chọn đơn hàng chưa được xác nhận.
+4. Hệ thống hiển thị trang Xác nhận đơn hàng với các thông tin của đơn hàng.
+5. Seller chọn Kho hàng còn chứa sản phẩm có trong đơn hàng và chọn Xác nhận.6. Hệ thống thông báo Đơn hàng đã được xác nhận thành công.
+Luồng sự kiện phụ
+A1: Hủy bỏ thao tác
+Người dùng nhấn nút "Hủy" hoặc đóng trình duyệt -> Hệ thống không thực hiện thay đổi nào.
+2.15. UC15 - Quản lý mã giảm giá
+Mục
+Nội dung chi tiết
+Tác nhân chính
+Người bán (Seller)
+Mô tả
+Tạo, chỉnh sửa và vô hiệu hóa voucher của shop.
+Điều kiện tiên quyết
+1. Hệ thống và các dịch vụ liên quan đang hoạt động.2. Dữ liệu đầu vào cần thiết đã sẵn sàng.
+3. Seller đã đăng nhập vào hệ thống.
+Điều kiện kết thúc
+Thêm voucher thành công.
+Luồng sự kiện chính
+1. Seller chọn chức năng Quản lý Voucher.2. Hệ thống hiển thị trang Danh sách voucher.3. Seller chọn chức năng Thêm voucher.
+4. Hệ thống hiển thị trang Thông tin voucher với các thông tin cần nhập.
+5. Seller nhập thông tin voucher, số lượng, ngày bắt đầu, ngày kết thúc và chọn Tạo mã.6. Hệ thống thông báo Voucher đã được tạo.
+Luồng sự kiện phụ
+A1: Thông tin không hợp lệ
+Tại bước 6, nếu thông tin không hợp lệ -> Hệ thống hiển thị thông báo lỗi.
+A2: Hủy bỏ thao tác
+Người dùng nhấn nút "Hủy" hoặc đóng trình duyệt -> Hệ thống không thực hiện thay đổi nào.
+2.16. UC16 - Quản lý nhân viên kho
+Mục
+Nội dung chi tiết
+Tác nhân chính
+Người bán (Seller)
+Mô tả
+Đăng ký, phân công hoặc gỡ nhân viên khỏi kho hàng.
+Điều kiện tiên quyết
+1. Hệ thống và các dịch vụ liên quan đang hoạt động.2. Dữ liệu đầu vào cần thiết đã sẵn sàng.
+3. Seller đã đăng nhập vào hệ thống.
+Điều kiện kết thúc
+Thêm thông tin nhân viên thành công.
+Luồng sự kiện chính
+1. Seller chọn chức năng Quản lý nhân viên.2. Hệ thống hiển thị trang Danh sách nhân viên.3. Seller chọn chức năng Thêm nhân viên.
+4. Hệ thống hiển thị trang Thông tin nhân viên với các thông tin cần nhập.
+5. Seller nhập thông tin nhân viên, tên đăng nhập, mật khẩu, kho hoạt động và chọn Xác nhận.6. Hệ thống thông báo Xác nhận nhân viên thành công.
+Luồng sự kiện phụ
+A1: Thông tin không hợp lệ
+Tại bước 6, nếu thông tin không hợp lệ -> Hệ thống hiển thị thông báo lỗi.
+A2: Hủy bỏ thao tác
+Người dùng nhấn nút "Hủy" hoặc đóng trình duyệt -> Hệ thống không thực hiện thay đổi nào.
+2.17. UC17 - Quản lý tồn kho
+Mục
+Nội dung chi tiết
+Tác nhân chính
+Nhân viên kho
+Mô tả
+Theo dõi và cập nhật số lượng tồn theo biến thể.
+Điều kiện tiên quyết
+1. Hệ thống và các dịch vụ liên quan đang hoạt động.2. Dữ liệu đầu vào cần thiết đã sẵn sàng.
+3. Nhân viên đã đăng nhập vào hệ thống.
+Điều kiện kết thúc
+Cập nhật số lượng sản phẩm trong kho thành công.
+Luồng sự kiện chính
+1. Nhân viên chọn chức năng Quản lý tồn kho.2. Hệ thống hiển thị trang Danh sách sản phẩm trong kho.3. Nhân viên chọn sản phẩm và chọn Cập nhật số lượng.
+4. Hệ thống hiển thị trang Cập nhật số lượng với các thông tin của mặt hàng.
+5. Nhân viên số lượng cập nhật và chọn Xác nhận.6. Hệ thống thông báo Số lượng sản phẩm đã được cập nhật thành công.
+Luồng sự kiện phụ
+A1: Hủy bỏ thao tác
+Người dùng nhấn nút "Hủy" hoặc đóng trình duyệt -> Hệ thống không thực hiện thay đổi nào.
+2.18. UC18 - Quản lý đơn hàng theo kho
+Mục
+Nội dung chi tiết
+Tác nhân chính
+Nhân viên kho
+Mô tả
+Xem danh sách đơn được gán cho kho, đóng gói, tạo vận đơn và cập nhật trạng thái giao hàng.
+Điều kiện tiên quyết
+1. Hệ thống và các dịch vụ liên quan đang hoạt động.2. Dữ liệu đầu vào cần thiết đã sẵn sàng.
+3. Nhân viên đã đăng nhập vào hệ thống.
+Điều kiện kết thúc
+Cập nhật trạng thái đơn hàng thành công.
+Luồng sự kiện chính
+1. Nhân viên chọn chức năng Quản lý đơn hàng.2. Hệ thống hiển thị trang Danh sách sản phẩm trong kho.3. Nhân viên chọn đơn hàng cần cập nhật và chọn Tạo vận đơn hàng.
+4. Hệ thống hiển thị trang Tạo vận đơn hàng với các thông tin của mặt hàng.
+5. Nhân viên nhập thêm thông tin đơn hàng và chọn Xác nhận.6. Hệ thống cập nhật trạng thái đơn hàng và thông báo Đơn hàng đã được cập nhật thành công.
+Luồng sự kiện phụ
+A1: Hủy bỏ thao tác
+Người dùng nhấn nút "Hủy" hoặc đóng trình duyệt -> Hệ thống không thực hiện thay đổi nào.
+3. Biểu đồ tuần tự cho các Usecase:
+UC01 - Tìm kiếm sản phẩm
+UC02 - Quản lý giỏ hàng
+UC03 - Đăng ký tài khoản
+UC04 - Quản lý thông tin cá nhân
+UC05 - Đặt hàng
+UC06 - Đánh giá sản phẩm
+UC07 - Nhắn tin
+UC08 - Quản lý shop
+UC09 - Quản lý người dùng
+UC10 - Quản lý danh mục sản phẩm
+UC11 - Đăng ký shop
+UC12 - Quản lý thông tin shop
+UC13 - Quản lý sản phẩm
+UC14 - Quản lý đơn hàng
+UC15 - Quản lý mã giảm giá
+UC16 - Quản lý nhân viên kho
+UC17 - Quản lý tồn kho
+UC18 - Quản lý đơn hàng theo kho
+1. Biểu đồ lớp (Class Diagram)
++ Mô tả chi tiết các mối quan hệ:
+A. Quan hệ kế thừa (Inheritance)
+Tất cả các entity (trừ ActivityLog, AuditLog, ChatMessage) đều kế thừa từ lớp trừu tượng `BaseEntity`, cung cấp các trường kiểm toán chung: `createdAt`, `updatedAt`, `createdBy`, `updatedBy`, `version` (Optimistic Locking), `deletedAt` (Soft Delete).
+B. Quan hệ kết hợp (Association)
+STT
+Quan hệ
+Kiểu
+Bội số
+Mô tả
+1
+User ↔ UserAddress
+OneToMany
+1:N
+Một user có nhiều địa chỉ
+2
+User ↔ UserRole
+OneToMany
+1:N
+Một user được gán nhiều vai trò
+3
+UserRole ↔ Role
+ManyToOne
+N:1
+Nhiều phân công → 1 vai trò
+4
+Role ↔ RolePermission
+OneToMany
+1:N
+Một vai trò có nhiều quyền
+5
+RolePermission ↔ Permission
+ManyToOne
+N:1
+Nhiều gán quyền → 1 quyền
+6
+User ↔ UserIdentity
+OneToMany
+1:N
+Một user liên kết nhiều OAuth provider
+7
+User ↔ Shop
+OneToMany
+1:N
+Một user có thể sở hữu nhiều shop
+8
+Shop - ShopAddress
+Embedded
+1:1
+Shop nhúng thông tin địa chỉ
+9
+User ↔ ShopFollower ↔ Shop
+ManyToMany (qua bảng trung gian)
+N:N
+User theo dõi Shop
+10
+Product ↔ Shop
+ManyToOne
+N:1
+Nhiều SP thuộc 1 shop
+11
+Product ↔ Category
+ManyToOne
+N:1
+Nhiều SP thuộc 1 danh mục
+12
+Product ↔ ProductImage
+OneToMany
+1:N
+1 SP có nhiều ảnh
+13
+Product ↔ ProductVariant
+OneToMany
+1:N
+1 SP có nhiều biến thể
+14
+Product ↔ ProductAttribute
+OneToMany
+1:N
+1 SP có nhiều thuộc tính
+15
+ProductAttribute ↔ DetailAttribute
+OneToMany
+1:N
+1 thuộc tính có nhiều giá trị chi tiết
+16
+ProductVariant ↔ DetailAttribute
+ManyToMany
+N:N
+Biến thể gồm nhiều giá trị thuộc tính
+17
+ProductVariant ↔ ProductVariantImage
+OneToMany
+1:N
+1 biến thể có nhiều ảnh
+18
+ProductVariant ↔ CustomerReview | | |
+OneToMany
+1:N
+1 biến thể có nhiều đánh giá
+19
+User ↔ Wishlist ↔ Product
+ManyToMany (qua bảng trung gian)
+N:N
+User yêu thích nhiều SP
+20
+User ↔ CartItem ↔ ProductVariant
+ManyToMany (qua bảng trung gian)
+N:N
+User thêm biến thể vào giỏ
+21
+User ↔ Order
+OneToMany
+1:N
+1 user có nhiều đơn hàng
+22
+Order ↔ ShippingAddress
+OneToOne
+1:1
+1 đơn hàng có 1 địa chỉ giao
+23
+Order ↔ OrderShopGroup
+OneToMany
+1:N
+1 đơn nhóm theo shop
+24
+OrderShopGroup ↔ Shop
+ManyToOne
+N:1
+Nhóm hàng thuộc 1 shop
+25
+OrderShopGroup ↔ Warehouse
+ManyToOne
+N:1
+Nhóm hàng xuất từ 1 kho
+26
+OrderShopGroup ↔ OrderItem
+OneToMany
+1:N
+1 nhóm có nhiều mặt hàng
+27
+OrderItem ↔ ProductVariant
+ManyToOne
+N:1
+Mặt hàng tham chiếu biến thể
+28
+OrderItem ↔ CustomerReview
+OneToOne
+1:0..1
+Mặt hàng có thể có đánh giá
+29
+Order ↔ ReturnRequest
+OneToMany
+1:N
+1 đơn có nhiều yêu cầu trả
+30
+Coupon ↔ Shop
+ManyToOne
+N:0..1
+Coupon thuộc shop hoặc platform
+31
+CouponUsage ↔ Coupon, User, Order
+ManyToOne
+N:1 mỗi cái
+Theo dõi sử dụng coupon
+32
+Warehouse ↔ Shop
+ManyToOne
+N:1
+Nhiều kho thuộc 1 shop
+33
+Warehouse ↔ WarehouseEmployee
+OneToMany
+1:N
+1 kho có nhiều NV
+34
+WarehouseEmployee ↔ User
+ManyToOne
+N:1
+NV kho là 1 user
+35
+WarehouseStock ↔ Warehouse, ProductVariant
+ManyToOne
+N:1 mỗi cái
+Tồn kho theo kho + biến thể
+36
+Room ↔ ChatMessage
+OneToMany
+1:N
+1 phòng có nhiều tin nhắn
+37
+Room ↔ RoomMember ↔ User
+ManyToMany (qua bảng trung gian)
+N:N
+User tham gia phòng chat
+38
+ChatMessage ↔ User
+ManyToOne
+N:1
+Tin nhắn do user gửi
+39
+User ↔ Notification
+OneToMany
+1:N
+1 user nhận nhiều thông báo
+40
+User ↔ SearchHistory
+OneToMany
+1:N
+1 user có nhiều lịch sử tìm kiếm
+2. Cơ sở dữ liệu (Database)
+Tất cả các bảng kế thừa từ BaseEntity đều có thêm các cột audit: created_at (DATETIME, NOT NULL), updated_at(DATETIME), created_by(VARCHAR(255)), updated_by (VARCHAR(255)), version (BIGINT, NOT NULL, DEFAULT 0), deleted_at (DATETIME). Các cột này không được lặp lại trong mỗi bảng bên dưới để tránh trùng lặp.
+Bảng users – Người dùng
+Cột
+Kiểu dữ liệu
+Ràng buộc
+Mô tả
+id
+VARCHAR(36)
+PRIMARY KEY
+Mã người dùng (UUID)
+username
+VARCHAR(50)
+UNIQUE, NOT NULL
+Tên đăng nhập
+password
+VARCHAR(255)
+NOT NULL
+Mật khẩu đã mã hóa (BCrypt)
+email
+VARCHAR(255)
+UNIQUE, NOT NULL
+Email đăng nhập
+full_name
+VARCHAR(255)
+Họ tên đầy đủ
+phone
+VARCHAR(20)
+Số điện thoại
+dob
+DATE
+Ngày sinh
+active
+BOOLEAN
+NOT NULL, DEFAULT TRUE
+Trạng thái tài khoản
+profile_picture
+VARCHAR(500)
+URL ảnh đại diện
+Index: idx_username(username), idx_email(email), idx_active(active)
+Bảng user_addresses – Địa chỉ người dùng
+Cột
+Kiểu dữ liệu
+Ràng buộc
+Mô tả
+id
+VARCHAR(36)
+PRIMARY KEY
+Mã địa chỉ (UUID)
+user_id
+VARCHAR(36)
+FOREIGN KEY → users(id), NOT NULL
+Mã người dùng
+receiver_name
+VARCHAR(255)
+NOT NULL
+Tên người nhận
+phone_number
+VARCHAR(20)
+NOT NULL
+SĐT người nhận
+full_address
+TEXT
+Địa chỉ đầy đủ
+detail_address
+TEXT
+Địa chỉ chi tiết (số nhà, đường)
+ward
+VARCHAR(100)
+Phường/Xã
+ward_code
+VARCHAR(20)
+Mã phường/xã (GHN)
+district
+VARCHAR(100)
+Quận/Huyện
+district_id
+INT
+Mã quận/huyện (GHN)
+province
+VARCHAR(100)
+Tỉnh/Thành phố
+province_id
+INT
+Mã tỉnh/thành phố (GHN)
+default_address
+BOOLEAN
+NOT NULL, DEFAULT FALSE
+Địa chỉ mặc định
+Index: idx_user_id(user_id), idx_default_address(default_address)
+Bảng roles – Vai trò
+Cột
+Kiểu dữ liệu
+Ràng buộc
+Mô tả
+id
+VARCHAR(36)
+PRIMARY KEY
+Mã vai trò (UUID)
+name
+VARCHAR(100)
+NOT NULL
+Tên vai trò (ADMIN, SELLER, BUYER, WAREHOUSE_EMPLOYEE)
+description
+VARCHAR(500)
+Mô tả vai trò
+Bảng permissions – Quyền hạn
+Cột
+Kiểu dữ liệu
+Ràng buộc
+Mô tả
+id
+VARCHAR(36)
+PRIMARY KEY
+Mã quyền (UUID)
+name
+VARCHAR(100)
+NOT NULL
+Tên quyền (vd: PRODUCT_CREATE, ORDER_VIEW)
+description
+VARCHAR(500)
+Mô tả quyền
+Index: idx_permissions_module(name)
+Bảng user_roles – Gán vai trò cho người dùng
+Cột
+Kiểu dữ liệu
+Ràng buộc
+Mô tả
+user_id
+VARCHAR(36)
+PRIMARY KEY (composite), FOREIGN KEY → users(id)
+Mã người dùng
+role_id
+VARCHAR(36)
+PRIMARY KEY (composite), FOREIGN KEY → roles(id)
+Mã vai trò
+assigned_at
+TIMESTAMP
+Thời điểm gán vai trò
+Bảng role_permissions – Gán quyền cho vai trò
+Cột
+Kiểu dữ liệu
+Ràng buộc
+Mô tả
+role_id
+VARCHAR(36)
+PRIMARY KEY (composite), FOREIGN KEY → roles(id)
+Mã vai trò
+permission_id
+VARCHAR(36)
+PRIMARY KEY (composite), FOREIGN KEY → permissions(id)
+Mã quyền
+Bảng user_identity – Liên kết OAuth
+Cột
+Kiểu dữ liệu
+Ràng buộc
+Mô tả
+id
+BIGINT
+PRIMARY KEY, AUTO_INCREMENT
+Mã liên kết
+user_id
+VARCHAR(36)
+FOREIGN KEY → users(id), NOT NULL
+Mã người dùng
+provider
+VARCHAR(20)
+NOT NULL
+Nhà cung cấp OAuth (GOOGLE, FACEBOOK)
+provider_user_id
+VARCHAR(255)
+ID user từ provider
+provider_email
+VARCHAR(255)
+Email từ provider
+linked_at
+TIMESTAMP
+Thời điểm liên kết
+Unique: (provider, provider_user_id)
+Bảng categories – Danh mục sản phẩm
+Cột
+Kiểu dữ liệu
+Ràng buộc
+Mô tả
+id
+VARCHAR(36)
+PRIMARY KEY
+Mã danh mục (UUID)
+name
+VARCHAR(100)
+NOT NULL
+Tên danh mục
+description
+TEXT
+Mô tả danh mục
+image_url
+VARCHAR(500)
+URL ảnh danh mục
+Index: idx_categories_name(name)
+Bảng products – Sản phẩm
+Cột
+Kiểu dữ liệu
+Ràng buộc
+Mô tả
+id
+VARCHAR(36)
+PRIMARY KEY
+Mã sản phẩm (UUID)
+name
+VARCHAR(200)
+NOT NULL
+Tên sản phẩm
+description
+TEXT
+Mô tả sản phẩm
+min_price
+DECIMAL(15,2)
+NOT NULL
+Giá thấp nhất (từ các variant)
+max_price
+DECIMAL(15,2)
+NOT NULL
+Giá cao nhất (từ các variant)
+total_sold
+BIGINT
+NOT NULL, DEFAULT 0
+Tổng số lượng đã bán
+weight
+DECIMAL(10,2)
+Cân nặng (gram)
+length
+DECIMAL(10,2)
+Chiều dài (cm)
+width
+DECIMAL(10,2)
+Chiều rộng (cm)
+height
+DECIMAL(10,2)
+Chiều cao (cm)
+shop_id
+VARCHAR(36)
+FOREIGN KEY → shops(id), NOT NULL
+Mã shop sở hữu
+category_id
+VARCHAR(36)
+FOREIGN KEY → categories(id)
+Mã danh mục
+Index: idx_products_shop_id(shop_id), idx_products_category_id(category_id), idx_product_min_price(min_price), idx_product_total_sold(total_sold)
+Bảng product_images – Ảnh sản phẩm
+Cột
+Kiểu dữ liệu
+Ràng buộc
+Mô tả
+id
+VARCHAR(36)
+PRIMARY KEY
+Mã ảnh (UUID)
+product_id
+VARCHAR(36)
+FOREIGN KEY → products(id), NOT NULL
+Mã sản phẩm
+url
+VARCHAR(500)
+NOT NULL
+URL ảnh (ImageKit CDN)
+is_main
+BOOLEAN
+NOT NULL, DEFAULT FALSE
+Ảnh chính hay không
+Index: idx_product_images_product_id(product_id), idx_product_images_product_main(product_id, is_main)
+Bảng product_variants – Biến thể sản phẩm
+Cột
+Kiểu dữ liệu
+Ràng buộc
+Mô tả
+id
+VARCHAR(36)
+PRIMARY KEY
+Mã biến thể (UUID)
+product_id
+VARCHAR(36)
+FOREIGN KEY → products(id), NOT NULL
+Mã sản phẩm
+name
+VARCHAR(200)
+Tên biến thể (vd: "Đỏ - XL")
+sku
+VARCHAR(100)
+Mã SKU
+price
+DECIMAL(15,2)
+NOT NULL
+Giá bán
+stock
+BIGINT
+Tổng tồn kho
+sold_count
+BIGINT
+NOT NULL, DEFAULT 0
+Số lượng đã bán
+status
+VARCHAR(20)
+Trạng thái (ACTIVE, INACTIVE)
+image_url
+VARCHAR(500)
+URL ảnh đại diện
+weight
+DECIMAL(10,2)
+Cân nặng (gram)
+length
+DECIMAL(10,2)
+Chiều dài (cm)
+width
+DECIMAL(10,2)
+Chiều rộng (cm)
+height
+DECIMAL(10,2)
+Chiều cao (cm)
+Index: idx_product_variants_product_id(product_id), idx_product_variants_status(status)
+Bảng product_variant_images – Ảnh biến thể
+Cột
+Kiểu dữ liệu
+Ràng buộc
+Mô tả
+id
+VARCHAR(36)
+PRIMARY KEY
+Mã ảnh (UUID)
+variant_id
+VARCHAR(36)
+FOREIGN KEY → product_variants(id), NOT NULL
+Mã biến thể
+url
+VARCHAR(500)
+NOT NULL
+URL ảnh
+is_main
+BOOLEAN
+NOT NULL, DEFAULT FALSE
+Ảnh chính hay không
+Index: idx_variant_images_variant_id(variant_id), idx_variant_images_main(is_main)
+Bảng product_attributes – Thuộc tính sản phẩm
+Cột
+Kiểu dữ liệu
+Ràng buộc
+Mô tả
+id
+VARCHAR(36)
+PRIMARY KEY
+Mã thuộc tính (UUID)
+product_id
+VARCHAR(36)
+FOREIGN KEY → products(id), NOT NULL
+Mã sản phẩm
+name
+VARCHAR(100)
+NOT NULL
+Tên thuộc tính (vd: "Màu sắc", "Kích thước")
+status
+VARCHAR(20)
+Trạng thái
+sort_order
+INT
+NOT NULL, DEFAULT 0
+Thứ tự sắp xếp
+Index: idx_product_attributes_product_id(product_id)
+Bảng detail_attributes – Giá trị chi tiết thuộc tính
+Cột
+Kiểu dữ liệu
+Ràng buộc
+Mô tả
+id
+VARCHAR(36)
+PRIMARY KEY
+Mã giá trị thuộc tính (UUID)
+product_attribute_id
+VARCHAR(36)
+FOREIGN KEY → product_attributes(id), NOT NULL
+Mã thuộc tính cha
+name
+VARCHAR(100)
+NOT NULL
+Giá trị (vd: "Đỏ", "XL")
+image_url
+VARCHAR(500)
+URL ảnh minh hoạ
+status
+VARCHAR(20)
+Trạng thái
+sort_order
+INT
+NOT NULL, DEFAULT 0
+Thứ tự sắp xếp
+Index: idx_detail_attributes_product_attribute_id(product_attribute_id)
+Bảng product_variant_detail_attributes – Liên kết biến thể & thuộc tính (N:N)
+Cột
+Kiểu dữ liệu
+Ràng buộc
+Mô tả
+product_variant_id
+VARCHAR(36)
+PRIMARY KEY (composite), FOREIGN KEY → product_variants(id)
+Mã biến thể
+detail_attribute_id
+VARCHAR(36)
+PRIMARY KEY (composite), FOREIGN KEY → detail_attributes(id)
+Mã giá trị thuộc tính
+Bảng customer_reviews – Đánh giá sản phẩm
+Cột
+Kiểu dữ liệu
+Ràng buộc
+Mô tả
+id
+VARCHAR(36)
+PRIMARY KEY
+Mã đánh giá (UUID)
+product_variant_id
+VARCHAR(36)
+FOREIGN KEY → product_variants(id), NOT NULL
+Mã biến thể được đánh giá
+user_id
+VARCHAR(36)
+FOREIGN KEY → users(id)
+Mã người đánh giá
+rating
+INT
+NOT NULL
+Điểm đánh giá (1-5)
+comment
+TEXT
+Nội dung đánh giá
+Index: idx_product_variant_id(product_variant_id), idx_user_id(user_id), idx_rating(rating), idx_created_at(created_at)
+Bảng wishlists – Danh sách yêu thích
+Cột
+Kiểu dữ liệu
+Ràng buộc
+Mô tả
+id
+VARCHAR(36)
+PRIMARY KEY
+Mã wishlist (UUID)
+user_id
+VARCHAR(36)
+FOREIGN KEY → users(id), NOT NULL
+Mã người dùng
+product_id
+VARCHAR(36)
+FOREIGN KEY → products(id), NOT NULL
+Mã sản phẩm
+Unique: uk_user_product(user_id, product_id) Index: idx_user_id(user_id), idx_product_id(product_id)
+Bảng shops – Cửa hàng
+Cột
+Kiểu dữ liệu
+Ràng buộc
+Mô tả
+id
+VARCHAR(36)
+PRIMARY KEY
+Mã shop (UUID)
+user_id
+VARCHAR(36)
+FOREIGN KEY → users(id), NOT NULL
+Mã chủ shop
+name
+VARCHAR(100)
+NOT NULL
+Tên shop
+description
+TEXT
+Mô tả shop
+logo
+VARCHAR(500)
+URL logo shop
+address
+TEXT
+Địa chỉ hiển thị
+status
+VARCHAR(20)
+NOT NULL
+Trạng thái (PENDING, APPROVED, REJECTED, SUSPENDED)
+rejection_reason
+TEXT
+Lý do từ chối
+approved_at
+DATETIME
+Thời điểm phê duyệt
+approved_by_id
+VARCHAR(36)
+FOREIGN KEY → users(id)
+Admin phê duyệt
+shop_address_phone_number
+VARCHAR(20)
+SĐT shop
+shop_address_latitude
+DECIMAL(10,7)
+Vĩ độ
+shop_address_longitude
+DECIMAL(10,7)
+Kinh độ
+shop_address_full_address
+TEXT
+Địa chỉ đầy đủ
+shop_address_detail_address
+TEXT
+Địa chỉ chi tiết
+shop_address_ward
+VARCHAR(100)
+Phường/Xã
+shop_address_ward_code
+VARCHAR(20)
+Mã phường/xã
+shop_address_district
+VARCHAR(100)
+Quận/Huyện
+shop_address_district_id
+INT
+Mã quận/huyện
+shop_address_province
+VARCHAR(100)
+Tỉnh/Thành phố
+shop_address_province_id
+VARCHAR(10)
+Mã tỉnh/thành phố
+Index: idx_shops_user_id(user_id), idx_shops_status(status), idx_shops_created_at(created_at)
+Bảng shop_followers – Theo dõi shop
+Cột
+Kiểu dữ liệu
+Ràng buộc
+Mô tả
+id
+VARCHAR(36)
+PRIMARY KEY
+Mã follow (UUID)
+user_id
+VARCHAR(36)
+FOREIGN KEY → users(id), NOT NULL
+Mã người theo dõi
+shop_id
+VARCHAR(36)
+FOREIGN KEY → shops(id), NOT NULL
+Mã shop
+Unique: uk_user_shop(user_id, shop_id) Index: idx_user_id(user_id), idx_shop_id(shop_id)
+Bảng carts – Giỏ hàng
+Cột
+Kiểu dữ liệu
+Ràng buộc
+Mô tả
+id
+VARCHAR(36)
+PRIMARY KEY
+Mã giỏ hàng (UUID)
+user_id
+VARCHAR(36)
+FOREIGN KEY → users(id), NOT NULL
+Mã người dùng
+product_variant_id
+VARCHAR(36)
+FOREIGN KEY → product_variants(id), NOT NULL
+Mã biến thể
+quantity
+INT
+NOT NULL
+Số lượng
+Unique: uk_user_variant(user_id, product_variant_id) Index: idx_user_id(user_id), idx_product_variant_id(product_variant_id), idx_created_at(created_at)
+Bảng orders – Đơn hàng
+Cột
+Kiểu dữ liệu
+Ràng buộc
+Mô tả
+id
+VARCHAR(36)
+PRIMARY KEY
+Mã đơn hàng (UUID)
+user_id
+VARCHAR(36)
+FOREIGN KEY → users(id), NOT NULL
+Mã người đặt
+status
+VARCHAR(20)
+NOT NULL
+Trạng thái đơn hàng (AWAITING_PAYMENT, PENDING, CONFIRMED, SHIPPING, DELIVERED, COMPLETED, CANCELLED)
+cancel_reason
+VARCHAR(255)
+Lý do huỷ đơn
+total
+DECIMAL(15,2)
+Tổng tiền thanh toán
+subtotal
+DECIMAL(15,2)
+Tổng tiền hàng (chưa phí ship, giảm giá)
+shipping_fee
+DECIMAL(15,2)
+Phí vận chuyển
+total_discount
+DECIMAL(15,2)
+Tổng giảm giá
+payment
+VARCHAR(20)
+Phương thức thanh toán (COD, VNPAY, MOMO, PAYPAL)
+coupon_id
+VARCHAR(36)
+Mã coupon platform
+coupon_code
+VARCHAR(50)
+Code coupon platform
+shop_coupon_id
+VARCHAR(36)
+Mã coupon shop
+shop_coupon_code
+VARCHAR(50)
+Code coupon shop
+discount_amount
+DECIMAL(15,2)
+NOT NULL, DEFAULT 0
+Số tiền giảm (platform coupon)
+shop_discount_amount
+DECIMAL(15,2)
+NOT NULL, DEFAULT 0
+Số tiền giảm (shop coupon)
+shipping_discount_amount
+DECIMAL(15,2)
+NOT NULL, DEFAULT 0
+Số tiền giảm phí ship
+is_paid
+BOOLEAN
+NOT NULL, DEFAULT FALSE
+Đã thanh toán chưa
+note
+VARCHAR(500)
+Ghi chú đơn hàng
+created_at
+DATETIME
+NOT NULL
+Thời gian tạo đơn
+updated_at
+DATETIME
+Thời gian cập nhật
+version
+BIGINT
+NOT NULL, DEFAULT 0
+Optimistic locking
+Index: idx_orders_user_id(user_id), idx_orders_status(status), idx_orders_created_at(created_at), idx_orders_payment(payment)
+Bảng order_shop_groups – Nhóm hàng theo shop trong đơn
+Cột
+Kiểu dữ liệu
+Ràng buộc
+Mô tả
+id
+VARCHAR(36)
+PRIMARY KEY
+Mã nhóm (UUID)
+order_id
+VARCHAR(36)
+FOREIGN KEY → orders(id), NOT NULL
+Mã đơn hàng
+shop_id
+VARCHAR(36)
+FOREIGN KEY → shops(id), NOT NULL
+Mã shop
+warehouse_id
+VARCHAR(36)
+FOREIGN KEY → warehouses(id)
+Mã kho xuất hàng
+total
+DECIMAL(15,2)
+Tổng tiền nhóm
+subtotal
+DECIMAL(15,2)
+Tiền hàng nhóm
+shipping_fee
+DECIMAL(15,2)
+Phí ship nhóm
+total_discount
+DECIMAL(15,2)
+Giảm giá nhóm
+shipment
+VARCHAR(20)
+Loại vận chuyển (NORMAL, EXPRESS)
+Index: idx_order_shop_groups_order_id(order_id), idx_order_shop_groups_shop_id(shop_id), idx_order_shop_groups_warehouse_id(warehouse_id)
+Bảng order_items – Mặt hàng trong đơn
+Cột
+Kiểu dữ liệu
+Ràng buộc
+Mô tả
+id
+VARCHAR(36)
+PRIMARY KEY
+Mã mặt hàng (UUID)
+order_shop_group_id
+VARCHAR(36)
+FOREIGN KEY → order_shop_groups(id), NOT NULL
+Mã nhóm shop
+product_variant_id
+VARCHAR(36)
+FOREIGN KEY → product_variants(id), NOT NULL
+Mã biến thể
+quantity
+INT
+NOT NULL
+Số lượng mua
+price
+DECIMAL(15,2)
+NOT NULL
+Giá tại thời điểm mua
+product_id
+VARCHAR(36)
+Mã sản phẩm (snapshot)
+product_name
+VARCHAR(200)
+Tên sản phẩm (snapshot)
+product_image
+VARCHAR(500)
+Ảnh sản phẩm (snapshot)
+variant_name
+VARCHAR(200)
+Tên biến thể (snapshot)
+variant_sku
+VARCHAR(100)
+Mã SKU biến thể (snapshot)
+customer_review_id
+VARCHAR(36)
+FOREIGN KEY → customer_reviews(id)
+Mã đánh giá
+Index: idx_order_items_group_id(order_shop_group_id), idx_order_items_variant_id(product_variant_id), idx_order_items_product_id(product_id)
+Bảng shipping_addresses – Địa chỉ giao hàng của đơn
+Cột
+Kiểu dữ liệu
+Ràng buộc
+Mô tả
+id
+VARCHAR(36)
+PRIMARY KEY
+Mã địa chỉ (UUID)
+order_id
+VARCHAR(36)
+FOREIGN KEY → orders(id), UNIQUE, NOT NULL
+Mã đơn hàng (1:1)
+receiver_name
+VARCHAR(255)
+NOT NULL
+Tên người nhận
+phone_number
+VARCHAR(20)
+NOT NULL
+SĐT người nhận
+full_address
+TEXT
+Địa chỉ đầy đủ
+detail_address
+TEXT
+Địa chỉ chi tiết
+ward
+VARCHAR(100)
+Phường/Xã
+ward_code
+VARCHAR(20)
+Mã phường/xã
+district
+VARCHAR(100)
+Quận/Huyện
+district_id
+INT
+Mã quận/huyện
+province
+VARCHAR(100)
+Tỉnh/Thành phố
+province_id
+VARCHAR(10)
+Mã tỉnh/thành phố
+Index: idx_shipping_order_id(order_id)
+Bảng return_requests – Yêu cầu trả hàng/hoàn tiền
+Cột
+Kiểu dữ liệu
+Ràng buộc
+Mô tả
+id
+VARCHAR(36)
+PRIMARY KEY
+Mã yêu cầu trả hàng (UUID)
+order_id
+VARCHAR(36)
+FOREIGN KEY → orders(id), NOT NULL
+Mã đơn hàng
+order_item_id
+VARCHAR(36)
+FOREIGN KEY → order_items(id), NOT NULL
+Mã mặt hàng cần trả
+user_id
+VARCHAR(36)
+FOREIGN KEY → users(id), NOT NULL
+Mã người yêu cầu
+status
+VARCHAR(20)
+NOT NULL, DEFAULT 'REQUESTED'
+Trạng thái (REQUESTED, APPROVED, REJECTED, RETURNED, REFUNDED, CANCELLED)
+reason
+VARCHAR(30)
+NOT NULL
+Lý do trả (DEFECTIVE, WRONG_ITEM, NOT_AS_DESCRIBED, DAMAGED_IN_SHIPPING, CHANGED_MIND, OTHER)
+description
+TEXT
+Mô tả chi tiết
+evidence_images
+VARCHAR(2000)
+URL ảnh bằng chứng (JSON array)
+refund_amount
+DECIMAL(15,2)
+Số tiền hoàn trả
+seller_response
+TEXT
+Phản hồi từ seller
+resolved_at
+DATETIME
+Thời điểm xử lý xong
+Index: idx_return_user(user_id), idx_return_order(order_id), idx_return_status(status)
+Bảng coupons – Mã giảm giá
+Cột
+Kiểu dữ liệu
+Ràng buộc
+Mô tả
+id
+VARCHAR(36)
+PRIMARY KEY
+Mã coupon (UUID)
+code
+VARCHAR(50)
+UNIQUE, NOT NULL
+Code giảm giá
+coupon_type
+VARCHAR(20)
+NOT NULL
+Loại coupon (PLATFORM, SHOP, PRODUCT)
+discount_type
+VARCHAR(20)
+NOT NULL
+Loại giảm giá (PERCENTAGE, FIXED_AMOUNT, FREE_SHIPPING)
+discount_value
+DECIMAL(15,2)
+Giá trị giảm
+max_discount
+DECIMAL(15,2)
+Giảm tối đa
+min_order_amount
+DECIMAL(15,2)
+Đơn tối thiểu để áp dụng
+max_usage
+INT
+Số lần sử dụng tối đa
+max_usage_per_user
+INT
+NOT NULL, DEFAULT 1
+Số lần / user
+current_usage
+INT
+NOT NULL, DEFAULT 0
+Số lần đã dùng
+valid_from
+DATETIME
+NOT NULL
+Ngày bắt đầu hiệu lực
+valid_to
+DATETIME
+NOT NULL
+Ngày hết hiệu lực
+is_active
+BOOLEAN
+NOT NULL, DEFAULT TRUE
+Đang hoạt động
+description
+TEXT
+Mô tả coupon
+shop_id
+VARCHAR(36)
+FOREIGN KEY → shops(id)
+Shop sở hữu (NULL = platform coupon)
+Index: idx_code(code), idx_shop_id(shop_id), idx_valid_period(valid_from, valid_to), idx_is_active(is_active)
+Bảng user_coupons – Coupon đã lưu của user
+Cột
+Kiểu dữ liệu
+Ràng buộc
+Mô tả
+id
+VARCHAR(36)
+PRIMARY KEY
+Mã (UUID)
+user_id
+VARCHAR(36)
+FOREIGN KEY → users(id), NOT NULL
+Mã người dùng
+coupon_id
+VARCHAR(36)
+NOT NULL
+Mã coupon đã lưu
+used
+BOOLEAN
+NOT NULL, DEFAULT FALSE
+Đã sử dụng hay chưa
+Index: idx_user_coupons_user_id(user_id), idx_user_coupons_coupon_id(coupon_id)
+Bảng coupon_usages – Lịch sử sử dụng coupon
+Cột
+Kiểu dữ liệu
+Ràng buộc
+Mô tả
+id
+VARCHAR(36)
+PRIMARY KEY
+Mã (UUID)
+coupon_id
+VARCHAR(36)
+FOREIGN KEY → coupons(id), NOT NULL
+Mã coupon
+user_id
+VARCHAR(36)
+FOREIGN KEY → users(id), NOT NULL
+Mã người dùng
+order_id
+VARCHAR(36)
+FOREIGN KEY → orders(id), NOT NULL
+Mã đơn hàng
+discount_amount
+DECIMAL(15,2)
+NOT NULL
+Số tiền đã giảm
+Bảng warehouses – Kho hàng
+Cột
+Kiểu dữ liệu
+Ràng buộc
+Mô tả
+id
+VARCHAR(36)
+PRIMARY KEY
+Mã kho (UUID)
+shop_id
+VARCHAR(36)
+FOREIGN KEY → shops(id), NOT NULL
+Mã shop sở hữu
+name
+VARCHAR(100)
+NOT NULL
+Tên kho
+contact_name
+VARCHAR(100)
+Tên LH kho
+contact_phone
+VARCHAR(20)
+SĐT LH kho
+detail_address
+TEXT
+Địa chỉ chi tiết
+full_address
+TEXT
+Địa chỉ đầy đủ
+ward
+VARCHAR(100)
+Phường/Xã
+ward_code
+VARCHAR(20)
+Mã phường/xã
+district
+VARCHAR(100)
+Quận/Huyện
+district_id
+INT
+Mã quận/huyện
+province
+VARCHAR(100)
+Tỉnh/Thành phố
+province_id
+VARCHAR(10)
+Mã tỉnh/thành phố
+latitude
+DECIMAL(10,7)
+Vĩ độ
+longitude
+DECIMAL(10,7)
+Kinh độ
+ghn_shop_id
+INT
+Mã shop GHN (điểm lấy hàng)
+status
+VARCHAR(20)
+NOT NULL, DEFAULT 'ACTIVE'
+Trạng thái (ACTIVE, INACTIVE)
+is_default
+BOOLEAN
+NOT NULL, DEFAULT FALSE
+Kho mặc định
+Index: idx_warehouses_shop_id(shop_id), idx_warehouses_status(status), idx_warehouses_ghn_shop_id(ghn_shop_id)
+Bảng warehouse_stock – Tồn kho
+Cột
+Kiểu dữ liệu
+Ràng buộc
+Mô tả
+id
+VARCHAR(36)
+PRIMARY KEY
+Mã tồn kho (UUID)
+warehouse_id
+VARCHAR(36)
+FOREIGN KEY → warehouses(id), NOT NULL
+Mã kho
+product_variant_id
+VARCHAR(36)
+FOREIGN KEY → product_variants(id), NOT NULL
+Mã biến thể
+stock_quantity
+BIGINT
+NOT NULL, DEFAULT 0
+Số lượng tồn kho
+reserved_quantity
+BIGINT
+NOT NULL, DEFAULT 0
+Số lượng đặt trước (đang xử lý đơn)
+Unique: uk_warehouse_variant(warehouse_id, product_variant_id) Index: idx_warehouse_stock_warehouse(warehouse_id), idx_warehouse_stock_variant(product_variant_id), idx_warehouse_stock_deleted(deleted_at)
+Bảng warehouse_employees – Nhân viên kho
+Cột
+Kiểu dữ liệu
+Ràng buộc
+Mô tả
+id
+VARCHAR(36)
+PRIMARY KEY
+Mã nhân viên kho (UUID)
+warehouse_id
+VARCHAR(36)
+FOREIGN KEY → warehouses(id), NOT NULL
+Mã kho
+user_id
+VARCHAR(36)
+FOREIGN KEY → users(id), NOT NULL
+Mã nhân viên
+role
+VARCHAR(50)
+NOT NULL, DEFAULT 'EMPLOYEE'
+Vai trò trong kho
+Unique: uq_warehouse_employee(warehouse_id, user_id) Index: idx_wh_emp_warehouse_id(warehouse_id), idx_wh_emp_user_id(user_id)
+Bảng rooms – Phòng chat
+Cột
+Kiểu dữ liệu
+Ràng buộc
+Mô tả
+room_id
+VARCHAR(36)
+PRIMARY KEY
+Mã phòng (UUID)
+name
+VARCHAR(200)
+Tên phòng (cho group chat)
+type
+VARCHAR(20)
+NOT NULL, DEFAULT 'PRIVATE'
+Loại phòng (PRIVATE, GROUP)
+private_key
+VARCHAR(100)
+UNIQUE
+Khoá riêng (dùng cho chat 1-1)
+last_message_at
+DATETIME
+Thời điểm tin nhắn cuối
+Index: idx_rooms_type(type), idx_rooms_last_message_at(last_message_at), idx_rooms_type_last_message(type, last_message_at)
+Bảng messages – Tin nhắn
+Cột
+Kiểu dữ liệu
+Ràng buộc
+Mô tả
+room_id
+VARCHAR(36)
+PRIMARY KEY (composite), FOREIGN KEY → rooms(room_id)
+Mã phòng
+sent_at
+DATETIME
+PRIMARY KEY (composite)
+Thời điểm gửi
+message_id
+VARCHAR(36)
+PRIMARY KEY (composite)
+Mã tin nhắn (UUID)
+sender_id
+VARCHAR(36)
+FOREIGN KEY → users(id)
+Mã người gửi
+sender_name
+VARCHAR(100)
+Tên người gửi (snapshot)
+content
+TEXT
+Nội dung tin nhắn
+type
+VARCHAR(20)
+Loại tin (TEXT, IMAGE, SYSTEM)
+Index: idx_sender(sender_id), idx_sent_at(sent_at), idx_room_sent(room_id, sent_at)
+Bảng room_members – Thành viên phòng chat
+Cột
+Kiểu dữ liệu
+Ràng buộc
+Mô tả
+room_id
+VARCHAR(36)
+PRIMARY KEY (composite), FOREIGN KEY → rooms(room_id)
+Mã phòng
+user_id
+VARCHAR(36)
+PRIMARY KEY (composite), FOREIGN KEY → users(id)
+Mã thành viên
+last_read_at
+DATETIME
+Thời điểm đọc tin cuối
+Index: idx_room_members_user(user_id), idx_room_members_room(room_id)
+Bảng notifications – Thông báo
+Cột
+Kiểu dữ liệu
+Ràng buộc
+Mô tả
+id
+VARCHAR(36)
+PRIMARY KEY
+Mã thông báo (UUID)
+user_id
+VARCHAR(36)
+FOREIGN KEY → users(id), NOT NULL
+Mã người nhận
+type
+VARCHAR(50)
+NOT NULL
+Loại thông báo (ORDER, PROMOTION, SYSTEM)
+title
+VARCHAR(200)
+NOT NULL
+Tiêu đề
+message
+TEXT
+Nội dung chi tiết
+status
+VARCHAR(20)
+Trạng thái (UNREAD, READ)
+read_at
+DATETIME
+Thời điểm đã đọc
+reference_id
+VARCHAR(36)
+ID tham chiếu (đơn hàng, coupon...)
+reference_type
+VARCHAR(30)
+Loại tham chiếu (ORDER, PRODUCT, COUPON)
+Index: idx_user_id(user_id), idx_status(status), idx_type(type), idx_created_at(created_at)
+Bảng activity_logs – Nhật ký hoạt động
+Cột
+Kiểu dữ liệu
+Ràng buộc
+Mô tả
+id
+VARCHAR(36)
+PRIMARY KEY
+Mã log (UUID)
+action
+VARCHAR(100)
+NOT NULL
+Hành động (LOGIN, CREATE_PRODUCT,.)
+target
+VARCHAR(100)
+Đối tượng tác động
+user_id
+VARCHAR(36)
+Mã người thực hiện
+details
+TEXT
+Chi tiết hành động (JSON)
+ip_address
+VARCHAR(50)
+Địa chỉ IP
+created_at
+DATETIME
+NOT NULL
+Thời gian ghi log
+Index: idx_user_id(user_id), idx_created_at(created_at), idx_action(action)
+Bảng audit_logs – Nhật ký kiểm toán
+Cột
+Kiểu dữ liệu
+Ràng buộc
+Mô tả
+id
+VARCHAR(36)
+PRIMARY KEY
+Mã audit (UUID)
+user_id
+VARCHAR(36)
+Mã người thực hiện
+username
+VARCHAR(50)
+Tên người thực hiện
+action
+VARCHAR(50)
+NOT NULL
+Hành động
+ip_address
+VARCHAR(45)
+Địa chỉ IP
+user_agent
+TEXT
+Thông tin trình duyệt
+details
+TEXT
+Chi tiết (JSON)
+created_at
+DATETIME
+NOT NULL
+Thời gian
+Index: idx_audit_user_id(user_id), idx_audit_action(action), idx_audit_created(created_at)
+Bảng search_history – Lịch sử tìm kiếm
+Cột
+Kiểu dữ liệu
+Ràng buộc
+Mô tả
+id
+VARCHAR(36)
+PRIMARY KEY
+Mã (UUID)
+user_id
+VARCHAR(36)
+FOREIGN KEY → users(id), NOT NULL
+Mã người dùng
+keyword
+VARCHAR(200)
+NOT NULL
+Từ khoá tìm kiếm
+searched_at
+DATETIME
+NOT NULL
+Thời điểm tìm kiếm
+Index: idx_search_history_user(user_id), idx_search_history_keyword(keyword)
+Giao diện dự kiến của trang web:
+- Trang danh sách sản phẩm:
+- Trang chủ:
+- Trang chi tiết sản phẩm:
+- Trang giỏ hàng:
+- Trang thanh toán:
+- Trang hồ sơ các nhân:
+- Trang Dashboard (Người bán):
+- Trang quản lý sản phẩm (Người bán):
+- Trang thêm sản phẩm (Người bán):
+- Trang Dashboard (Admin):

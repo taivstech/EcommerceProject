@@ -1,0 +1,150 @@
+HỌC VIỆN CÔNG NGHỆ BƯU CHÍNH VIỄN THÔNG
+KHOA CÔNG NGHỆ THÔNG TIN
+—------------------------
+BÁO CÁO BÀI TẬP LỚN
+PHÁT TRIỂN HỆ THỐNG TMĐT
+Đề tài: Website TMĐT
+Nhóm lớp: 5 - Nhóm BTL: 6
+Giảng viên: Đỗ Quang Hưng
+Thành viên: Nguyễn Duy Hoàng  - B22DCCN334
+Trần Trọng Đại          - B22DCCN178
+Lê Đức Toàn              - B22DCCN730
+Võ Sỹ Tài                   - B22DCCN706
+Hà Nội - 2026
+1. Danh sách các tác nhân (Actors) và mô tả:
+STT
+Tên tác nhân
+Mô tả chi tiết
+1
+Quản trị viên (Admin)
+Người quản lý toàn bộ hệ thống với quyền cao nhất.
+- Duyệt hoặc từ chối shop đăng ký.
+- Quản lý người dùng.
+- Quản lý danh mục sản phẩm (category).
+- Xem và quản lý tất cả đơn hàng trên hệ thống.
+- Quản lý role và permission.
+- Xem analytics và báo cáo toàn hệ thống.
+2
+Người bán hàng (Seller)
+Chủ shop - đăng ký và quản lý thông tin shop.
+- Quản lý sản phẩm và xử lý đơn hàng.
+- Tạo và quản lý mã giảm giá.
+- Quản lý hệ thống kho hàng, thêm/xóa nhân viên kho.
+- Xem dashboard thống kê doanh thu và hoạt động.
+- Nhắn tin với khách hàng.
+3
+Nhân viên kho (Warehouse Employee)
+Nhân viên được Seller thêm vào để quản lý một hoặc nhiều kho hàng cụ thể.
+- Có quyền xem các đơn hàng được phân về kho mình phụ trách, xác nhận đóng gói đơn hàng, cập nhật trạng thái đơn.
+- Quản lý tồn kho (stock) trong kho được phân công.
+4
+Khách hàng (Customer)
+Người dùng cuối của hệ thống.
+- Truy cập website để duyệt, tìm kiếm sản phẩm, xem chi tiết sản phẩm.
+- Quản lý giỏ hàng, đặt hàng, sử dụng mã giảm giá (voucher), thanh toán, theo dõi trạng thái đơn hàng, đánh giá sản phẩm sau khi nhận hàng.
+- Nhắn tin trực tiếp với shop.
+5
+Cổng thanh toán (Payment Gateway)
+Các hệ thống thanh toán bên ngoài hỗ trợ xử lý giao dịch trực tuyến (VNPAY, MoMo, PayPal).
+- Mỗi cổng nhận yêu cầu thanh toán từ hệ thống, xử lý giao dịch, gửi callback (IPN - Instant Payment Notification) về kết quả thanh toán thành công hoặc thất bại, và redirect người dùng về trang kết quả đặt hàng.
+- Ngoài ra hệ thống còn hỗ trợ COD (thanh toán khi nhận hàng).
+6
+Đơn vị vận chuyển (Shipping Carrier)
+Hệ thống bên ngoài (Giao Hàng Nhanh - GHN) cung cấp dịch vụ vận chuyển.
+- Cung cấp API tra cứu địa chỉ, tính phí vận chuyển từ kho đến khách hàng.
+2. Biểu đồ Usecase tổng quát của hệ thống:
+1. Mô tả Usecase tổng quát (Bảng danh mục Usecase):
+Tác nhân
+Tên Usecase
+Mô tả ngắn gọn
+Người xem
+Tìm kiếm sản phẩm (SP)
+Tìm kiếm sản phẩm theo từ khóa, danh mục, giá và bộ lọc.
+Quản lý giỏ hàng
+Thêm, sửa số lượng hoặc xóa sản phẩm trong giỏ hàng.
+Khách hàng (Customer)
+Đăng ký tài khoản
+Cho phép người dùng mới tạo tài khoản trên hệ thống.
+Quản lý thông tin cá nhân
+Cập nhật thông tin cá nhân và quản lý địa chỉ giao hàng.
+Đặt hàng
+Tạo đơn hàng, chọn địa chỉ, chi phí và xác nhận mua.
+Đánh giá SP
+Gửi điểm đánh giá và nhận xét sau khi nhận hàng.
+Nhắn tin
+Trao đổi trực tiếp với shop qua chat realtime.
+Quản trị viên (Admin)
+Quản lý shop
+Duyệt shop mới, theo dõi và đình chỉ shop vi phạm.
+Quản lý người dùng
+Xem danh sách, khóa / mở khóa tài khoản và phân quyền.
+Quản lý danh mục SP
+Tạo / sửa / xóa danh mục sản phẩm cho hệ thống.
+Người bán (Seller)
+Đăng ký shop
+Gửi yêu cầu mở shop và chờ quản trị viên duyệt.
+Quản lý thông tin shop
+Cập nhật tên, mô tả, logo, kho và địa chỉ shop.
+Quản lý SP
+Tạo / sửa / xóa sản phẩm, mô tả, thuộc tính và ảnh.
+Quản lý đơn hàng
+Xem, xác nhận, cập nhật trạng thái và hủy đơn của shop.
+Quản lý mã giảm giá
+Tạo, chỉnh sửa và vô hiệu hóa voucher của shop.
+Quản lý nhân viên kho
+Đăng ký, phân công hoặc gỡ nhân viên khỏi kho hàng.
+Nhân viên kho
+Quản lý tồn kho
+Theo dõi và cập nhật số lượng tồn theo biến thể.
+Quản lý đơn hàng theo kho
+Xem danh sách đơn được gán cho kho, đóng gói, tạo vận đơn và cập nhật trạng thái giao hàng.
+2. Đặc tả Usecase chi tiết:
+2.1. UC01 - Tìm kiếm sản phẩm
+Mục
+Nội dung chi tiết
+Tác nhân chính
+Người xem
+Mô tả
+Tìm kiếm sản phẩm theo từ khóa, danh mục, giá và bộ lọc.
+Điều kiện tiên quyết
+1. Hệ thống và các dịch vụ liên quan đang hoạt động.2. Dữ liệu đầu vào cần thiết đã sẵn sàng.
+Điều kiện kết thúc
+Người xem tìm kiếm được sản phẩm theo nhu cầu.
+Luồng sự kiện chính
+1. Người dùng truy cập chức năng Tìm kiếm sản phẩm.2. Hệ thống hiển thị thanh tìm kiếm.3. Người dùng nhập tên, điều kiện, lọc và chọn Tìm kiếm.4. Hệ thống hiển thị thông tin chi tiết cho người dùng.
+5. Người dùng chọn vào sản phẩm.
+6. Hệ thống hiển thị trang giao diện chi tiết về sản phẩm mà người dùng đã chọn.
+Luồng sự kiện phụ
+A1: Không tìm thấy sản phẩm
+Tại bước 3, hệ thống hiển thị thông báo sản phẩm không tồn tại và yêu cầu nhập lại.
+A2: Hủy bỏ thao tác
+Người dùng nhấn nút "Hủy" hoặc đóng trình duyệt -> Hệ thống không thực hiện thay đổi nào.
+2.2. UC02 - Quản lý giỏ hàng
+Mục
+Nội dung chi tiết
+Tác nhân chính
+Người xem
+Mô tả
+Thêm, sửa số lượng hoặc xóa sản phẩm trong giỏ hàng.
+Điều kiện tiên quyết
+1. Hệ thống và các dịch vụ liên quan đang hoạt động.2. Dữ liệu đầu vào cần thiết đã sẵn sàng.
+Điều kiện kết thúc
+Giỏ hàng hiển thị thông tin các sản phẩm được thêm vào.
+Luồng sự kiện chính
+1. Người dùng truy cập trang sản phẩm cần thêm vào giỏ và chọn số lượng cần thêm.2. Người dùng chọn chức năng “Thêm vào giỏ hàng”3. Hệ thống hiển thị thông báo thêm vào giỏ thành công.4. Người dùng chọn chức năng Giỏ hàng5. Hệ thống hiển thị trang Giỏ hàng với thông tin sản phẩm đã được thêm, cùng với thông tin hiện tại của mỗi sản phẩm (Trạng thái, số lượng còn lại).
+Luồng sự kiện phụ
+A1: Quá số lượng hiện tại của sản phẩm
+Tại bước 2, nếu số lượng hiện tại < số lượng thêm vào giỏ -> Hệ thống hiển thị thông báo quá số lượng đang có.
+A2: Hủy bỏ thao tác
+Người dùng nhấn nút "Hủy" hoặc đóng trình duyệt -> Hệ thống không thực hiện thay đổi nào.
+2.3. UC03 - Đăng ký tài khoản
+Mục
+Nội dung chi tiết
+Tác nhân chính
+Khách hàng
+Mô tả
+Người dùng mới tạo tài khoản trên hệ thống.
+Điều kiện tiên quyết
+1. Hệ thống và các dịch vụ liên quan đang hoạt động.2. Dữ liệu đầu vào cần thiết đã sẵn sàng.
+Điều kiện kết thúc
+Đăng ký tài khoản thành công.

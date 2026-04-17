@@ -1,0 +1,500 @@
+0000: Nội dung chi tiết
+0001: Tác nhân chính
+0002: Người bán (Seller)
+0003: Mô tả
+0004: Đăng ký, phân công hoặc gỡ nhân viên khỏi kho hàng.
+0005: Điều kiện tiên quyết
+0006: 1. Hệ thống và các dịch vụ liên quan đang hoạt động.2. Dữ liệu đầu vào cần thiết đã sẵn sàng.
+0007: 3. Seller đã đăng nhập vào hệ thống.
+0008: Điều kiện kết thúc
+0009: Thêm thông tin nhân viên thành công.
+0010: Luồng sự kiện chính
+0011: 1. Seller chọn chức năng Quản lý nhân viên.2. Hệ thống hiển thị trang Danh sách nhân viên.3. Seller chọn chức năng Thêm nhân viên.
+0012: 4. Hệ thống hiển thị trang Thông tin nhân viên với các thông tin cần nhập.
+0013: 5. Seller nhập thông tin nhân viên, tên đăng nhập, mật khẩu, kho hoạt động và chọn Xác nhận.6. Hệ thống thông báo Xác nhận nhân viên thành công.
+0014: Luồng sự kiện phụ
+0015: A1: Thông tin không hợp lệ
+0016: Tại bước 6, nếu thông tin không hợp lệ -> Hệ thống hiển thị thông báo lỗi.
+0017: A2: Hủy bỏ thao tác
+0018: Người dùng nhấn nút "Hủy" hoặc đóng trình duyệt -> Hệ thống không thực hiện thay đổi nào.
+0019: 2.17. UC17 - Quản lý tồn kho
+0020: Mục
+0021: Nội dung chi tiết
+0022: Tác nhân chính
+0023: Nhân viên kho
+0024: Mô tả
+0025: Theo dõi và cập nhật số lượng tồn theo biến thể.
+0026: Điều kiện tiên quyết
+0027: 1. Hệ thống và các dịch vụ liên quan đang hoạt động.2. Dữ liệu đầu vào cần thiết đã sẵn sàng.
+0028: 3. Nhân viên đã đăng nhập vào hệ thống.
+0029: Điều kiện kết thúc
+0030: Cập nhật số lượng sản phẩm trong kho thành công.
+0031: Luồng sự kiện chính
+0032: 1. Nhân viên chọn chức năng Quản lý tồn kho.2. Hệ thống hiển thị trang Danh sách sản phẩm trong kho.3. Nhân viên chọn sản phẩm và chọn Cập nhật số lượng.
+0033: 4. Hệ thống hiển thị trang Cập nhật số lượng với các thông tin của mặt hàng.
+0034: 5. Nhân viên số lượng cập nhật và chọn Xác nhận.6. Hệ thống thông báo Số lượng sản phẩm đã được cập nhật thành công.
+0035: Luồng sự kiện phụ
+0036: A1: Hủy bỏ thao tác
+0037: Người dùng nhấn nút "Hủy" hoặc đóng trình duyệt -> Hệ thống không thực hiện thay đổi nào.
+0038: 2.18. UC18 - Quản lý đơn hàng theo kho
+0039: Mục
+0040: Nội dung chi tiết
+0041: Tác nhân chính
+0042: Nhân viên kho
+0043: Mô tả
+0044: Xem danh sách đơn được gán cho kho, đóng gói, tạo vận đơn và cập nhật trạng thái giao hàng.
+0045: Điều kiện tiên quyết
+0046: 1. Hệ thống và các dịch vụ liên quan đang hoạt động.2. Dữ liệu đầu vào cần thiết đã sẵn sàng.
+0047: 3. Nhân viên đã đăng nhập vào hệ thống.
+0048: Điều kiện kết thúc
+0049: Cập nhật trạng thái đơn hàng thành công.
+0050: Luồng sự kiện chính
+0051: 1. Nhân viên chọn chức năng Quản lý đơn hàng.2. Hệ thống hiển thị trang Danh sách sản phẩm trong kho.3. Nhân viên chọn đơn hàng cần cập nhật và chọn Tạo vận đơn hàng.
+0052: 4. Hệ thống hiển thị trang Tạo vận đơn hàng với các thông tin của mặt hàng.
+0053: 5. Nhân viên nhập thêm thông tin đơn hàng và chọn Xác nhận.6. Hệ thống cập nhật trạng thái đơn hàng và thông báo Đơn hàng đã được cập nhật thành công.
+0054: Luồng sự kiện phụ
+0055: A1: Hủy bỏ thao tác
+0056: Người dùng nhấn nút "Hủy" hoặc đóng trình duyệt -> Hệ thống không thực hiện thay đổi nào.
+0057: 3. Biểu đồ tuần tự cho các Usecase:
+0058: UC01 - Tìm kiếm sản phẩm
+0059: UC02 - Quản lý giỏ hàng
+0060: UC03 - Đăng ký tài khoản
+0061: UC04 - Quản lý thông tin cá nhân
+0062: UC05 - Đặt hàng
+0063: UC06 - Đánh giá sản phẩm
+0064: UC07 - Nhắn tin
+0065: UC08 - Quản lý shop
+0066: UC09 - Quản lý người dùng
+0067: UC10 - Quản lý danh mục sản phẩm
+0068: UC11 - Đăng ký shop
+0069: UC12 - Quản lý thông tin shop
+0070: UC13 - Quản lý sản phẩm
+0071: UC14 - Quản lý đơn hàng
+0072: UC15 - Quản lý mã giảm giá
+0073: UC16 - Quản lý nhân viên kho
+0074: UC17 - Quản lý tồn kho
+0075: UC18 - Quản lý đơn hàng theo kho
+0076: 1. Biểu đồ lớp (Class Diagram)
+0077: + Mô tả chi tiết các mối quan hệ:
+0078: A. Quan hệ kế thừa (Inheritance)
+0079: Tất cả các entity (trừ ActivityLog, AuditLog, ChatMessage) đều kế thừa từ lớp trừu tượng `BaseEntity`, cung cấp các trường kiểm toán chung: `createdAt`, `updatedAt`, `createdBy`, `updatedBy`, `version` (Optimistic Locking), `deletedAt` (Soft Delete).
+0080: B. Quan hệ kết hợp (Association)
+0081: STT
+0082: Quan hệ
+0083: Kiểu
+0084: Bội số
+0085: Mô tả
+0086: 1
+0087: User ↔ UserAddress
+0088: OneToMany
+0089: 1:N
+0090: Một user có nhiều địa chỉ
+0091: 2
+0092: User ↔ UserRole
+0093: OneToMany
+0094: 1:N
+0095: Một user được gán nhiều vai trò
+0096: 3
+0097: UserRole ↔ Role
+0098: ManyToOne
+0099: N:1
+0100: Nhiều phân công → 1 vai trò
+0101: 4
+0102: Role ↔ RolePermission
+0103: OneToMany
+0104: 1:N
+0105: Một vai trò có nhiều quyền
+0106: 5
+0107: RolePermission ↔ Permission
+0108: ManyToOne
+0109: N:1
+0110: Nhiều gán quyền → 1 quyền
+0111: 6
+0112: User ↔ UserIdentity
+0113: OneToMany
+0114: 1:N
+0115: Một user liên kết nhiều OAuth provider
+0116: 7
+0117: User ↔ Shop
+0118: OneToMany
+0119: 1:N
+0120: Một user có thể sở hữu nhiều shop
+0121: 8
+0122: Shop - ShopAddress
+0123: Embedded
+0124: 1:1
+0125: Shop nhúng thông tin địa chỉ
+0126: 9
+0127: User ↔ ShopFollower ↔ Shop
+0128: ManyToMany (qua bảng trung gian)
+0129: N:N
+0130: User theo dõi Shop
+0131: 10
+0132: Product ↔ Shop
+0133: ManyToOne
+0134: N:1
+0135: Nhiều SP thuộc 1 shop
+0136: 11
+0137: Product ↔ Category
+0138: ManyToOne
+0139: N:1
+0140: Nhiều SP thuộc 1 danh mục
+0141: 12
+0142: Product ↔ ProductImage
+0143: OneToMany
+0144: 1:N
+0145: 1 SP có nhiều ảnh
+0146: 13
+0147: Product ↔ ProductVariant
+0148: OneToMany
+0149: 1:N
+0150: 1 SP có nhiều biến thể
+0151: 14
+0152: Product ↔ ProductAttribute
+0153: OneToMany
+0154: 1:N
+0155: 1 SP có nhiều thuộc tính
+0156: 15
+0157: ProductAttribute ↔ DetailAttribute
+0158: OneToMany
+0159: 1:N
+0160: 1 thuộc tính có nhiều giá trị chi tiết
+0161: 16
+0162: ProductVariant ↔ DetailAttribute
+0163: ManyToMany
+0164: N:N
+0165: Biến thể gồm nhiều giá trị thuộc tính
+0166: 17
+0167: ProductVariant ↔ ProductVariantImage
+0168: OneToMany
+0169: 1:N
+0170: 1 biến thể có nhiều ảnh
+0171: 18
+0172: ProductVariant ↔ CustomerReview | | |
+0173: OneToMany
+0174: 1:N
+0175: 1 biến thể có nhiều đánh giá
+0176: 19
+0177: User ↔ Wishlist ↔ Product
+0178: ManyToMany (qua bảng trung gian)
+0179: N:N
+0180: User yêu thích nhiều SP
+0181: 20
+0182: User ↔ CartItem ↔ ProductVariant
+0183: ManyToMany (qua bảng trung gian)
+0184: N:N
+0185: User thêm biến thể vào giỏ
+0186: 21
+0187: User ↔ Order
+0188: OneToMany
+0189: 1:N
+0190: 1 user có nhiều đơn hàng
+0191: 22
+0192: Order ↔ ShippingAddress
+0193: OneToOne
+0194: 1:1
+0195: 1 đơn hàng có 1 địa chỉ giao
+0196: 23
+0197: Order ↔ OrderShopGroup
+0198: OneToMany
+0199: 1:N
+0200: 1 đơn nhóm theo shop
+0201: 24
+0202: OrderShopGroup ↔ Shop
+0203: ManyToOne
+0204: N:1
+0205: Nhóm hàng thuộc 1 shop
+0206: 25
+0207: OrderShopGroup ↔ Warehouse
+0208: ManyToOne
+0209: N:1
+0210: Nhóm hàng xuất từ 1 kho
+0211: 26
+0212: OrderShopGroup ↔ OrderItem
+0213: OneToMany
+0214: 1:N
+0215: 1 nhóm có nhiều mặt hàng
+0216: 27
+0217: OrderItem ↔ ProductVariant
+0218: ManyToOne
+0219: N:1
+0220: Mặt hàng tham chiếu biến thể
+0221: 28
+0222: OrderItem ↔ CustomerReview
+0223: OneToOne
+0224: 1:0..1
+0225: Mặt hàng có thể có đánh giá
+0226: 29
+0227: Order ↔ ReturnRequest
+0228: OneToMany
+0229: 1:N
+0230: 1 đơn có nhiều yêu cầu trả
+0231: 30
+0232: Coupon ↔ Shop
+0233: ManyToOne
+0234: N:0..1
+0235: Coupon thuộc shop hoặc platform
+0236: 31
+0237: CouponUsage ↔ Coupon, User, Order
+0238: ManyToOne
+0239: N:1 mỗi cái
+0240: Theo dõi sử dụng coupon
+0241: 32
+0242: Warehouse ↔ Shop
+0243: ManyToOne
+0244: N:1
+0245: Nhiều kho thuộc 1 shop
+0246: 33
+0247: Warehouse ↔ WarehouseEmployee
+0248: OneToMany
+0249: 1:N
+0250: 1 kho có nhiều NV
+0251: 34
+0252: WarehouseEmployee ↔ User
+0253: ManyToOne
+0254: N:1
+0255: NV kho là 1 user
+0256: 35
+0257: WarehouseStock ↔ Warehouse, ProductVariant
+0258: ManyToOne
+0259: N:1 mỗi cái
+0260: Tồn kho theo kho + biến thể
+0261: 36
+0262: Room ↔ ChatMessage
+0263: OneToMany
+0264: 1:N
+0265: 1 phòng có nhiều tin nhắn
+0266: 37
+0267: Room ↔ RoomMember ↔ User
+0268: ManyToMany (qua bảng trung gian)
+0269: N:N
+0270: User tham gia phòng chat
+0271: 38
+0272: ChatMessage ↔ User
+0273: ManyToOne
+0274: N:1
+0275: Tin nhắn do user gửi
+0276: 39
+0277: User ↔ Notification
+0278: OneToMany
+0279: 1:N
+0280: 1 user nhận nhiều thông báo
+0281: 40
+0282: User ↔ SearchHistory
+0283: OneToMany
+0284: 1:N
+0285: 1 user có nhiều lịch sử tìm kiếm
+0286: 2. Cơ sở dữ liệu (Database)
+0287: Tất cả các bảng kế thừa từ BaseEntity đều có thêm các cột audit: created_at (DATETIME, NOT NULL), updated_at(DATETIME), created_by(VARCHAR(255)), updated_by (VARCHAR(255)), version (BIGINT, NOT NULL, DEFAULT 0), deleted_at (DATETIME). Các cột này không được lặp lại trong mỗi bảng bên dưới để tránh trùng lặp.
+0288: Bảng users – Người dùng
+0289: Cột
+0290: Kiểu dữ liệu
+0291: Ràng buộc
+0292: Mô tả
+0293: id
+0294: VARCHAR(36)
+0295: PRIMARY KEY
+0296: Mã người dùng (UUID)
+0297: username
+0298: VARCHAR(50)
+0299: UNIQUE, NOT NULL
+0300: Tên đăng nhập
+0301: password
+0302: VARCHAR(255)
+0303: NOT NULL
+0304: Mật khẩu đã mã hóa (BCrypt)
+0305: email
+0306: VARCHAR(255)
+0307: UNIQUE, NOT NULL
+0308: Email đăng nhập
+0309: full_name
+0310: VARCHAR(255)
+0311: Họ tên đầy đủ
+0312: phone
+0313: VARCHAR(20)
+0314: Số điện thoại
+0315: dob
+0316: DATE
+0317: Ngày sinh
+0318: active
+0319: BOOLEAN
+0320: NOT NULL, DEFAULT TRUE
+0321: Trạng thái tài khoản
+0322: profile_picture
+0323: VARCHAR(500)
+0324: URL ảnh đại diện
+0325: Index: idx_username(username), idx_email(email), idx_active(active)
+0326: Bảng user_addresses – Địa chỉ người dùng
+0327: Cột
+0328: Kiểu dữ liệu
+0329: Ràng buộc
+0330: Mô tả
+0331: id
+0332: VARCHAR(36)
+0333: PRIMARY KEY
+0334: Mã địa chỉ (UUID)
+0335: user_id
+0336: VARCHAR(36)
+0337: FOREIGN KEY → users(id), NOT NULL
+0338: Mã người dùng
+0339: receiver_name
+0340: VARCHAR(255)
+0341: NOT NULL
+0342: Tên người nhận
+0343: phone_number
+0344: VARCHAR(20)
+0345: NOT NULL
+0346: SĐT người nhận
+0347: full_address
+0348: TEXT
+0349: Địa chỉ đầy đủ
+0350: detail_address
+0351: TEXT
+0352: Địa chỉ chi tiết (số nhà, đường)
+0353: ward
+0354: VARCHAR(100)
+0355: Phường/Xã
+0356: ward_code
+0357: VARCHAR(20)
+0358: Mã phường/xã (GHN)
+0359: district
+0360: VARCHAR(100)
+0361: Quận/Huyện
+0362: district_id
+0363: INT
+0364: Mã quận/huyện (GHN)
+0365: province
+0366: VARCHAR(100)
+0367: Tỉnh/Thành phố
+0368: province_id
+0369: INT
+0370: Mã tỉnh/thành phố (GHN)
+0371: default_address
+0372: BOOLEAN
+0373: NOT NULL, DEFAULT FALSE
+0374: Địa chỉ mặc định
+0375: Index: idx_user_id(user_id), idx_default_address(default_address)
+0376: Bảng roles – Vai trò
+0377: Cột
+0378: Kiểu dữ liệu
+0379: Ràng buộc
+0380: Mô tả
+0381: id
+0382: VARCHAR(36)
+0383: PRIMARY KEY
+0384: Mã vai trò (UUID)
+0385: name
+0386: VARCHAR(100)
+0387: NOT NULL
+0388: Tên vai trò (ADMIN, SELLER, BUYER, WAREHOUSE_EMPLOYEE)
+0389: description
+0390: VARCHAR(500)
+0391: Mô tả vai trò
+0392: Bảng permissions – Quyền hạn
+0393: Cột
+0394: Kiểu dữ liệu
+0395: Ràng buộc
+0396: Mô tả
+0397: id
+0398: VARCHAR(36)
+0399: PRIMARY KEY
+0400: Mã quyền (UUID)
+0401: name
+0402: VARCHAR(100)
+0403: NOT NULL
+0404: Tên quyền (vd: PRODUCT_CREATE, ORDER_VIEW)
+0405: description
+0406: VARCHAR(500)
+0407: Mô tả quyền
+0408: Index: idx_permissions_module(name)
+0409: Bảng user_roles – Gán vai trò cho người dùng
+0410: Cột
+0411: Kiểu dữ liệu
+0412: Ràng buộc
+0413: Mô tả
+0414: user_id
+0415: VARCHAR(36)
+0416: PRIMARY KEY (composite), FOREIGN KEY → users(id)
+0417: Mã người dùng
+0418: role_id
+0419: VARCHAR(36)
+0420: PRIMARY KEY (composite), FOREIGN KEY → roles(id)
+0421: Mã vai trò
+0422: assigned_at
+0423: TIMESTAMP
+0424: Thời điểm gán vai trò
+0425: Bảng role_permissions – Gán quyền cho vai trò
+0426: Cột
+0427: Kiểu dữ liệu
+0428: Ràng buộc
+0429: Mô tả
+0430: role_id
+0431: VARCHAR(36)
+0432: PRIMARY KEY (composite), FOREIGN KEY → roles(id)
+0433: Mã vai trò
+0434: permission_id
+0435: VARCHAR(36)
+0436: PRIMARY KEY (composite), FOREIGN KEY → permissions(id)
+0437: Mã quyền
+0438: Bảng user_identity – Liên kết OAuth
+0439: Cột
+0440: Kiểu dữ liệu
+0441: Ràng buộc
+0442: Mô tả
+0443: id
+0444: BIGINT
+0445: PRIMARY KEY, AUTO_INCREMENT
+0446: Mã liên kết
+0447: user_id
+0448: VARCHAR(36)
+0449: FOREIGN KEY → users(id), NOT NULL
+0450: Mã người dùng
+0451: provider
+0452: VARCHAR(20)
+0453: NOT NULL
+0454: Nhà cung cấp OAuth (GOOGLE, FACEBOOK)
+0455: provider_user_id
+0456: VARCHAR(255)
+0457: ID user từ provider
+0458: provider_email
+0459: VARCHAR(255)
+0460: Email từ provider
+0461: linked_at
+0462: TIMESTAMP
+0463: Thời điểm liên kết
+0464: Unique: (provider, provider_user_id)
+0465: Bảng categories – Danh mục sản phẩm
+0466: Cột
+0467: Kiểu dữ liệu
+0468: Ràng buộc
+0469: Mô tả
+0470: id
+0471: VARCHAR(36)
+0472: PRIMARY KEY
+0473: Mã danh mục (UUID)
+0474: name
+0475: VARCHAR(100)
+0476: NOT NULL
+0477: Tên danh mục
+0478: description
+0479: TEXT
+0480: Mô tả danh mục
+0481: image_url
+0482: VARCHAR(500)
+0483: URL ảnh danh mục
+0484: Index: idx_categories_name(name)
+0485: Bảng products – Sản phẩm
+0486: Cột
+0487: Kiểu dữ liệu
+0488: Ràng buộc
+0489: Mô tả
+0490: id
+0491: VARCHAR(36)
+0492: PRIMARY KEY
+0493: Mã sản phẩm (UUID)
+0494: name
+0495: VARCHAR(200)
+0496: NOT NULL
+0497: Tên sản phẩm
+0498: description
+0499: TEXT
