@@ -94,16 +94,41 @@ services:
       SPRING_DATA_REDIS_PASSWORD: ${REDIS_PASSWORD}
       # ── Search ──────────────────────────────────────────────────────────────
       ELASTICSEARCH_URIS: http://elasticsearch:9200
-      # ── Security ────────────────────────────────────────────────────────────
+      # ── Security & Auth ────────────────────────────────────────────────────────
       JWT_SIGNER_KEY: ${JWT_SIGNER_KEY}
       OUTBOUND_IDENTITY_CLIENT_ID: ${GOOGLE_CLIENT_ID}
       OUTBOUND_IDENTITY_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET}
+      OUTBOUND_IDENTITY_REDIRECT_URI: ${OUTBOUND_IDENTITY_REDIRECT_URI}
       # ── App URLs ────────────────────────────────────────────────────────────
       APP_BASE_URL: https://ecommerce.pro.vn/api
       APP_CORS_ALLOWED_ORIGINS: https://ecommerce.pro.vn,https://www.ecommerce.pro.vn
-      # ── Rate Limiting ────────────────────────────────────────────────────────
+      # ── External Services (GHN, Payments, Media) ────────────────────────────
+      GHN_API_URL: ${GHN_API_URL}
+      GHN_TOKEN: ${GHN_TOKEN}
+      GHN_SHOP_ID: ${GHN_SHOP_ID}
+      VNPAY_TMN_CODE: ${VNPAY_TMN_CODE}
+      VNPAY_HASH_SECRET: ${VNPAY_HASH_SECRET}
+      VNPAY_PAYMENT_URL: ${VNPAY_PAYMENT_URL}
+      VNPAY_RETURN_URL: ${VNPAY_RETURN_URL}
+      VNPAY_API_URL: ${VNPAY_API_URL}
+      VNPAY_IPN_URL: ${VNPAY_IPN_URL}
+      PAYPAL_CLIENT_ID: ${PAYPAL_CLIENT_ID}
+      PAYPAL_CLIENT_SECRET: ${PAYPAL_CLIENT_SECRET}
+      PAYPAL_RETURN_URL: ${PAYPAL_RETURN_URL}
+      MOMO_PARTNER_CODE: ${MOMO_PARTNER_CODE}
+      MOMO_ACCESS_KEY: ${MOMO_ACCESS_KEY}
+      MOMO_SECRET_KEY: ${MOMO_SECRET_KEY}
+      MOMO_PAYMENT_URL: ${MOMO_PAYMENT_URL}
+      MOMO_RETURN_URL: ${MOMO_RETURN_URL}
+      MOMO_NOTIFY_URL: ${MOMO_NOTIFY_URL}
+      PUBLIC_KEY_IMAGE_KIT: ${PUBLIC_KEY_IMAGE_KIT}
+      PRIVATE_KEY_IMAGE_KIT: ${PRIVATE_KEY_IMAGE_KIT}
+      IMAGE_KIT_URL_ENDPOINT: ${IMAGE_KIT_URL_ENDPOINT}
+      BREVO_SMTP_USERNAME: ${BREVO_SMTP_USERNAME}
+      BREVO_SMTP_KEY: ${BREVO_SMTP_KEY}
+      BREVO_API_KEY: ${BREVO_API_KEY}
+      # ── Rate Limiting & JVM ──────────────────────────────────────────────────
       APP_RATE_LIMIT_ENABLED: "true"
-      # ── JVM Options ─────────────────────────────────────────────────────────
       JAVA_OPTS: "-Xms256m -Xmx512m -XX:+UseContainerSupport"
     healthcheck:
       test: ["CMD-SHELL", "curl -sf http://localhost:8088/actuator/health || exit 1"]
