@@ -17,7 +17,7 @@ echo " Pulling latest Docker images..."
 docker compose -f $COMPOSE_FILE pull
 
 echo " Restarting and Building services..."
-docker compose -f $COMPOSE_FILE build --no-cache frontend
+docker compose -f $COMPOSE_FILE build --no-cache
 docker compose -f $COMPOSE_FILE up -d --remove-orphans
 
 echo " Cleaning up old Docker images..."

@@ -67,7 +67,9 @@ services:
   # ─────────────────────────────────────────────────────────────────────────────
 
   backend:
-    image: taivstech/gocart-backend:latest
+    build:
+      context: ./backend/EcommerceWeb
+      dockerfile: Dockerfile
     container_name: gocart-backend
     restart: always
     depends_on:
