@@ -10,8 +10,11 @@ import com.taivs.EcommerceWeb.services.product.RecommendationService;
 import com.taivs.EcommerceWeb.services.product.RecentlyViewedService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.client.RestTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -38,6 +41,10 @@ public class RecommendationServiceImpl implements RecommendationService {
     private final RecentlyViewedService recentlyViewedService;
     private final ProductMapper productMapper;
     private final RedisTemplate<String, Object> redisTemplate;
+    private final RestTemplate restTemplate;
+
+    @Value("${app.recommendation.url:http://localhost:8000/api/recommendations}")
+    private String recommendationBaseUrl;
 
     @Override
     public List<ProductResponse> getForYou(String userId, int limit) {
@@ -47,7 +54,11 @@ public class RecommendationServiceImpl implements RecommendationService {
             return loadProductResponses(cached.stream().limit(limit).toList());
         }
 
-        List<String> topIds = computeForYou(userId, limit);
+        List<String> topIds = callRecommendationApi("/for-you/" + userId, limit);
+        if (topIds.isEmpty()) {
+            topIds = computeForYouFallback(userId, limit);
+        }
+        
         cacheIds(cacheKey, topIds);
         return loadProductResponses(topIds);
     }
@@ -60,7 +71,11 @@ public class RecommendationServiceImpl implements RecommendationService {
             return loadProductResponses(cached.stream().limit(limit).toList());
         }
 
-        List<String> topIds = computeSimilar(productId, limit);
+        List<String> topIds = callRecommendationApi("/similar/" + productId, limit);
+        if (topIds.isEmpty()) {
+            topIds = computeSimilarFallback(productId, limit);
+        }
+
         cacheIds(cacheKey, topIds);
         return loadProductResponses(topIds);
     }
@@ -73,15 +88,18 @@ public class RecommendationServiceImpl implements RecommendationService {
             return loadProductResponses(cached.stream().limit(limit).toList());
         }
 
-        List<String> topIds = productRepository.findFrequentlyBoughtTogetherIds(
-                productId, PageRequest.of(0, limit));
-
+        List<String> topIds = callRecommendationApi("/bought-together/" + productId, limit);
         if (topIds.isEmpty()) {
-            Product source = productRepository.findById(productId).orElse(null);
-            if (source != null && source.getCategory() != null) {
-                topIds = productRepository.findByCategoryIdAndIdNot(
-                                source.getCategory().getId(), productId, PageRequest.of(0, limit))
-                        .stream().map(Product::getId).toList();
+            topIds = productRepository.findFrequentlyBoughtTogetherIds(
+                    productId, PageRequest.of(0, limit));
+
+            if (topIds.isEmpty()) {
+                Product source = productRepository.findById(productId).orElse(null);
+                if (source != null && source.getCategory() != null) {
+                    topIds = productRepository.findByCategoryIdAndIdNot(
+                                    source.getCategory().getId(), productId, PageRequest.of(0, limit))
+                            .stream().map(Product::getId).toList();
+                }
             }
         }
 
@@ -108,7 +126,25 @@ public class RecommendationServiceImpl implements RecommendationService {
         log.info("Recommendation cache warm-up completed in {}ms", System.currentTimeMillis() - start);
     }
 
-    private List<String> computeForYou(String userId, int limit) {
+    private List<String> callRecommendationApi(String endpoint, int limit) {
+        String url = recommendationBaseUrl + endpoint + "?n=" + limit;
+        try {
+            ResponseEntity<Map> response = restTemplate.getForEntity(url, Map.class);
+            if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
+                List<Map<String, Object>> recs = (List<Map<String, Object>>) response.getBody().get("recommendations");
+                if (recs != null && !recs.isEmpty()) {
+                    return recs.stream()
+                            .map(r -> (String) r.get("product_id"))
+                            .toList();
+                }
+            }
+        } catch (Exception e) {
+            log.error("Failed to call ML recommendation API {}, fallback to local DB logic: {}", url, e.getMessage());
+        }
+        return Collections.emptyList();
+    }
+
+    private List<String> computeForYouFallback(String userId, int limit) {
         Set<String> categoryIds = new LinkedHashSet<>();
         try {
             List<String> viewedIds = recentlyViewedService.getRecentlyViewedProductIds();
@@ -153,7 +189,7 @@ public class RecommendationServiceImpl implements RecommendationService {
         return candidateIds.stream().limit(limit).toList();
     }
 
-    private List<String> computeSimilar(String productId, int limit) {
+    private List<String> computeSimilarFallback(String productId, int limit) {
         Product source = productRepository.findById(productId).orElse(null);
         if (source == null || source.getCategory() == null) {
             return productRepository.findTopByTotalSold(PageRequest.of(0, limit))

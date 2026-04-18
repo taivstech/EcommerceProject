@@ -165,6 +165,8 @@ jwt:
 app:
   rate-limit:
     enabled: ${RATE_LIMIT_ENABLED:true}
+  recommendation:
+    url: ${RECOMMENDATION_URL:http://recommendation:8000/api/recommendations}
   mail:
     from: ${APP_MAIL_FROM:taivs0903@gmail.com}
     from-name: ${APP_MAIL_FROM_NAME:Social Media}

@@ -24,7 +24,6 @@ public class OrderNotificationService {
     @Async
     public void notifyNewOrder(Order order) {
         try {
-
             order.getOrderShopGroups().forEach(group -> {
                 if (group.getShop() != null) {
                     Shop shop = group.getShop();
