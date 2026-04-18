@@ -23,8 +23,9 @@ git pull origin main
 echo " Pulling latest Docker images..."
 docker compose -f $COMPOSE_FILE pull
 
-# 4. Khởi động lại các Service
-echo " Restarting services..."
+# 4. Khởi động lại các Service (Cần build lại để nhúng VITE_API_URL mới)
+echo " Restarting and Building services..."
+docker compose -f $COMPOSE_FILE build --no-cache frontend
 docker compose -f $COMPOSE_FILE up -d --remove-orphans
 
 # 5. Dọn dẹp Image cũ để tiết kiệm dung lượng VPS

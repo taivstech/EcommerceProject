@@ -144,6 +144,23 @@ services:
       - gocart-net
 
   # ─────────────────────────────────────────────────────────────────────────────
+  # LAYER 1.5: FRONTEND (Built and served via internal Nginx)
+  # ─────────────────────────────────────────────────────────────────────────────
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        - VITE_API_URL=https://ecommerce.pro.vn/api
+    container_name: gocart-frontend
+    restart: always
+    ports:
+      # Bind to localhost only — Host Nginx will proxy here
+      - "127.0.0.1:3000:3000"
+    networks:
+      - gocart-net
+
+  # ─────────────────────────────────────────────────────────────────────────────
   # LAYER 3: MONITORING (Internal access only via Nginx or SSH tunnel)
   # ─────────────────────────────────────────────────────────────────────────────
 

@@ -12,7 +12,7 @@ echo " GoCart VPS Setup — Firewall + Nginx + Certbot"
 echo "======================================================"
 
 # ── Cấu hình (thay đổi cho phù hợp) ─────────────────────────────────────────
-DOMAIN="api.ecommerce.pro.vn"
+DOMAIN="ecommerce.pro.vn"
 EMAIL="admin@ecommerce.pro.vn"
 PROJECT_DIR="/opt/gocart"
 NGINX_CONF="/etc/nginx/sites-available/gocart"
@@ -87,14 +87,14 @@ echo "[6/8] Cài đặt Nginx config tạm thời (HTTP only, cần cho Let's En
 cat > "$NGINX_CONF" <<'NGINX_TEMP'
 server {
     listen 80;
-    server_name api.ecommerce.pro.vn;
+    server_name ecommerce.pro.vn www.ecommerce.pro.vn;
 
     location /.well-known/acme-challenge/ {
         root /var/www/certbot;
     }
 
     location / {
-        return 200 "GoCart API Server - SSL pending";
+        return 200 "GoCart Server - SSL pending";
         add_header Content-Type text/plain;
     }
 }
