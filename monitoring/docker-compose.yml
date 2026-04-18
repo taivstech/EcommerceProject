@@ -1,17 +1,5 @@
 version: '3.8'
 
-# Monitoring stack: Prometheus (scrape) + Grafana (visualize)
-# Usage:
-#   docker-compose -f monitoring/docker-compose.yml up -d
-# Access:
-#   Prometheus  → http://localhost:9090
-#   Grafana     → http://localhost:3000  (admin / admin123)
-#
-# Recommended Grafana dashboards to import:
-#   - JVM (Micrometer)   → https://grafana.com/grafana/dashboards/4701
-#   - Spring Boot 3.x    → https://grafana.com/grafana/dashboards/19004
-#   - HikariCP           → https://grafana.com/grafana/dashboards/6083
-
 services:
 
   prometheus:
@@ -24,7 +12,7 @@ services:
       - prometheus_data:/prometheus
     command:
       - '--config.file=/etc/prometheus/prometheus.yml'
-      - '--storage.tsdb.retention.time=7d'   # keep 7 days of metrics
+      - '--storage.tsdb.retention.time=7d' # keep 7 days of metrics
     restart: unless-stopped
 
   grafana:

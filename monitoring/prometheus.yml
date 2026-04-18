@@ -14,8 +14,3 @@ scrape_configs:
       - target_label: service
         replacement: ecommerceweb
 
-# To add more services later, append:
-#  - job_name: 'my-other-service'
-#    metrics_path: '/actuator/prometheus'
-#    static_configs:
-#      - targets: ['host.docker.internal:<port>']

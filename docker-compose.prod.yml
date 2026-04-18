@@ -99,7 +99,7 @@ services:
       OUTBOUND_IDENTITY_CLIENT_ID: ${GOOGLE_CLIENT_ID}
       OUTBOUND_IDENTITY_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET}
       # ── App URLs ────────────────────────────────────────────────────────────
-      APP_BASE_URL: https://api.ecommerce.pro.vn/api
+      APP_BASE_URL: https://ecommerce.pro.vn/api
       APP_CORS_ALLOWED_ORIGINS: https://ecommerce.pro.vn,https://www.ecommerce.pro.vn
       # ── Rate Limiting ────────────────────────────────────────────────────────
       APP_RATE_LIMIT_ENABLED: "true"

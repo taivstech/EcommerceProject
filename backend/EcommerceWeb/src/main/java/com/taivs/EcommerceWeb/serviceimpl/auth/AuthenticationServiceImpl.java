@@ -99,7 +99,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     @Value("${spring.security.oauth2.client.registration.google.client-secret}")
     protected String googleClientSecret;
 
-    @Value("${OUTBOUND_IDENTITY_REDIRECT_URI:https://contributed-surfaces-update-elephant.trycloudflare.com/authenticate}")
+    @Value("${app.auth.outbound-redirect-uri:https://ecommerce.pro.vn/authenticate}")
     protected String frontendRedirectUri;
 
     @Value("${oauth2.state-signer-key:${jwt.signerKey}}")
