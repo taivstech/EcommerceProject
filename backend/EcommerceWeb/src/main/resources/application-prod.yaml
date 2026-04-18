@@ -173,22 +173,22 @@ app:
   email:
     verification:
       expiration-hours: ${EMAIL_VERIFICATION_EXPIRATION_HOURS:24}
-      base-url: ${APP_BASE_URL:https://feeds-hull-jaguar-dreams.trycloudflare.com/api}
+      base-url: ${APP_BASE_URL:https://ecommerce.pro.vn/api}
     password-reset:
       expiration-minutes: ${PASSWORD_RESET_EXPIRATION_MINUTES:30}
 
 ghn:
-  api-url: ${GHN_API_URL}
-  token: ${GHN_TOKEN}
-  shop-id: ${GHN_SHOP_ID}
+  api-url: https://online-gateway.ghn.vn/shiip/public-api
+  token: ${GHN_TOKEN:669398e2-1160-11f1-a3d6-dac90fb956b5}
+  shop-id: ${GHN_SHOP_ID:199394}
 
 vnpay:
-  tmnCode: ${VNPAY_TMN_CODE}
-  hashSecret: ${VNPAY_HASH_SECRET}
-  paymentUrl: ${VNPAY_PAYMENT_URL}
-  returnUrl: ${VNPAY_RETURN_URL}
-  apiUrl: ${VNPAY_API_URL}
-  ipnUrl: ${VNPAY_IPN_URL}
+  tmnCode: ${VNPAY_TMN_CODE:88888888}
+  hashSecret: ${VNPAY_HASH_SECRET:AAAAAAAAAAAAAAAA}
+  paymentUrl: ${VNPAY_PAYMENT_URL:https://sandbox.vnpayment.vn/paymentv2/vpcpay.html}
+  returnUrl: ${VNPAY_RETURN_URL:https://ecommerce.pro.vn/payment/callback}
+  apiUrl: ${VNPAY_API_URL:https://sandbox.vnpayment.vn/merchant_webapi/api/transaction}
+  ipnUrl: ${VNPAY_IPN_URL:https://ecommerce.pro.vn/api/payment/callback/VNPAY}
 
 paypal:
   clientId: ${PAYPAL_CLIENT_ID}
