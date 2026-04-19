@@ -146,6 +146,8 @@ management:
         include: health,info,prometheus,metrics
   endpoint:
     health:
+      mail:
+        enabled: false
       show-details: when-authorized
       probes:
         enabled: true
