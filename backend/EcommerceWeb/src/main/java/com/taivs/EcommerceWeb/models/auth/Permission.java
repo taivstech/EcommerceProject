@@ -23,6 +23,8 @@ public class Permission extends BaseEntity {
 
     private String name;
 
+    private String module;
+
     private String description;
 
 
