@@ -144,10 +144,11 @@ management:
     web:
       exposure:
         include: health,info,prometheus,metrics
+  health:
+    mail:
+      enabled: false
   endpoint:
     health:
-      mail:
-        enabled: false
       show-details: when-authorized
       probes:
         enabled: true
