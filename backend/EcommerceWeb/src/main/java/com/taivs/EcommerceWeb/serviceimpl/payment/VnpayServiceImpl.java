@@ -105,10 +105,10 @@ public class VnpayServiceImpl implements VnpayService, PaymentGateway {
             String fieldName = iterator.next();
             String fieldValue = vnp_Params.get(fieldName);
             
-            hashData.append(fieldName).append('=').append(URLEncoder.encode(fieldValue, StandardCharsets.US_ASCII));
-            query.append(URLEncoder.encode(fieldName, StandardCharsets.US_ASCII))
+            hashData.append(fieldName).append('=').append(URLEncoder.encode(fieldValue, StandardCharsets.UTF_8));
+            query.append(URLEncoder.encode(fieldName, StandardCharsets.UTF_8))
                     .append('=')
-                    .append(URLEncoder.encode(fieldValue, StandardCharsets.US_ASCII));
+                    .append(URLEncoder.encode(fieldValue, StandardCharsets.UTF_8));
             if (iterator.hasNext()) {
                 hashData.append('&');
                 query.append('&');
@@ -156,7 +156,7 @@ public class VnpayServiceImpl implements VnpayService, PaymentGateway {
                 String fieldName = fieldNames.get(i);
                 String fieldValue = params.get(fieldName);
                 if (fieldValue != null && !fieldValue.isEmpty()) {
-                    hashData.append(fieldName).append('=').append(URLEncoder.encode(fieldValue, StandardCharsets.US_ASCII));
+                    hashData.append(fieldName).append('=').append(URLEncoder.encode(fieldValue, StandardCharsets.UTF_8));
                     if (i < fieldNames.size() - 1) hashData.append('&');
                 }
             }

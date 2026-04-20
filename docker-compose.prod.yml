@@ -14,6 +14,7 @@ services:
       MYSQL_PASSWORD: ${MYSQL_PASSWORD}
     volumes:
       - gocart_mysql_data:/var/lib/mysql
+    command: --default-authentication-plugin=mysql_native_password
     # Port 3306 NOT exposed to host — internal Docker network only
     networks:
       - gocart-net
@@ -100,7 +101,7 @@ services:
       JWT_SIGNER_KEY: ${JWT_SIGNER_KEY}
       OUTBOUND_IDENTITY_CLIENT_ID: ${GOOGLE_CLIENT_ID}
       OUTBOUND_IDENTITY_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET}
-      OUTBOUND_IDENTITY_REDIRECT_URI: ${OUTBOUND_IDENTITY_REDIRECT_URI}
+      AUTH_OUTBOUND_REDIRECT_URI: ${OUTBOUND_IDENTITY_REDIRECT_URI}
       # ── App URLs ────────────────────────────────────────────────────────────
       APP_BASE_URL: https://ecommerce.pro.vn/api
       APP_CORS_ALLOWED_ORIGINS: https://ecommerce.pro.vn,https://www.ecommerce.pro.vn

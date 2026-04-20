@@ -44,7 +44,12 @@ public class PayPalServiceImpl implements PaymentGateway {
         try {
             String returnUrl = payPalConfig.getReturnUrl() + "?orderId=" + orderId + "&gateway=paypal";
             String cancelUrl = payPalConfig.getCancelUrl() + "?orderId=" + orderId;
-            String amountValue = amount.setScale(2, RoundingMode.HALF_UP).toPlainString();
+            BigDecimal exchangeRate = BigDecimal.valueOf(payPalConfig.getExchangeRate());
+            BigDecimal amountInUsd = amount.divide(exchangeRate, 2, RoundingMode.HALF_UP);
+            String amountValue = amountInUsd.toPlainString();
+            
+            log.info("Creating PayPal payment for order {}: {} VND -> {} USD (Rate: {})", 
+                    orderId, amount, amountValue, exchangeRate);
 
             var orderRequest = new OrderRequest.Builder(
                     CheckoutPaymentIntent.CAPTURE,

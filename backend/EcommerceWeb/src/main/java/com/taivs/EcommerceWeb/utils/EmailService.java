@@ -19,6 +19,8 @@ public class EmailService {
 
     @Async
     public void sendEmail(String to, String subject, String htmlContent) {
+        return;
+        /*
         try {
             MimeMessage message = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
@@ -34,6 +36,7 @@ public class EmailService {
         } catch (Exception e) {
             log.error("Failed to send email to: {}", to, e);
         }
+        */
     }
 
     @Async

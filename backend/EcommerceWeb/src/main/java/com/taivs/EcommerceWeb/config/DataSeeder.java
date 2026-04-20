@@ -833,6 +833,7 @@ public class DataSeeder implements CommandLineRunner {
                 String name = entry.getKey() + "_" + action;
                 Permission p = permissionRepository.save(Permission.builder()
                         .name(name)
+                        .module(entry.getKey())
                         .description(action + " " + entry.getKey().toLowerCase())
                         .build());
                 all.put(name, p);

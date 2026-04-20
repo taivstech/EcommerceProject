@@ -26,6 +26,9 @@ public class PayPalConfig {
     @Value("${paypal.cancelUrl}")
     private String cancelUrl;
 
+    @Value("${paypal.exchangeRate:25000}")
+    private double exchangeRate;
+
     @Bean
     public PaypalServerSdkClient paypalClient() {
         Environment env = "sandbox".equalsIgnoreCase(mode) ? Environment.SANDBOX : Environment.PRODUCTION;
