@@ -18,4 +18,3 @@ public interface CategoryMapper {
     @Mapping(target = "products", ignore = true)
     void update(@MappingTarget Category entity, CategoryRequest request);
 }
-

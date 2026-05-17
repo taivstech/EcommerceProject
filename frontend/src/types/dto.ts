@@ -175,6 +175,7 @@ export interface ProductAttributeResponse {
 export interface ProductResponse {
   id: string
   name: string
+  brand?: string
   description?: string
   price?: number
   min_price?: number

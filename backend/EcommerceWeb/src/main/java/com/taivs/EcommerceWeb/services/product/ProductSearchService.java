@@ -16,6 +16,8 @@ public interface ProductSearchService {
 
     long reindexAll();
 
+    void reindexAllAsync();
+
     Page<ProductSearchResult> search(
             String query,
             String categoryId,
@@ -23,6 +25,8 @@ public interface ProductSearchService {
             String province,
             Double minPrice,
             Double maxPrice,
+            Double minRating,
+            String brand,
             String sortBy,
             String sortDir,
             int page,

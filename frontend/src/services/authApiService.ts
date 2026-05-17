@@ -52,5 +52,23 @@ export const authApiService = {
   resetPassword: async (body: ResetPasswordRequest): Promise<void> => {
     await api.post<void>("/auth/reset-password", body)
   },
-}
 
+  checkUsername: async (username: string): Promise<boolean> => {
+    const res = await api.get<boolean>(`/auth/check-username?username=${encodeURIComponent(username)}`, { skipAuth: true })
+    return res.result ?? false
+  },
+
+  checkEmail: async (email: string): Promise<boolean> => {
+    const res = await api.get<boolean>(`/auth/check-email?email=${encodeURIComponent(email)}`, { skipAuth: true })
+    return res.result ?? false
+  },
+
+  verifyEmail: async (token: string): Promise<{ accessToken: string; authenticated: boolean }> => {
+    const res = await api.get<{ accessToken: string; authenticated: boolean }>(
+      `/auth/verify-email?token=${encodeURIComponent(token)}`,
+      { skipAuth: true }
+    )
+    if (!res.result) throw new Error("Email verification failed")
+    return res.result
+  },
+}

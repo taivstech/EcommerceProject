@@ -36,7 +36,7 @@ public class AdminOrderController {
     @PutMapping("/{id}/status")
     @PreAuthorize("hasRole('ADMIN')")
     public ApiResponse<Void> updateOrderStatus(@PathVariable("id") String id,
-                                                @RequestBody @Valid UpdateOrderStatusRequest request) {
+            @RequestBody @Valid UpdateOrderStatusRequest request) {
         adminOrderService.adminUpdateOrderStatus(id, request.getStatus());
         return ApiResponse.<Void>builder().build();
     }
@@ -56,7 +56,8 @@ public class AdminOrderController {
         byte[] data = exportService.exportOrdersExcel(from, to);
         return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=orders-report.xlsx")
-                .contentType(MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
+                .contentType(
+                        MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
                 .body(data);
     }
 }

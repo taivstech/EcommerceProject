@@ -40,7 +40,7 @@ const StoreInfo = ({ store }) => {
             )}
             {store.created_at && (
                 <p className="flex items-center gap-2 text-slate-500">
-                    <Calendar size={14} /> Applied on {new Date(store.created_at).toLocaleDateString('vi-VN')}
+                    <Calendar size={14} /> Applied on {new Date(store.created_at).toLocaleDateString('en-US')}
                 </p>
             )}
             {store.rejection_reason && (

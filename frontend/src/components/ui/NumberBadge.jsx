@@ -1,10 +1,10 @@
 /**
- * NumberBadge - Component để hiển thị số đẹp và nhất quán
- * @param {number} value - Giá trị số cần hiển thị
+ * NumberBadge - Component to display numbers beautifully and consistently
+ * @param {number} value - Numeric value to display
  * @param {string} variant - 'badge' | 'text' | 'inline'
  * @param {string} size - 'sm' | 'md' | 'lg'
- * @param {string} color - Màu sắc (optional)
- * @param {number} max - Giá trị tối đa, nếu vượt quá sẽ hiển thị "max+"
+ * @param {string} color - Color (optional)
+ * @param {number} max - Maximum value, if exceeded will display "max+"
  */
 const NumberBadge = ({ 
   value, 

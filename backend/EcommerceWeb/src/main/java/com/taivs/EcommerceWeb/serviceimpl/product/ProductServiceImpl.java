@@ -1,6 +1,5 @@
 package com.taivs.EcommerceWeb.serviceimpl.product;
 
-import com.taivs.EcommerceWeb.models.order.Order;
 import com.taivs.EcommerceWeb.services.product.ProductSearchService;
 import com.taivs.EcommerceWeb.models.product.Category;
 import com.taivs.EcommerceWeb.repositories.product.CategoryRepository;
@@ -24,7 +23,9 @@ import com.taivs.EcommerceWeb.models.shop.Shop;
 import com.taivs.EcommerceWeb.repositories.shop.ShopRepository;
 import com.taivs.EcommerceWeb.exceptions.AppException;
 import com.taivs.EcommerceWeb.exceptions.ErrorCode;
+import com.taivs.EcommerceWeb.utils.AuthUtils;
 import com.taivs.EcommerceWeb.utils.RedisCacheHelper;
+import com.taivs.EcommerceWeb.utils.CategoryTagMapping;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.*;
@@ -66,13 +67,13 @@ public class ProductServiceImpl implements ProductService {
                 Sort.by(Sort.Direction.DESC, "createdAt")
         );
 
-        Page<String> idPage =
+        Slice<String> idSlice =
                 productRepository.findProductIdsByShop(
                         shop.getId(),
                         pageable
                 );
 
-        return mapIdPage(idPage, pageable);
+        return mapSliceToPage(idSlice, pageable);
     }
 
     @Override
@@ -117,6 +118,8 @@ public class ProductServiceImpl implements ProductService {
             String shopId,
             BigDecimal minPrice,
             BigDecimal maxPrice,
+            Double minRating,
+            String brand,
             String sortBy,
             String sortDir,
             int page,
@@ -139,6 +142,8 @@ public class ProductServiceImpl implements ProductService {
                         keyword,
                         minPrice,
                         maxPrice,
+                        minRating,
+                        brand,
                         pageable
                 );
 
@@ -165,7 +170,6 @@ public class ProductServiceImpl implements ProductService {
         return response;
     }
 
-
     @Override
     @Transactional
     public ProductResponse createBySeller(
@@ -181,6 +185,7 @@ public class ProductServiceImpl implements ProductService {
         attachImages(product, files);
         attachAttributes(product, request.getAttributes());
         attachVariants(product, request.getVariants(), request.getAttributes());
+        attachTags(product, request.getTags(), request.getCategoryId());
 
         product.setMinPrice(BigDecimal.ZERO);
         product.setMaxPrice(BigDecimal.ZERO);
@@ -241,6 +246,12 @@ public class ProductServiceImpl implements ProductService {
         if (hasNewVariants) {
             List<ProductAttributeRequest> attributesForVariants = request.getAttributes();
             attachVariants(product, request.getVariants(), attributesForVariants);
+        }
+
+        // Update tags if seller provided them (null = keep existing; [] = clear)
+        if (request.getTags() != null) {
+            product.getTags().clear();
+            attachTags(product, request.getTags(), request.getCategoryId());
         }
 
         Product saved = productRepository.saveAndFlush(product);
@@ -321,6 +332,39 @@ public class ProductServiceImpl implements ProductService {
         );
     }
 
+    /** Slice-aware variant — no COUNT query, total reported as slice size (conservative). */
+    private Page<ProductResponse> mapSliceToPage(
+            Slice<String> idSlice,
+            Pageable pageable) {
+
+        if (!idSlice.hasContent()) {
+            return Page.empty(pageable);
+        }
+
+        List<Product> products =
+                productRepository.findAllByIdsWithAllRelations(idSlice.getContent());
+
+        Map<String, Product> map =
+                products.stream()
+                        .collect(Collectors.toMap(Product::getId, p -> p));
+
+        List<ProductResponse> responses =
+                idSlice.getContent().stream()
+                        .map(map::get)
+                        .filter(Objects::nonNull)
+                        .map(productMapper::toResponse)
+                        .toList();
+
+        // We don't know the real total without a COUNT, so we signal
+        // "at least this many" so the frontend can show a next-page button
+        // when hasNext() is true.
+        long estimatedTotal = idSlice.hasNext()
+                ? (long) pageable.getOffset() + pageable.getPageSize() + 1
+                : pageable.getOffset() + responses.size();
+
+        return new PageImpl<>(responses, pageable, estimatedTotal);
+    }
+
     private String resolveSortField(String sortBy) {
 
         if (sortBy == null) return "createdAt";
@@ -328,7 +372,9 @@ public class ProductServiceImpl implements ProductService {
         return switch (sortBy.toLowerCase()) {
             case "price" -> "minPrice";
             case "name" -> "name";
-            case "sold" -> "totalSold";
+            case "sold", "best_selling" -> "totalSold";
+            case "rating", "top_rated" -> "avgRating";
+            case "newest" -> "createdAt";
             default -> "createdAt";
         };
     }
@@ -343,6 +389,34 @@ public class ProductServiceImpl implements ProductService {
                                 new AppException(ErrorCode.CATEGORY_NOT_FOUND));
 
         product.setCategory(category);
+    }
+
+    /**
+     * Combines auto-tags from category mapping + seller-chosen tags.
+     * Normalizes to lowercase, trims, deduplicates, caps at 15.
+     */
+    private void attachTags(Product product, List<String> sellerTags, String categoryId) {
+        Set<String> merged = new java.util.LinkedHashSet<>();
+
+        // 1. Auto-tags from category (always applied, free tier)
+        if (categoryId != null) {
+            CategoryTagMapping.getTagsForCategory(categoryId, categoryRepository)
+                    .forEach(t -> merged.add(t.toLowerCase().trim()));
+        }
+
+        // 2. Seller-chosen tags
+        if (sellerTags != null) {
+            sellerTags.stream()
+                    .filter(t -> t != null && !t.isBlank())
+                    .map(t -> t.toLowerCase().trim())
+                    .filter(t -> t.length() <= 100)
+                    .forEach(merged::add);
+        }
+
+        // Cap at 15 tags
+        List<String> final_tags = merged.stream().limit(15).toList();
+        product.getTags().clear();
+        product.getTags().addAll(final_tags);
     }
 
     private void attachImages(Product product, MultipartFile[] files) {
@@ -552,7 +626,7 @@ public class ProductServiceImpl implements ProductService {
 
     private Shop requireShop() {
 
-        return shopRepository.findByUser_Id(getCurrentUserId())
+        return shopRepository.findByUser_Id(AuthUtils.currentUserId())
                 .orElseThrow(() ->
                         new AppException(ErrorCode.SHOP_NOT_EXISTS));
     }
@@ -568,22 +642,15 @@ public class ProductServiceImpl implements ProductService {
         return shop;
     }
 
-    private String getCurrentUserId() {
-
-        return SecurityContextHolder
-                .getContext()
-                .getAuthentication()
-                .getName();
-    }
     @Override
     public Page<ProductResponse> getTopSellingProducts(int page, int size) {
 
         Pageable pageable = PageRequest.of(page, size);
 
-        Page<String> idPage =
+        Slice<String> idSlice =
                 productRepository.findTopSellingProductIds(pageable);
 
-        return mapIdPage(idPage, pageable);
+        return mapSliceToPage(idSlice, pageable);
     }
     @Override
     public Page<ProductResponse> getTopSellingProductsByShop(
@@ -593,13 +660,13 @@ public class ProductServiceImpl implements ProductService {
 
         Pageable pageable = PageRequest.of(page, size);
 
-        Page<String> idPage =
+        Slice<String> idSlice =
                 productRepository.findTopSellingProductIdsByShop(
                         shopId,
                         pageable
                 );
 
-        return mapIdPage(idPage, pageable);
+        return mapSliceToPage(idSlice, pageable);
     }
     @Override
     public Page<ProductResponse> getTopSellingProductsByCategory(
@@ -609,23 +676,25 @@ public class ProductServiceImpl implements ProductService {
 
         Pageable pageable = PageRequest.of(page, size);
 
-        Page<String> idPage =
+        Slice<String> idSlice =
                 productRepository.findTopSellingProductIdsByCategory(
                         categoryId,
                         pageable
                 );
 
-        return mapIdPage(idPage, pageable);
+        return mapSliceToPage(idSlice, pageable);
     }
     @Override
     public List<ProductResponse> getNewestProducts(int limit) {
 
         Pageable pageable = PageRequest.of(0, limit);
 
-        Page<String> idPage =
+        Slice<String> idSlice =
                 productRepository.findNewestProductIds(pageable);
 
-        return mapIdPage(idPage, pageable).getContent();
+        return idSlice.getContent().isEmpty() ? List.of() :
+                productRepository.findAllByIdsWithAllRelations(idSlice.getContent())
+                        .stream().map(productMapper::toResponse).toList();
     }
     @Override
     public Page<ProductResponse> getProductsByShop(
@@ -639,13 +708,13 @@ public class ProductServiceImpl implements ProductService {
                 Sort.by(Sort.Direction.DESC, "createdAt")
         );
 
-        Page<String> idPage =
+        Slice<String> idSlice =
                 productRepository.findProductIdsByShop(
                         shopId,
                         pageable
                 );
 
-        return mapIdPage(idPage, pageable);
+        return mapSliceToPage(idSlice, pageable);
     }
 
     @Override
@@ -653,13 +722,15 @@ public class ProductServiceImpl implements ProductService {
 
         Pageable pageable = PageRequest.of(0, limit);
 
-        Page<String> idPage =
+        Slice<String> idSlice =
                 productRepository.findTrendingProductIds(
                         LocalDateTime.now().minusDays(days),
                         pageable
                 );
 
-        return mapIdPage(idPage, pageable).getContent();
+        return idSlice.getContent().isEmpty() ? List.of() :
+                productRepository.findAllByIdsWithAllRelations(idSlice.getContent())
+                        .stream().map(productMapper::toResponse).toList();
     }
 
     @Override

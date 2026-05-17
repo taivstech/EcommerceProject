@@ -38,6 +38,15 @@ public interface CustomerReviewRepository extends JpaRepository<CustomerReview, 
             where p.id = :productId
             """)
     Double getAverageRatingByProductId(@Param("productId") String productId);
+    @Query("""
+            select cr.rating, count(cr)
+            from CustomerReview cr
+            join cr.productVariant pv
+            join pv.product p
+            where p.id = :productId
+            group by cr.rating
+            """)
+    List<Object[]> getRatingBreakdownByProductId(@Param("productId") String productId);
 
     @Query("""
             select count(cr)

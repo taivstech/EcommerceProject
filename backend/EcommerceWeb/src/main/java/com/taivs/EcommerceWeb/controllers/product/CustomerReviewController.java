@@ -25,7 +25,7 @@ public class CustomerReviewController {
     @PostMapping
     @PreAuthorize("hasAuthority('review:create') or hasRole('USER') or hasRole('SELLER') or hasRole('ADMIN')")
     public ApiResponse<CustomerReviewResponse> createReview(@RequestBody @Valid CreateReviewRequest request) {
-        log.info("Received review request - orderItemId: '{}', rating: {}, comment: '{}'", 
+        log.info("Received review request - orderItemId: '{}', rating: {}, comment: '{}'",
                 request.getOrderItemId(), request.getRating(), request.getComment());
         log.debug("Request object: {}", request);
         return ApiResponse.<CustomerReviewResponse>builder()

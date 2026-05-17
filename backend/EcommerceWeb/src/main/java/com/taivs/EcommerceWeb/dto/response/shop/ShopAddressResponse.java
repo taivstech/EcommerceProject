@@ -1,6 +1,5 @@
 package com.taivs.EcommerceWeb.dto.response.shop;
 
-import com.taivs.EcommerceWeb.models.shop.Shop;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;

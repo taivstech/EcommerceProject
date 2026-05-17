@@ -31,14 +31,14 @@ public class ChatWebSocketController {
 
     @MessageMapping("/chat.typing")
     public void typing(@Payload Map<String, String> payload, Principal principal) {
-        if (principal == null) return;
+        if (principal == null)
+            return;
         String roomId = payload.get("roomId");
-        if (roomId == null || roomId.isBlank()) return;
+        if (roomId == null || roomId.isBlank())
+            return;
 
         messagingTemplate.convertAndSend(
                 "/topic/rooms/" + roomId + "/typing",
-                Map.of("userId", principal.getName(), "typing", true)
-        );
+                Map.of("userId", principal.getName(), "typing", true));
     }
 }
-

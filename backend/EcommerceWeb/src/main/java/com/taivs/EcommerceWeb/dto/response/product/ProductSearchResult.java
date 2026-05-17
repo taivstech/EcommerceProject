@@ -26,4 +26,7 @@ public class ProductSearchResult {
     private Integer variantCount;
     private Long totalStock;
     private Double score;    // Elasticsearch relevance score
+    private BigDecimal avgRating; // Average customer review rating (0-5)
+    private Long ratingCount; // Number of ratings
+    private String brand;     // Product brand
 }

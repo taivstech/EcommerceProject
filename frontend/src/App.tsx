@@ -23,6 +23,9 @@ import Pricing from '@/pages/Pricing'
 import Login from '@/pages/Login'
 import Register from '@/pages/Register'
 import Authenticate from '@/pages/Authenticate'
+import ForgotPassword from '@/pages/ForgotPassword'
+import ResetPassword from '@/pages/ResetPassword'
+import VerifyEmail from '@/pages/VerifyEmail'
 import Profile from '@/pages/Profile'
 import ProfileAddresses from '@/pages/ProfileAddresses'
 
@@ -84,6 +87,9 @@ export default function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/authenticate" element={<Authenticate />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/reset-password" element={<ResetPassword />} />
+        <Route path="/verify-email" element={<VerifyEmail />} />
         <Route path="/profile" element={<Profile />} />
         <Route path="/profile/addresses" element={<ProfileAddresses />} />
 

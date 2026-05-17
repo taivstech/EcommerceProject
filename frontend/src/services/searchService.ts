@@ -19,68 +19,26 @@ export const searchService = {
     if (params.province) query.set("province", params.province)
     if (params.minPrice !== undefined) query.set("minPrice", String(params.minPrice))
     if (params.maxPrice !== undefined) query.set("maxPrice", String(params.maxPrice))
+    if (params.minRating !== undefined && params.minRating > 0) query.set("minRating", String(params.minRating))
+    if (params.brand) query.set("brand", params.brand)
     if (params.sortBy) query.set("sortBy", params.sortBy)
     if (params.sortDir) query.set("sortDir", params.sortDir)
     if (params.page !== undefined) query.set("page", String(params.page))
     if (params.size !== undefined) query.set("size", String(params.size))
 
-    try {
-      const res = await api.get<PageResponse<ProductSearchResult>>(
-        `/search/products?${query.toString()}`
-      )
-      const esResult = res.result || { content: [], totalPages: 0, totalElements: 0 }
-      
-      // If Elasticsearch returns empty results and we have a search query, fallback to database search
-      if (esResult.empty && params.q && params.q.trim().length > 0) {
-        console.warn("Elasticsearch returned empty results, falling back to database search")
-        const fallbackQuery = new URLSearchParams()
-        if (params.q) fallbackQuery.set("keyword", params.q)
-        if (params.categoryId) fallbackQuery.set("categoryId", params.categoryId)
-        if (params.shopId) fallbackQuery.set("shopId", params.shopId)
-        if (params.minPrice !== undefined) fallbackQuery.set("minPrice", String(params.minPrice))
-        if (params.maxPrice !== undefined) fallbackQuery.set("maxPrice", String(params.maxPrice))
-        if (params.sortBy) fallbackQuery.set("sortBy", params.sortBy)
-        if (params.sortDir) fallbackQuery.set("sortDir", params.sortDir)
-        if (params.page !== undefined) fallbackQuery.set("page", String(params.page))
-        if (params.size !== undefined) fallbackQuery.set("size", String(params.size))
-
-        try {
-          const fallbackRes = await api.get<PageResponse<any>>(
-            `/products/search?${fallbackQuery.toString()}`
-          )
-          return fallbackRes.result || { content: [], totalPages: 0, totalElements: 0 }
-        } catch {
-          return esResult
-        }
-      }
-      
-      return esResult
-    } catch {
-      // Fallback to standard search if Elasticsearch is unavailable
-      console.warn("Elasticsearch unavailable, falling back to standard search")
-      const fallbackQuery = new URLSearchParams()
-      if (params.q) fallbackQuery.set("keyword", params.q)
-      if (params.categoryId) fallbackQuery.set("categoryId", params.categoryId)
-      if (params.shopId) fallbackQuery.set("shopId", params.shopId)
-      if (params.minPrice !== undefined) fallbackQuery.set("minPrice", String(params.minPrice))
-      if (params.maxPrice !== undefined) fallbackQuery.set("maxPrice", String(params.maxPrice))
-      if (params.sortBy) fallbackQuery.set("sortBy", params.sortBy)
-      if (params.sortDir) fallbackQuery.set("sortDir", params.sortDir)
-      if (params.page !== undefined) fallbackQuery.set("page", String(params.page))
-      if (params.size !== undefined) fallbackQuery.set("size", String(params.size))
-
-      const fallbackRes = await api.get<PageResponse<any>>(
-        `/products/search?${fallbackQuery.toString()}`
-      )
-      return fallbackRes.result || { content: [], totalPages: 0, totalElements: 0 }
-    }
+    // The backend SearchController already handles ES → DB fallback internally.
+    // Do NOT add a second fallback here — it can ignore category/filter params.
+    const res = await api.get<PageResponse<ProductSearchResult>>(
+      `/search/products?${query.toString()}`
+    )
+    return res.result || { content: [], totalPages: 0, totalElements: 0 }
   },
 
   /**
    * Autocomplete / suggestion endpoint — returns keyword suggestions + matching shops.
    */
   suggest: async (prefix: string, limit = 8): Promise<SuggestResponse> => {
-    if (!prefix || prefix.trim().length < 2) return { keywords: [], shops: [] }
+    if (!prefix || prefix.trim().length < 1) return { keywords: [], shops: [] }
 
     try {
       const res = await api.get<SuggestResponse>(

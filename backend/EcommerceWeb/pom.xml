@@ -138,6 +138,12 @@
             <version>8.0.1.Final</version>
         </dependency>
 
+        <!-- Jackson JSR310 for Java 8 Date/Time support -->
+        <dependency>
+            <groupId>com.fasterxml.jackson.datatype</groupId>
+            <artifactId>jackson-datatype-jsr310</artifactId>
+        </dependency>
+
         <!-- Seed/dev data generator (faker) -->
         <dependency>
             <groupId>net.datafaker</groupId>

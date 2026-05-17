@@ -2,6 +2,7 @@ package com.taivs.EcommerceWeb.serviceimpl.admin;
 
 import com.taivs.EcommerceWeb.models.admin.ActivityLog;
 import com.taivs.EcommerceWeb.repositories.admin.ActivityLogRepository;
+import com.taivs.EcommerceWeb.utils.AuthUtils;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -20,7 +21,7 @@ public class ActivityLogService {
     @Async
     public void log(String action, String target, String details, HttpServletRequest request) {
         try {
-            String userId = getCurrentUserId();
+            String userId = AuthUtils.currentUserId();
             String ipAddress = getClientIp(request);
 
             ActivityLog log = ActivityLog.builder()
@@ -40,7 +41,7 @@ public class ActivityLogService {
     @Async
     public void log(String action, String target) {
         try {
-            String userId = getCurrentUserId();
+            String userId = AuthUtils.currentUserId();
 
             ActivityLog log = ActivityLog.builder()
                     .action(action)
@@ -59,16 +60,8 @@ public class ActivityLogService {
     }
 
     public List<ActivityLog> getMyLogs() {
-        String userId = getCurrentUserId();
+        String userId = AuthUtils.currentUserId();
         return activityLogRepository.findByUserIdOrderByCreatedAtDesc(userId);
-    }
-
-    private String getCurrentUserId() {
-        try {
-            return SecurityContextHolder.getContext().getAuthentication().getName();
-        } catch (Exception e) {
-            return "anonymous";
-        }
     }
 
     private String getClientIp(HttpServletRequest request) {

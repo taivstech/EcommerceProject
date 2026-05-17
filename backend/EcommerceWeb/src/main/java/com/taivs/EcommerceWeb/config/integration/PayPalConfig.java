@@ -34,8 +34,7 @@ public class PayPalConfig {
         Environment env = "sandbox".equalsIgnoreCase(mode) ? Environment.SANDBOX : Environment.PRODUCTION;
         return new PaypalServerSdkClient.Builder()
                 .clientCredentialsAuth(
-                        new ClientCredentialsAuthModel.Builder(clientId, clientSecret).build()
-                )
+                        new ClientCredentialsAuthModel.Builder(clientId, clientSecret).build())
                 .environment(env)
                 .build();
     }

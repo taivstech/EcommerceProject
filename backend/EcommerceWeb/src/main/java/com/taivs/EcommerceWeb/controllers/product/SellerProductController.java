@@ -25,8 +25,8 @@ public class SellerProductController {
     @GetMapping
     @PreAuthorize("hasAuthority('product:view_own') or hasAuthority('product:create') or hasRole('SELLER')")
     public ApiResponse<Page<ProductResponse>> myProducts(@RequestParam(defaultValue = "0") int page,
-                                                         @RequestParam(defaultValue = "10") int size ) {
-        return ApiResponse.<Page<ProductResponse> >builder()
+            @RequestParam(defaultValue = "10") int size) {
+        return ApiResponse.<Page<ProductResponse>>builder()
                 .result(productService.getMyProducts(page, size))
                 .build();
     }

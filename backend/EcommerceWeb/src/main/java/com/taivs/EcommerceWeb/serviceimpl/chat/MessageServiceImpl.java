@@ -18,6 +18,7 @@ import com.taivs.EcommerceWeb.services.chat.MessageService;
 import com.taivs.EcommerceWeb.services.notification.NotificationService;
 import com.taivs.EcommerceWeb.exceptions.AppException;
 import com.taivs.EcommerceWeb.exceptions.ErrorCode;
+import com.taivs.EcommerceWeb.utils.AuthUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -47,7 +48,7 @@ public class MessageServiceImpl implements MessageService {
     @Override
     @Transactional
     public PrivateChatResponse createOrGetPrivateChat(CreatePrivateChatRequest request) {
-        String meId = getCurrentUserId();
+        String meId = AuthUtils.currentUserId();
         String otherId = request.getOtherUserId();
 
         if (otherId == null || otherId.isBlank() || meId.equals(otherId)) {
@@ -102,13 +103,13 @@ public class MessageServiceImpl implements MessageService {
 
     @Override
     public List<PrivateChatResponse> myPrivateChats() {
-        String meId = getCurrentUserId();
+        String meId = AuthUtils.currentUserId();
         return roomMemberRepository.findMyPrivateChats(meId);
     }
 
     @Override
     public List<MessageResponse> getRoomMessages(String roomId) {
-        String meId = getCurrentUserId();
+        String meId = AuthUtils.currentUserId();
         ensureMember(roomId, meId);
 
         return chatMessageRepository.findAllByRoomIdAsc(roomId)
@@ -174,13 +175,13 @@ public class MessageServiceImpl implements MessageService {
     @Override
     @Transactional
     public MessageResponse sendMyMessage(SendMessageRequest request) {
-        String meId = getCurrentUserId();
+        String meId = AuthUtils.currentUserId();
         return sendMessage(meId, request);
     }
 
     @Override
     public Page<MessageResponse> getRoomMessages(String roomId, int page, int size) {
-        String meId = getCurrentUserId();
+        String meId = AuthUtils.currentUserId();
         ensureMember(roomId, meId);
         return chatMessageRepository.findByRoomIdPaged(roomId, PageRequest.of(page, size))
                 .map(this::toMessageResponse);
@@ -189,14 +190,14 @@ public class MessageServiceImpl implements MessageService {
     @Override
     @Transactional
     public void markAsRead(String roomId) {
-        String meId = getCurrentUserId();
+        String meId = AuthUtils.currentUserId();
         ensureMember(roomId, meId);
         roomMemberRepository.updateLastReadAt(roomId, meId, LocalDateTime.now());
     }
 
     @Override
     public Map<String, Long> getUnreadCounts() {
-        String meId = getCurrentUserId();
+        String meId = AuthUtils.currentUserId();
         List<RoomMember> memberships = roomMemberRepository.findAllByUserId(meId);
         Map<String, Long> counts = new HashMap<>();
         for (RoomMember rm : memberships) {
@@ -223,10 +224,6 @@ public class MessageServiceImpl implements MessageService {
         if (!ok) {
             throw new AppException(ErrorCode.CHAT_NOT_ALLOWED);
         }
-    }
-
-    private String getCurrentUserId() {
-        return SecurityContextHolder.getContext().getAuthentication().getName();
     }
 
     private String buildPrivateKey(String a, String b) {

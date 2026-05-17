@@ -10,11 +10,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 
-/**
- * No-op fallback used when Elasticsearch is disabled (e.g. seed profile).
- * All operations are silent no-ops; search returns empty results.
- */
-@Service
+@Service("productSearchServiceNoOpImpl")
 @ConditionalOnProperty(name = "app.search.elasticsearch.enabled", havingValue = "false")
 @Slf4j
 public class ProductSearchServiceNoOpImpl implements ProductSearchService {
@@ -36,10 +32,15 @@ public class ProductSearchServiceNoOpImpl implements ProductSearchService {
     }
 
     @Override
+    public void reindexAllAsync() {
+        log.debug("[NoOp] reindexAllAsync skipped (ES disabled)");
+    }
+
+    @Override
     public Page<ProductSearchResult> search(
             String query, String categoryId, String shopId,
             String province, Double minPrice, Double maxPrice,
-            String sortBy, String sortDir, int page, int size) {
+            Double minRating, String brand, String sortBy, String sortDir, int page, int size) {
         return Page.empty();
     }
 

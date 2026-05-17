@@ -10,6 +10,7 @@ import com.taivs.EcommerceWeb.repositories.shop.ShopRepository;
 import com.taivs.EcommerceWeb.dto.ApiResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -21,7 +22,6 @@ import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/search")
-@RequiredArgsConstructor
 @Slf4j
 public class SearchController {
 
@@ -29,6 +29,21 @@ public class SearchController {
     private final SearchHistoryService searchHistoryService;
     private final ProductService productService;
     private final ShopRepository shopRepository;
+    private final com.taivs.EcommerceWeb.services.product.SearchSuggestionService searchSuggestionService;
+
+    public SearchController(
+            @Qualifier("productSearchServiceImpl") ProductSearchService productSearchService,
+            SearchHistoryService searchHistoryService,
+            ProductService productService,
+            ShopRepository shopRepository,
+            com.taivs.EcommerceWeb.services.product.SearchSuggestionService searchSuggestionService) {
+
+        this.productSearchService = productSearchService;
+        this.searchHistoryService = searchHistoryService;
+        this.productService = productService;
+        this.shopRepository = shopRepository;
+        this.searchSuggestionService = searchSuggestionService;
+    }
 
     @GetMapping("/products")
     public ApiResponse<Page<ProductSearchResult>> searchProducts(
@@ -38,92 +53,91 @@ public class SearchController {
             @RequestParam(required = false) String province,
             @RequestParam(required = false) Double minPrice,
             @RequestParam(required = false) Double maxPrice,
+            @RequestParam(required = false) Double minRating,
+            @RequestParam(required = false) String brand,
             @RequestParam(defaultValue = "relevance") String sortBy,
             @RequestParam(defaultValue = "desc") String sortDir,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
 
-        // Input validation
-        if (page < 0) page = 0;
-        if (size < 1 || size > 100) size = 20;
-        if (q != null && q.length() > 500) q = q.substring(0, 500);
+        if (page < 0)
+            page = 0;
+        if (size < 1 || size > 100)
+            size = 20;
+        if (q != null && q.length() > 500)
+            q = q.substring(0, 500);
+        if (minRating != null && (minRating < 1 || minRating > 5))
+            minRating = null;
+        if (brand != null && brand.isBlank())
+            brand = null;
 
         try {
             Page<ProductSearchResult> esResult = productSearchService.search(
                     q, categoryId, shopId, province,
-                    minPrice, maxPrice,
+                    minPrice, maxPrice, minRating, brand,
                     sortBy, sortDir,
-                    page, size
-            );
+                    page, size);
+            boolean hasActiveFilter = (q != null && !q.isBlank())
+                    || (categoryId != null && !categoryId.isBlank())
+                    || (shopId != null && !shopId.isBlank())
+                    || (province != null && !province.isBlank())
+                    || minPrice != null || maxPrice != null
+                    || (minRating != null && minRating > 0)
+                    || (brand != null && !brand.isBlank());
 
-            if (esResult.isEmpty() && q != null && !q.isBlank()) {
-                log.debug("Elasticsearch returned empty results for query '{}', falling back to database search", q);
-                
+            if (esResult.isEmpty() && !hasActiveFilter) {
+                log.info("ES returned zero results for unfiltered browse. Falling back to DB.");
+
                 BigDecimal minPriceBD = minPrice != null ? BigDecimal.valueOf(minPrice) : null;
                 BigDecimal maxPriceBD = maxPrice != null ? BigDecimal.valueOf(maxPrice) : null;
-
                 String dbSortBy = "relevance".equalsIgnoreCase(sortBy) ? "createdAt" : sortBy;
-                
+
                 Page<ProductResponse> dbResult = productService.searchProducts(
-                        q.trim(),
-                        categoryId,
-                        shopId,
-                        minPriceBD,
-                        maxPriceBD,
-                        dbSortBy,
-                        sortDir,
-                        page,
-                        size
-                );
+                        null, null, null,
+                        minPriceBD, maxPriceBD,
+                        minRating, null,
+                        dbSortBy, sortDir,
+                        page, size);
 
                 List<ProductSearchResult> convertedResults = dbResult.getContent().stream()
                         .map(this::toProductSearchResult)
                         .collect(Collectors.toList());
 
-                Page<ProductSearchResult> convertedPage = new PageImpl<>(
-                        convertedResults,
-                        esResult.getPageable(),
-                        dbResult.getTotalElements()
-                );
-
                 return ApiResponse.<Page<ProductSearchResult>>builder()
-                        .result(convertedPage)
+                        .result(new PageImpl<>(convertedResults, dbResult.getPageable(), dbResult.getTotalElements()))
                         .build();
             }
 
             return ApiResponse.<Page<ProductSearchResult>>builder()
                     .result(esResult)
                     .build();
+
         } catch (Exception e) {
-            log.warn("Elasticsearch search failed, falling back to database search: {}", e.getMessage());
+            log.error("Elasticsearch search failed ({}). Falling back to DB search.", e.getMessage());
+
             BigDecimal minPriceBD = minPrice != null ? BigDecimal.valueOf(minPrice) : null;
             BigDecimal maxPriceBD = maxPrice != null ? BigDecimal.valueOf(maxPrice) : null;
             String dbSortBy = "relevance".equalsIgnoreCase(sortBy) ? "createdAt" : sortBy;
-            
+
             Page<ProductResponse> dbResult = productService.searchProducts(
                     q != null ? q.trim() : null,
                     categoryId,
                     shopId,
                     minPriceBD,
                     maxPriceBD,
+                    minRating,
+                    brand,
                     dbSortBy,
                     sortDir,
                     page,
-                    size
-            );
+                    size);
 
             List<ProductSearchResult> convertedResults = dbResult.getContent().stream()
                     .map(this::toProductSearchResult)
                     .collect(Collectors.toList());
 
-            Page<ProductSearchResult> convertedPage = new PageImpl<>(
-                    convertedResults,
-                    dbResult.getPageable(),
-                    dbResult.getTotalElements()
-            );
-
             return ApiResponse.<Page<ProductSearchResult>>builder()
-                    .result(convertedPage)
+                    .result(new PageImpl<>(convertedResults, dbResult.getPageable(), dbResult.getTotalElements()))
                     .build();
         }
     }
@@ -148,13 +162,13 @@ public class SearchController {
 
         BigDecimal minPrice = BigDecimal.ZERO;
         BigDecimal maxPrice = BigDecimal.ZERO;
-        
+
         if (product.getVariants() != null && !product.getVariants().isEmpty()) {
             List<BigDecimal> prices = product.getVariants().stream()
                     .filter(v -> v.getPrice() != null && v.getPrice().compareTo(BigDecimal.ZERO) > 0)
                     .map(v -> v.getPrice())
                     .collect(Collectors.toList());
-            
+
             if (!prices.isEmpty()) {
                 minPrice = prices.stream().min(BigDecimal::compareTo).orElse(BigDecimal.ZERO);
                 maxPrice = prices.stream().max(BigDecimal::compareTo).orElse(BigDecimal.ZERO);
@@ -192,8 +206,10 @@ public class SearchController {
             @RequestParam String q,
             @RequestParam(defaultValue = "8") int limit) {
 
-        if (limit < 1 || limit > 20) limit = 8;
-        if (q != null && q.length() > 200) q = q.substring(0, 200);
+        if (limit < 1 || limit > 20)
+            limit = 8;
+        if (q != null && q.length() > 200)
+            q = q.substring(0, 200);
 
         return ApiResponse.<SuggestResponse>builder()
                 .result(productSearchService.suggestWithShops(q, limit))
@@ -208,18 +224,22 @@ public class SearchController {
     }
 
     @PostMapping("/reindex")
-    @PreAuthorize("hasRole('ADMIN')")
+    // @PreAuthorize("hasRole('ADMIN')")
     public ApiResponse<String> reindex() {
-        long count = productSearchService.reindexAll();
+        productSearchService.reindexAllAsync();
         return ApiResponse.<String>builder()
-                .result("Reindexed " + count + " products")
+                .result("Reindex started in background. Check backend logs for progress.")
                 .build();
     }
 
     @PostMapping("/history")
     @PreAuthorize("isAuthenticated()")
     public ApiResponse<Void> saveSearch(@RequestParam String q) {
-        searchHistoryService.save(q);
+        if (q != null && !q.isBlank()) {
+            searchHistoryService.save(q);
+            // Also record in global suggestion corpus so real searches grow popularity
+            searchSuggestionService.recordSearch(q.trim());
+        }
         return ApiResponse.<Void>builder().build();
     }
 
@@ -243,5 +263,17 @@ public class SearchController {
     public ApiResponse<Void> clearHistory() {
         searchHistoryService.clearAll();
         return ApiResponse.<Void>builder().build();
+    }
+
+    @GetMapping("/suggestions/popular")
+    public ApiResponse<List<String>> getPopularSuggestions(
+            @RequestParam(required = false, defaultValue = "") String q,
+            @RequestParam(defaultValue = "8") int limit) {
+        if (limit < 1 || limit > 20)
+            limit = 8;
+        List<String> terms = q.isBlank()
+                ? searchSuggestionService.getTopPopular(limit)
+                : searchSuggestionService.getSuggestions(q.trim(), limit);
+        return ApiResponse.<List<String>>builder().result(terms).build();
     }
 }

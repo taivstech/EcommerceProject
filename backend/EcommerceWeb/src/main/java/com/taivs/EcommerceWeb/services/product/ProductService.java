@@ -18,6 +18,8 @@ public interface ProductService {
             String shopId,
             BigDecimal minPrice,
             BigDecimal maxPrice,
+            Double minRating,
+            String brand,
             String sortBy,
             String sortDir,
             int page,

@@ -1,6 +1,6 @@
 import { Suspense, useState, useEffect, useCallback, useRef, useMemo } from "react"
 import ProductCard from "@/components/ProductCard"
-import { MoveLeftIcon, Package, Store, ChevronDown, ChevronLeft, ChevronRight, ChevronUp, StarIcon, MapPin } from "lucide-react"
+import { MoveLeftIcon, Package, Store, ChevronDown, ChevronLeft, ChevronRight, ChevronUp, StarIcon } from "lucide-react"
 import { useRouter, useSearchParams } from "@/utils/compat"
 import { useSelector } from "react-redux"
 import { shopService, productService, searchService } from "@/services"
@@ -8,17 +8,26 @@ import { normalizeProduct } from "@/redux/features/product/productSlice"
 import { useAuth } from "@/hooks/useAuth"
 import { Link } from "@/utils/compat"
 
-const PAGE_SIZE = 40
+const PAGE_SIZE = 16
+
+const FAMOUS_BRANDS = [
+  'Nike', 'Apple', 'Samsung', 'Adidas', 'Sony', "L'Oreal", 'Asus', 'Zara', 'Lego', 'Disney', 'Xiaomi', 'H&M'
+]
 
 function ShopContent() {
 
     const searchParams = useSearchParams()
     const search = searchParams.get('search')
     const categoryId = searchParams.get('categoryId')
+    const brand = searchParams.get('brand')
     const tab = searchParams.get('tab')
+    const viewParam = searchParams.get('view')
+    const sortByParam = searchParams.get('sortBy')
     const router = useRouter()
 
-    const [activeTab, setActiveTab] = useState(tab === 'stores' ? 'stores' : 'products')
+    const [activeTab, setActiveTab] = useState(
+        tab === 'stores' || viewParam === 'mall' ? 'stores' : 'products'
+    )
     const [stores, setStores] = useState([])
     const [storesLoading, setStoresLoading] = useState(false)
     const storesFetched = useRef(false)
@@ -29,7 +38,10 @@ function ShopContent() {
     const [totalElements, setTotalElements] = useState(0)
     const [currentPage, setCurrentPage] = useState(0)
 
-    const [sortBy, setSortBy] = useState('relevance')
+    const [sortBy, setSortBy] = useState(() => {
+        const allowed = ['relevance', 'newest', 'best_selling', 'top_rated', 'price_asc', 'price_desc']
+        return sortByParam && allowed.includes(sortByParam) ? sortByParam : 'relevance'
+    })
     const [priceMin, setPriceMin] = useState('')
     const [priceMax, setPriceMax] = useState('')
     const [ratingFilter, setRatingFilter] = useState(0)
@@ -37,20 +49,14 @@ function ShopContent() {
     const [expandedCategories, setExpandedCategories] = useState(false)
     const [expandedRating, setExpandedRating] = useState(true)
 
-    const [locationFilter, setLocationFilter] = useState('')
-    const [provinces, setProvinces] = useState([])
-    const [expandedLocation, setExpandedLocation] = useState(true)
-
     const [priceDropdownOpen, setPriceDropdownOpen] = useState(false)
     const priceDropdownRef = useRef(null)
 
+    // Track latest request to cancel stale responses (race condition guard)
+    const requestIdRef = useRef(0)
+
     const categories = useSelector(state => state.category.list)
     const { isAuthenticated } = useAuth()
-
-    // Load provinces for location filter
-    useEffect(() => {
-        searchService.getProvinces().then(setProvinces).catch(() => {})
-    }, [])
 
     useEffect(() => {
         const handleClick = (e) => {
@@ -63,15 +69,24 @@ function ShopContent() {
     }, [])
 
     useEffect(() => {
-        setCurrentPage(0)
-    }, [search, categoryId, sortBy, ratingFilter, locationFilter])
+        setActiveTab(tab === 'stores' || viewParam === 'mall' ? 'stores' : 'products')
+    }, [tab, viewParam])
 
+    // Reset to page 0 when filters change (search, category, sort, rating)
+    // Use a ref to track the "generation" so loadProducts can detect staleness
+    const filterGenRef = useRef(0)
     useEffect(() => {
-        setActiveTab(tab === 'stores' ? 'stores' : 'products')
-    }, [tab])
+        filterGenRef.current += 1
+        setCurrentPage(0)
+    }, [search, categoryId, brand, sortBy, ratingFilter])
 
     const loadProducts = useCallback(async () => {
         if (activeTab !== 'products') return
+
+        // Assign a unique id to this invocation; discard results if superseded
+        requestIdRef.current += 1
+        const myRequestId = requestIdRef.current
+
         setProductsLoading(true)
         try {
             let sortField = undefined
@@ -80,56 +95,77 @@ function ShopContent() {
             else if (sortBy === 'price_desc') { sortField = 'minPrice'; sortDir = 'desc' }
             else if (sortBy === 'newest') { sortField = 'createdAt'; sortDir = 'desc' }
             else if (sortBy === 'best_selling') { sortField = 'totalSold'; sortDir = 'desc' }
+            else if (sortBy === 'top_rated') { sortField = 'rating'; sortDir = 'desc' }
 
-            if (search || categoryId || locationFilter) {
+            if (search || categoryId || brand || ratingFilter > 0) {
                 const result = await searchService.searchProducts({
                     q: search || undefined,
                     categoryId: categoryId || undefined,
-                    province: locationFilter || undefined,
+                    brand: brand || undefined,
                     minPrice: priceMin ? Number(priceMin) : undefined,
                     maxPrice: priceMax ? Number(priceMax) : undefined,
+                    minRating: ratingFilter > 0 ? ratingFilter : undefined,
                     sortBy: sortField,
                     sortDir,
                     page: currentPage,
                     size: PAGE_SIZE,
                 })
 
-                const items = (result.content || []).map(item => ({
-                    id: item.id,
-                    name: item.name,
-                    description: item.description,
-                    minPrice: item.min_price != null ? Number(item.min_price) : null,
-                    maxPrice: item.max_price != null ? Number(item.max_price) : null,
-                    shopId: item.shop_id,
-                    shopName: item.shop_name,
-                    categoryId: item.category_id,
-                    totalSold: item.total_sold || 0,
-                    mainImage: item.main_image_url,
-                    images: (item.image_urls || []).map(url => ({ url })),
-                }))
+                // Discard stale response — a newer request has already been issued
+                if (myRequestId !== requestIdRef.current) return
+
+                const items = (result.content || []).map(item => {
+                    const mainImg = item.main_image_url || item.mainImageUrl
+                        || (item.image_urls?.[0]) || (item.imageUrls?.[0]) || null
+                    const allImages = mainImg
+                        ? [{ url: mainImg, is_main: true }]
+                        : (item.image_urls || item.imageUrls || []).map(url => ({ url }))
+                    return {
+                        id: item.id,
+                        name: item.name,
+                        brand: item.brand || null,
+                        description: item.description,
+                        minPrice: item.min_price != null ? Number(item.min_price) : (item.minPrice != null ? Number(item.minPrice) : null),
+                        maxPrice: item.max_price != null ? Number(item.max_price) : (item.maxPrice != null ? Number(item.maxPrice) : null),
+                        shopId: item.shop_id || item.shopId,
+                        shopName: item.shop_name || item.shopName,
+                        categoryId: item.category_id || item.categoryId,
+                        totalSold: item.total_sold || item.totalSold || 0,
+                        mainImage: mainImg,
+                        images: allImages,
+                        averageRating: item.avgRating || item.avg_rating || null,
+                    }
+                })
                 setProducts(items)
-                setTotalPages(result.totalPages || 0)
-                setTotalElements(result.totalElements || 0)
+                setTotalPages(result.totalPages ?? result.total_pages ?? result.page?.totalPages ?? 0)
+                setTotalElements(result.totalElements ?? result.total_elements ?? result.page?.totalElements ?? items.length)
 
                 if (isAuthenticated && search && search.trim()) {
                     searchService.saveSearchHistory(search.trim()).catch(() => {})
                 }
             } else {
                 const result = await productService.getPublicProducts(currentPage, PAGE_SIZE)
+
+                if (myRequestId !== requestIdRef.current) return
+
                 const items = (result.content || []).map(normalizeProduct)
                 setProducts(items)
-                setTotalPages(result.totalPages || 0)
-                setTotalElements(result.totalElements || 0)
+                setTotalPages(result.totalPages ?? result.total_pages ?? result.page?.totalPages ?? 0)
+                setTotalElements(result.totalElements ?? result.total_elements ?? result.page?.totalElements ?? items.length)
             }
         } catch (error) {
+            if (myRequestId !== requestIdRef.current) return
             console.error('Failed to load products:', error)
             setProducts([])
             setTotalPages(0)
             setTotalElements(0)
         } finally {
-            setProductsLoading(false)
+            // Only clear loading spinner for the latest request
+            if (myRequestId === requestIdRef.current) {
+                setProductsLoading(false)
+            }
         }
-    }, [activeTab, search, categoryId, sortBy, priceMin, priceMax, currentPage, isAuthenticated, locationFilter])
+    }, [activeTab, search, categoryId, brand, sortBy, priceMin, priceMax, ratingFilter, currentPage, isAuthenticated])
 
     useEffect(() => {
         loadProducts()
@@ -144,9 +180,8 @@ function ShopContent() {
         loadProducts()
     }
 
-    const filteredProducts = ratingFilter > 0
-        ? products.filter(p => (p.averageRating || p.rating || 0) >= ratingFilter)
-        : products
+    // Products are now fully filtered server-side (including rating)
+    const filteredProducts = products
 
     useEffect(() => {
         if (activeTab === 'stores' && !storesFetched.current) {
@@ -174,12 +209,24 @@ function ShopContent() {
         ? (categories || []).find(c => c.id === categoryId)
         : null
 
-    const displayCategories = expandedCategories ? (categories || []) : (categories || []).slice(0, 5)
+    const displayCategories = expandedCategories ? (categories || []) : (categories || []).slice(0, 15)
 
     const handleCategoryClick = (catId) => {
         const params = new URLSearchParams()
         if (search) params.set('search', search)
         if (catId) params.set('categoryId', catId)
+        if (brand) params.set('brand', brand)
+        router.push(`/shop${params.toString() ? '?' + params.toString() : ''}`)
+    }
+
+    const handleBrandClick = (brandName) => {
+        const params = new URLSearchParams()
+        if (search) params.set('search', search)
+        if (categoryId) params.set('categoryId', categoryId)
+        
+        const nextBrand = brand === brandName ? null : brandName
+        if (nextBrand) params.set('brand', nextBrand)
+        
         router.push(`/shop${params.toString() ? '?' + params.toString() : ''}`)
     }
 
@@ -218,7 +265,7 @@ function ShopContent() {
 
                 <div className="flex items-center justify-between my-6">
                     <h1 onClick={() => router.push('/shop')} className="text-2xl text-slate-500 flex items-center gap-2 cursor-pointer">
-                        {(search || categoryId) && <MoveLeftIcon size={20} />}
+                        {(search || categoryId || brand) && <MoveLeftIcon size={20} />}
                         {currentCategory ? (
                             <>Category: <span className="text-slate-700 font-medium">{currentCategory.name}</span></>
                         ) : search ? (
@@ -259,59 +306,6 @@ function ShopContent() {
                         <aside className="hidden lg:block w-56 shrink-0">
                             <div className="sticky top-6 space-y-6">
 
-                                {/* Location Filter */}
-                                {provinces.length > 0 && (
-                                    <div>
-                                        <button
-                                            onClick={() => setExpandedLocation(v => !v)}
-                                            className="flex items-center justify-between w-full text-sm font-semibold text-slate-800 mb-3"
-                                        >
-                                            <span className="flex items-center gap-1.5">
-                                                <MapPin size={14} />
-                                                Location
-                                            </span>
-                                            {expandedLocation ? <ChevronUp size={14}/> : <ChevronDown size={14}/>}
-                                        </button>
-                                        {expandedLocation && (
-                                            <div className="space-y-1">
-                                                <label
-                                                    className="flex items-center gap-2.5 py-1.5 cursor-pointer group"
-                                                    onClick={() => setLocationFilter('')}
-                                                >
-                                                    <input
-                                                        type="radio"
-                                                        checked={!locationFilter}
-                                                        readOnly
-                                                        className="w-4 h-4 text-green-600 border-slate-300 focus:ring-green-500 cursor-pointer"
-                                                    />
-                                                    <span className={`text-sm ${!locationFilter ? 'text-slate-900 font-medium' : 'text-slate-600 group-hover:text-slate-800'}`}>
-                                                        All Locations
-                                                    </span>
-                                                </label>
-                                                {provinces.map(prov => (
-                                                    <label
-                                                        key={prov}
-                                                        className="flex items-center gap-2.5 py-1.5 cursor-pointer group"
-                                                        onClick={() => setLocationFilter(locationFilter === prov ? '' : prov)}
-                                                    >
-                                                        <input
-                                                            type="radio"
-                                                            checked={locationFilter === prov}
-                                                            readOnly
-                                                            className="w-4 h-4 text-green-600 border-slate-300 focus:ring-green-500 cursor-pointer"
-                                                        />
-                                                        <span className={`text-sm ${locationFilter === prov ? 'text-slate-900 font-medium' : 'text-slate-600 group-hover:text-slate-800'}`}>
-                                                            {prov}
-                                                        </span>
-                                                    </label>
-                                                ))}
-                                            </div>
-                                        )}
-
-                                        <hr className="border-slate-200 mt-6" />
-                                    </div>
-                                )}
-
                                 {/* Category Filter */}
                                 <div>
                                     <h3 className="text-sm font-semibold text-slate-800 mb-3">By Category</h3>
@@ -334,7 +328,7 @@ function ShopContent() {
                                             </label>
                                         ))}
                                     </div>
-                                    {(categories || []).length > 5 && (
+                                    {(categories || []).length > 15 && (
                                         <button
                                             onClick={() => setExpandedCategories(v => !v)}
                                             className="flex items-center gap-1 text-xs text-green-600 hover:text-green-700 mt-2 font-medium"
@@ -343,6 +337,32 @@ function ShopContent() {
                                             {expandedCategories ? <ChevronUp size={14}/> : <ChevronDown size={14}/>}
                                         </button>
                                     )}
+                                </div>
+
+                                <hr className="border-slate-200" />
+
+                                {/* Brand Filter */}
+                                <div>
+                                    <h3 className="text-sm font-semibold text-slate-800 mb-3">By Brand</h3>
+                                    <div className="space-y-1 max-h-48 overflow-y-auto pr-1 scrollbar-thin">
+                                        {FAMOUS_BRANDS.map(b => (
+                                            <label
+                                                key={b}
+                                                className="flex items-center gap-2.5 py-1.5 cursor-pointer group"
+                                                onClick={() => handleBrandClick(b)}
+                                            >
+                                                <input
+                                                    type="checkbox"
+                                                    checked={brand === b}
+                                                    readOnly
+                                                    className="w-4 h-4 rounded border-slate-300 text-green-600 focus:ring-green-500 cursor-pointer"
+                                                />
+                                                <span className={`text-sm ${brand === b ? 'text-slate-900 font-medium' : 'text-slate-600 group-hover:text-slate-800'}`}>
+                                                    {b}
+                                                </span>
+                                            </label>
+                                        ))}
+                                    </div>
                                 </div>
 
                                 <hr className="border-slate-200" />
@@ -428,6 +448,7 @@ function ShopContent() {
                                     { value: 'relevance', label: 'Relevance' },
                                     { value: 'newest', label: 'Newest' },
                                     { value: 'best_selling', label: 'Best Selling' },
+                                    { value: 'top_rated', label: '⭐ Top Rated' },
                                 ].map(opt => (
                                     <button
                                         key={opt.value}
@@ -521,7 +542,7 @@ function ShopContent() {
                                 <div className="flex flex-col items-center justify-center py-20 text-slate-400">
                                     <Package size={48} className="mb-3 opacity-30" />
                                     <p>No products found</p>
-                                    {(search || categoryId || priceMin || priceMax || locationFilter) && (
+                                    {(search || categoryId || priceMin || priceMax) && (
                                         <button
                                             onClick={() => router.push('/shop')}
                                             className="mt-3 text-sm text-green-600 hover:text-green-700 font-medium"
@@ -532,38 +553,46 @@ function ShopContent() {
                                 </div>
                             )}
 
-                            {/* Bottom Pagination */}
-                            {totalPages > 1 && (
-                                <div className="flex items-center justify-center gap-1 mt-10 mb-20">
-                                    <button
-                                        onClick={() => goToPage(currentPage - 1)}
-                                        disabled={currentPage === 0}
-                                        className="px-3 py-2 rounded-lg text-sm text-slate-600 hover:bg-slate-100 disabled:opacity-30 disabled:cursor-not-allowed transition"
-                                    >
-                                        <ChevronLeft size={18} />
-                                    </button>
-                                    {paginationRange().map(page => (
-                                        <button
-                                            key={page}
-                                            onClick={() => goToPage(page)}
-                                            className={`w-9 h-9 rounded-lg text-sm font-medium font-num transition ${
-                                                page === currentPage
-                                                    ? 'bg-green-600 text-white'
-                                                    : 'text-slate-600 hover:bg-slate-100'
-                                            }`}
-                                        >
-                                            {page + 1}
-                                        </button>
-                                    ))}
-                                    <button
-                                        onClick={() => goToPage(currentPage + 1)}
-                                        disabled={currentPage >= totalPages - 1}
-                                        className="px-3 py-2 rounded-lg text-sm text-slate-600 hover:bg-slate-100 disabled:opacity-30 disabled:cursor-not-allowed transition"
-                                    >
-                                        <ChevronRight size={18} />
-                                    </button>
+                            {/* Bottom Pagination & Results Info */}
+                            <div className="mt-10 mb-20 border-t border-slate-100 pt-8">
+                                <div className="flex flex-col items-center gap-4">
+                                    <p className="text-sm text-slate-500">
+                                        Showing <span className="font-medium text-slate-800">{products.length}</span> of <span className="font-medium text-slate-800">{totalElements}</span> products
+                                    </p>
+                                    
+                                    {totalPages > 1 && (
+                                        <div className="flex items-center gap-1">
+                                            <button
+                                                onClick={() => goToPage(currentPage - 1)}
+                                                disabled={currentPage === 0}
+                                                className="px-3 py-2 rounded-lg text-sm text-slate-600 hover:bg-slate-100 disabled:opacity-30 disabled:cursor-not-allowed transition"
+                                            >
+                                                <ChevronLeft size={18} />
+                                            </button>
+                                            {paginationRange().map(page => (
+                                                <button
+                                                    key={page}
+                                                    onClick={() => goToPage(page)}
+                                                    className={`w-9 h-9 rounded-lg text-sm font-medium font-num transition ${
+                                                        page === currentPage
+                                                            ? 'bg-green-600 text-white shadow-md shadow-green-200'
+                                                            : 'text-slate-600 hover:bg-slate-100'
+                                                    }`}
+                                                >
+                                                    {page + 1}
+                                                </button>
+                                            ))}
+                                            <button
+                                                onClick={() => goToPage(currentPage + 1)}
+                                                disabled={currentPage >= totalPages - 1}
+                                                className="px-3 py-2 rounded-lg text-sm text-slate-600 hover:bg-slate-100 disabled:opacity-30 disabled:cursor-not-allowed transition"
+                                            >
+                                                <ChevronRight size={18} />
+                                            </button>
+                                        </div>
+                                    )}
                                 </div>
-                            )}
+                            </div>
                         </div>
                     </div>
                 )}

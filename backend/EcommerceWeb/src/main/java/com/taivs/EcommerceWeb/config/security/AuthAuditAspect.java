@@ -5,6 +5,7 @@ import com.taivs.EcommerceWeb.dto.response.auth.AuthenticationTokens;
 import com.taivs.EcommerceWeb.models.admin.AuditLog;
 import com.taivs.EcommerceWeb.repositories.admin.AuditLogRepository;
 import com.taivs.EcommerceWeb.repositories.user.UserRepository;
+import com.taivs.EcommerceWeb.utils.AuthUtils;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -23,9 +24,7 @@ public class AuthAuditAspect {
     private final AuditLogRepository auditLogRepository;
     private final UserRepository userRepository;
 
-    @AfterReturning(
-            pointcut = "execution(* com.taivs.EcommerceWeb.serviceimpl.auth.AuthenticationServiceImpl.authenticate(..))",
-            returning = "tokens")
+    @AfterReturning(pointcut = "execution(* com.taivs.EcommerceWeb.serviceimpl.auth.AuthenticationServiceImpl.authenticate(..))", returning = "tokens")
     public void afterLoginSuccess(JoinPoint joinPoint, AuthenticationTokens tokens) {
         try {
             Object[] args = joinPoint.getArgs();
@@ -44,9 +43,7 @@ public class AuthAuditAspect {
         }
     }
 
-    @AfterThrowing(
-            pointcut = "execution(* com.taivs.EcommerceWeb.serviceimpl.auth.AuthenticationServiceImpl.authenticate(..))",
-            throwing = "ex")
+    @AfterThrowing(pointcut = "execution(* com.taivs.EcommerceWeb.serviceimpl.auth.AuthenticationServiceImpl.authenticate(..))", throwing = "ex")
     public void afterLoginFailed(JoinPoint joinPoint, Exception ex) {
         try {
             Object[] args = joinPoint.getArgs();
@@ -65,11 +62,10 @@ public class AuthAuditAspect {
         }
     }
 
-    @AfterReturning(
-            pointcut = "execution(* com.taivs.EcommerceWeb.serviceimpl.auth.AuthenticationServiceImpl.logout(..))")
+    @AfterReturning(pointcut = "execution(* com.taivs.EcommerceWeb.serviceimpl.auth.AuthenticationServiceImpl.logout(..))")
     public void afterLogout(JoinPoint joinPoint) {
         try {
-            String userId = getCurrentUserId();
+            String userId = AuthUtils.currentUserId();
             saveAuditLog(userId, null, "LOGOUT", null);
             log.info("AUDIT: LOGOUT user={}", userId);
         } catch (Exception e) {
@@ -77,20 +73,17 @@ public class AuthAuditAspect {
         }
     }
 
-    @AfterReturning(
-            pointcut = "execution(* com.taivs.EcommerceWeb.serviceimpl.auth.AuthenticationServiceImpl.refreshToken(..))",
-            returning = "tokens")
+    @AfterReturning(pointcut = "execution(* com.taivs.EcommerceWeb.serviceimpl.auth.AuthenticationServiceImpl.refreshToken(..))", returning = "tokens")
     public void afterTokenRefresh(JoinPoint joinPoint, AuthenticationTokens tokens) {
         try {
-            String userId = getCurrentUserId();
+            String userId = AuthUtils.currentUserId();
             saveAuditLog(userId, null, "TOKEN_REFRESH", null);
         } catch (Exception e) {
             log.error("AUDIT logging failed: {}", e.getMessage());
         }
     }
 
-    @AfterReturning(
-            pointcut = "execution(* com.taivs.EcommerceWeb.serviceimpl.auth.AuthenticationServiceImpl.resetPassword(..))")
+    @AfterReturning(pointcut = "execution(* com.taivs.EcommerceWeb.serviceimpl.auth.AuthenticationServiceImpl.resetPassword(..))")
     public void afterPasswordReset(JoinPoint joinPoint) {
         try {
             saveAuditLog(null, null, "PASSWORD_RESET", null);
@@ -132,12 +125,4 @@ public class AuthAuditAspect {
         return request.getRemoteAddr();
     }
 
-    private String getCurrentUserId() {
-        try {
-            return org.springframework.security.core.context.SecurityContextHolder
-                    .getContext().getAuthentication().getName();
-        } catch (Exception e) {
-            return null;
-        }
-    }
 }

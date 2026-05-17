@@ -93,7 +93,8 @@ export default function ChatWidget() {
     if (!isAuthenticated || rooms.length === 0) return
     const checkOnline = async () => {
       const statuses = {}
-      for (const room of rooms.slice(0, 20)) {
+      // Only check online status for the first 5 active chats to save requests
+      for (const room of rooms.slice(0, 5)) {
         if (room.other_user_id) {
           try {
             statuses[room.other_user_id] = await messageService.isUserOnline(room.other_user_id)
@@ -105,7 +106,7 @@ export default function ChatWidget() {
       setOnlineUsers(statuses)
     }
     checkOnline()
-    const interval = setInterval(checkOnline, 30000)
+    const interval = setInterval(checkOnline, 60000) // Increase to 60s
     return () => clearInterval(interval)
   }, [isAuthenticated, rooms])
 

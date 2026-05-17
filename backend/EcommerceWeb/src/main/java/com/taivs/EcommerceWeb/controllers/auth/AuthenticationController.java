@@ -33,7 +33,6 @@ import java.text.ParseException;
 public class AuthenticationController {
     private final AuthenticationService authenticationService;
 
-
     @GetMapping("/outbound/state")
     ApiResponse<OutboundOAuthStateResponse> issueOutboundState() {
         OutboundOAuthStateResponse result = authenticationService.issueOutboundOAuthState();
@@ -127,8 +126,8 @@ public class AuthenticationController {
     @PostMapping("/reset-password")
     ApiResponse<Void> resetPassword(@RequestBody @Valid ResetPasswordRequest request) {
         authenticationService.resetPassword(ResetPasswordRequest.builder()
-                        .newPassword(request.getNewPassword())
-                        .token(request.getToken())
+                .newPassword(request.getNewPassword())
+                .token(request.getToken())
                 .build());
         return ApiResponse.<Void>builder()
                 .message("Password reset successfully")
@@ -154,9 +153,11 @@ public class AuthenticationController {
     }
 
     private String extractBearerToken(String authorization) {
-        if (authorization == null) return null;
+        if (authorization == null)
+            return null;
         String prefix = "Bearer ";
-        if (!authorization.startsWith(prefix)) return null;
+        if (!authorization.startsWith(prefix))
+            return null;
         return authorization.substring(prefix.length()).trim();
     }
 
@@ -167,5 +168,37 @@ public class AuthenticationController {
                 .build();
     }
 
-}
+    @GetMapping("/check-username")
+    ApiResponse<Boolean> checkUsernameAvailable(@RequestParam String username) {
+        boolean available = authenticationService.checkUsernameAvailable(username);
+        return ApiResponse.<Boolean>builder()
+                .result(available)
+                .message(available ? "Username is available" : "Username is already taken")
+                .build();
+    }
 
+    @GetMapping("/check-email")
+    ApiResponse<Boolean> checkEmailAvailable(@RequestParam String email) {
+        boolean available = authenticationService.checkEmailAvailable(email);
+        return ApiResponse.<Boolean>builder()
+                .result(available)
+                .message(available ? "Email is available" : "Email is already registered")
+                .build();
+    }
+
+    @GetMapping("/verify-email")
+    ApiResponse<AuthenticationResponse> verifyEmail(
+            @RequestParam String token,
+            HttpServletRequest request,
+            HttpServletResponse response) {
+        AuthenticationTokens tokens = authenticationService.verifyEmail(token);
+        CookieUtil.setAccessTokenCookie(request, response, tokens.getAccessToken());
+        CookieUtil.setRefreshTokenCookie(request, response, tokens.getRefreshToken());
+        return ApiResponse.<AuthenticationResponse>builder()
+                .code(200)
+                .result(toApiResponse(tokens))
+                .message("Email verified successfully")
+                .build();
+    }
+
+}

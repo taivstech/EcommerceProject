@@ -96,6 +96,7 @@ class HybridEngine:
                 data["interactions"],
                 data["ratings"],
                 self.product_id_set,
+                behavior_df=data.get("behaviors"),   # ← behavior signals injected here
             )
         except Exception as e:
             logger.error("Collaborative model build failed: %s", e, exc_info=True)
@@ -106,18 +107,24 @@ class HybridEngine:
         except Exception as e:
             logger.error("Association rules build failed: %s", e, exc_info=True)
 
-        # Adapt blend weights based on data density
-        self._adapt_weights(data["interactions"], data["ratings"])
+        # Adapt blend weights based on data density (all signal sources)
+        behaviors = data.get("behaviors")
+        self._adapt_weights(data["interactions"], data["ratings"], behaviors)
 
         self._ready = True
         self._last_build = time.time()
         self._build_time_ms = int((time.time() - start) * 1000)
         logger.info("=== Hybrid Engine ready (built in %dms) ===", self._build_time_ms)
 
-    def _adapt_weights(self, interactions_df: pd.DataFrame, ratings_df: pd.DataFrame):
-        """Adjust blend weights based on interaction data density."""
+    def _adapt_weights(self, interactions_df: pd.DataFrame, ratings_df: pd.DataFrame,
+                       behavior_df=None):
+        """Adjust blend weights based on total interaction data density across all sources."""
         n_products = len(self.product_id_set)
-        n_interactions = len(interactions_df) + len(ratings_df)
+        n_purchase_ratings = len(interactions_df) + len(ratings_df)
+        n_behavior = len(behavior_df) if behavior_df is not None and not behavior_df.empty else 0
+
+        # Behavior signals count at 30% of the weight of a purchase/rating for density purposes
+        n_interactions = n_purchase_ratings + int(n_behavior * 0.3)
 
         if n_products == 0:
             self._alpha = 0.0
@@ -145,8 +152,8 @@ class HybridEngine:
             self._beta = 0.3
 
         logger.info(
-            "Adaptive weights: α(collab)=%.2f, β(content)=%.2f (density=%.1f)",
-            self._alpha, self._beta, density,
+            "Adaptive weights: α(collab)=%.2f, β(content)=%.2f (density=%.1f, purchases=%d, behaviors=%d)",
+            self._alpha, self._beta, density, n_purchase_ratings, n_behavior,
         )
 
     # ═══════════════════════════════════════════════════════════════════

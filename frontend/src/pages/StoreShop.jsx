@@ -7,6 +7,7 @@ import { Image } from "@/utils/compat"
 import { shopService, productService } from "@/services"
 import { useAuth } from "@/hooks/useAuth"
 import { toast } from "react-hot-toast"
+import { normalizeProduct } from "@/redux/features/product/productSlice"
 
 export default function StoreShop() {
 
@@ -28,7 +29,8 @@ export default function StoreShop() {
             ])
 
             setStoreInfo(shopData)
-            setProducts(productsData.content || [])
+            const items = (productsData.content || []).map(normalizeProduct)
+            setProducts(items)
 
             if (shopData && isAuthenticated) {
                 const [following, count] = await Promise.all([
@@ -81,7 +83,7 @@ export default function StoreShop() {
     }
 
     const createdDate = storeInfo?.created_at 
-        ? new Date(storeInfo.created_at).toLocaleDateString('vi-VN')
+        ? new Date(storeInfo.created_at).toLocaleDateString('en-US')
         : null
 
     return !loading ? (

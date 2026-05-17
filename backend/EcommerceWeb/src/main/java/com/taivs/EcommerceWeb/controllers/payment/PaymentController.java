@@ -37,16 +37,15 @@ public class PaymentController {
         if (!order.getUser().getId().equals(currentUserId)) {
             throw new AppException(ErrorCode.UNAUTHORIZED);
         }
-        
+
         String clientIp = request.getRemoteAddr();
         String paymentUrl = paymentService.createPaymentUrl(
                 paymentMethod.toUpperCase(),
                 orderId,
                 order.getTotal(),
                 "Payment for order " + orderId,
-                clientIp
-        );
-        
+                clientIp);
+
         return ApiResponse.<String>builder()
                 .result(paymentUrl)
                 .build();
@@ -56,7 +55,7 @@ public class PaymentController {
     public ApiResponse<String> handleCallback(
             @PathVariable("paymentMethod") String paymentMethod,
             @RequestParam Map<String, String> params) {
-        log.info("PaymentController.handleCallback - paymentMethod: {}, params count: {}", 
+        log.info("PaymentController.handleCallback - paymentMethod: {}, params count: {}",
                 paymentMethod, params.size());
         return paymentService.handleCallback(paymentMethod.toUpperCase(), params);
     }
@@ -74,7 +73,7 @@ public class PaymentController {
         if (body != null) {
             body.forEach((k, v) -> callbackParams.put(k, v != null ? v.toString() : ""));
         }
-        
+
         return paymentService.handleCallback(paymentMethod.toUpperCase(), callbackParams);
     }
 

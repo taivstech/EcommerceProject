@@ -16,15 +16,15 @@ public class PredefinedPermission {
     public static final String CREATE_SHOP = "shop:create";
     public static final String UPDATE_SHOP = "shop:update";
     public static final String VIEW_OWN_SHOP = "shop:view_own";
-    
+
     public static final String CREATE_PRODUCT = "product:create";
     public static final String UPDATE_PRODUCT = "product:update";
     public static final String DELETE_PRODUCT = "product:delete";
     public static final String MANAGE_INVENTORY = "product:manage_inventory";
-    
+
     public static final String VIEW_SHOP_ORDERS = "order:view_shop";
     public static final String UPDATE_ORDER_STATUS = "order:update_status";
-    
+
     public static final String CREATE_COUPON = "coupon:create";
     public static final String MANAGE_COUPON = "coupon:manage";
 
@@ -40,18 +40,18 @@ public class PredefinedPermission {
     public static final String VIEW_ALL_USERS = "user:view_all";
     public static final String MANAGE_USERS = "user:manage";
     public static final String BAN_USER = "user:ban";
-    
+
     public static final String VIEW_ALL_SHOPS = "shop:view_all";
     public static final String SUSPEND_SHOP = "shop:suspend";
     public static final String APPROVE_SHOP = "shop:approve";
-    
+
     public static final String VIEW_ALL_PRODUCTS = "product:view_all";
     public static final String APPROVE_PRODUCT = "product:approve";
-    
+
     public static final String VIEW_ALL_ORDERS = "order:view_all";
     public static final String MANAGE_ORDERS = "order:manage";
     public static final String REFUND_ORDER = "order:refund";
-    
+
     public static final String MANAGE_CATEGORIES = "category:manage";
     public static final String VIEW_ANALYTICS = "analytics:view";
     public static final String MANAGE_SYSTEM = "system:manage";

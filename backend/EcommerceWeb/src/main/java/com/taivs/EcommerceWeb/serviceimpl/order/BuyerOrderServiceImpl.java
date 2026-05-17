@@ -2,6 +2,7 @@ package com.taivs.EcommerceWeb.serviceimpl.order;
 
 import com.taivs.EcommerceWeb.services.order.BuyerOrderService;
 import com.taivs.EcommerceWeb.services.order.OrderNotificationService;
+import com.taivs.EcommerceWeb.services.order.CommissionService;
 import com.taivs.EcommerceWeb.models.user.User;
 import com.taivs.EcommerceWeb.repositories.user.UserRepository;
 import com.taivs.EcommerceWeb.models.cart.CartItem;
@@ -37,6 +38,7 @@ import com.taivs.EcommerceWeb.services.warehouse.WarehouseStockService;
 import com.taivs.EcommerceWeb.services.warehouse.WarehouseSelectionService;
 import com.taivs.EcommerceWeb.exceptions.AppException;
 import com.taivs.EcommerceWeb.exceptions.ErrorCode;
+import com.taivs.EcommerceWeb.utils.AuthUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -69,15 +71,16 @@ public class BuyerOrderServiceImpl implements BuyerOrderService {
     private final WarehouseSelectionService warehouseSelectionService;
     private final WarehouseStockService warehouseStockService;
     private final OrderNotificationService orderNotificationService;
+    private final CommissionService commissionService;
 
     @Override
     public List<OrderResponse> getMyOrders() {
-        String userId = currentUserId();
+        String userId = AuthUtils.currentUserId();
 
         List<Order> orders = orderRepository.findByUserIdWithShippingAndGroupsOrderByCreatedAtDesc(userId);
 
         loadOrderItemsIntoOrders(orders);
-        
+
         return orders.stream()
                 .map(this::mapToResponse)
                 .toList();
@@ -85,7 +88,7 @@ public class BuyerOrderServiceImpl implements BuyerOrderService {
 
     @Override
     public OrderResponse getMyOrderById(String orderId) {
-        String userId = currentUserId();
+        String userId = AuthUtils.currentUserId();
 
         Order order = orderRepository.findByIdWithShippingAndGroups(orderId)
                 .filter(o -> o.getUser().getId().equals(userId))
@@ -100,13 +103,12 @@ public class BuyerOrderServiceImpl implements BuyerOrderService {
     @Transactional
     public OrderResponse checkout(CheckoutRequest request) {
 
-        String userId = currentUserId();
+        String userId = AuthUtils.currentUserId();
 
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new AppException(ErrorCode.UNAUTHENTICATED));
 
-        List<CartItem> allCartItems =
-                cartItemRepository.findByUserIdWithRelationsOrderByCreatedAtDesc(userId);
+        List<CartItem> allCartItems = cartItemRepository.findByUserIdWithRelationsOrderByCreatedAtDesc(userId);
 
         if (allCartItems.isEmpty()) {
             log.error("[CHECKOUT] Cart is empty for userId: {}", userId);
@@ -121,13 +123,13 @@ public class BuyerOrderServiceImpl implements BuyerOrderService {
                         return request.getShopId().equals(shopId);
                     })
                     .collect(Collectors.toList());
-            
+
             if (cartItems.isEmpty()) {
-                log.error("[CHECKOUT] No cart items found for shopId: {}. UserId: {}, Total cart items: {}", 
-                    request.getShopId(), userId, allCartItems.size());
+                log.error("[CHECKOUT] No cart items found for shopId: {}. UserId: {}, Total cart items: {}",
+                        request.getShopId(), userId, allCartItems.size());
                 throw new AppException(ErrorCode.INVALID_REQUEST);
             }
-            
+
             log.info("[CHECKOUT] Processing {} items for shopId: {}", cartItems.size(), request.getShopId());
         }
 
@@ -141,12 +143,10 @@ public class BuyerOrderServiceImpl implements BuyerOrderService {
             qtyByVariant.merge(
                     ci.getProductVariant().getId(),
                     ci.getQuantity(),
-                    Integer::sum
-            );
+                    Integer::sum);
         }
 
-        List<ProductVariant> variants =
-                variantRepository.findByIdsForUpdateWithProduct(qtyByVariant.keySet());
+        List<ProductVariant> variants = variantRepository.findByIdsForUpdateWithProduct(qtyByVariant.keySet());
 
         validateStock(variants, qtyByVariant);
 
@@ -209,8 +209,8 @@ public class BuyerOrderServiceImpl implements BuyerOrderService {
 
             BigDecimal totalWeight = shippingService.calculateTotalWeight(groupVariants, groupQtyMap);
 
-            List<WarehouseSelectionService.WarehouseSelectionResult> warehouseSelections =
-                    warehouseSelectionService.selectWarehouses(shop.getId(), itemsMap, request, totalWeight);
+            List<WarehouseSelectionService.WarehouseSelectionResult> warehouseSelections = warehouseSelectionService
+                    .selectWarehouses(shop.getId(), itemsMap, request, totalWeight);
 
             if (warehouseSelections.isEmpty()) {
                 throw new AppException(ErrorCode.INSUFFICIENT_STOCK, "No warehouses available for this order");
@@ -233,7 +233,8 @@ public class BuyerOrderServiceImpl implements BuyerOrderService {
                     Long qty = entry.getValue();
                     ProductVariant variant = variantMap.get(variantId);
 
-                    if (variant == null) continue;
+                    if (variant == null)
+                        continue;
 
                     BigDecimal price = Optional.ofNullable(variant.getPrice())
                             .orElse(BigDecimal.ZERO);
@@ -241,7 +242,8 @@ public class BuyerOrderServiceImpl implements BuyerOrderService {
 
                     if (!warehouseStockService.hasSufficientStock(selection.warehouse().getId(), variantId, qty)) {
                         throw new AppException(ErrorCode.INSUFFICIENT_STOCK,
-                                String.format("Insufficient stock for %s in warehouse %s", variant.getName(), selection.warehouse().getName()));
+                                String.format("Insufficient stock for %s in warehouse %s", variant.getName(),
+                                        selection.warehouse().getName()));
                     }
 
                     warehouseStockService.reserveStock(selection.warehouse().getId(), variantId, qty);
@@ -329,8 +331,7 @@ public class BuyerOrderServiceImpl implements BuyerOrderService {
                 throw new AppException(ErrorCode.COUPON_INVALID_FOR_SCOPE);
             }
 
-            BigDecimal checkedOutShopSubtotal =
-                    subtotalByShop.getOrDefault(checkedOutShopId, BigDecimal.ZERO);
+            BigDecimal checkedOutShopSubtotal = subtotalByShop.getOrDefault(checkedOutShopId, BigDecimal.ZERO);
 
             if (appliedShopCoupon.getDiscountType() == DiscountType.FREE_SHIPPING) {
                 if (appliedCoupon != null && appliedCoupon.getDiscountType() == DiscountType.FREE_SHIPPING) {
@@ -379,7 +380,7 @@ public class BuyerOrderServiceImpl implements BuyerOrderService {
         if (!checkedOutCartItemIds.isEmpty()) {
             cartItemRepository.deleteByUser_IdAndIdIn(userId, checkedOutCartItemIds);
             log.info("[CHECKOUT] {} checked-out cart items deleted for userId: {}",
-                checkedOutCartItemIds.size(), userId);
+                    checkedOutCartItemIds.size(), userId);
         }
 
         orderNotificationService.notifyOrderCreated(savedOrder.getId());
@@ -409,12 +410,11 @@ public class BuyerOrderServiceImpl implements BuyerOrderService {
         return mapToResponse(savedOrder);
     }
 
-
     @Override
     @Transactional
     public void cancelMyOrder(String orderId, String reason) {
 
-        String userId = currentUserId();
+        String userId = AuthUtils.currentUserId();
 
         Order order = orderRepository.findById(orderId)
                 .filter(o -> o.getUser().getId().equals(userId))
@@ -426,12 +426,10 @@ public class BuyerOrderServiceImpl implements BuyerOrderService {
 
         List<String> variantIds = collectVariantIds(order);
 
-        List<ProductVariant> variants =
-                variantRepository.findByIdsForUpdateWithProduct(new HashSet<>(variantIds));
+        List<ProductVariant> variants = variantRepository.findByIdsForUpdateWithProduct(new HashSet<>(variantIds));
 
-        Map<String, ProductVariant> variantMap =
-                variants.stream()
-                        .collect(Collectors.toMap(ProductVariant::getId, v -> v));
+        Map<String, ProductVariant> variantMap = variants.stream()
+                .collect(Collectors.toMap(ProductVariant::getId, v -> v));
 
         restoreStock(order, variantMap);
 
@@ -446,8 +444,6 @@ public class BuyerOrderServiceImpl implements BuyerOrderService {
         decrementCouponUsageIfApplied(order.getShopCouponId());
 
         couponUsageRepository.deleteByOrder_Id(order.getId());
-
-
 
         order.setStatus(OrderStatus.CANCELLED);
         order.setCancelReason(reason);
@@ -464,7 +460,7 @@ public class BuyerOrderServiceImpl implements BuyerOrderService {
     @Transactional
     public void confirmReceipt(String orderId) {
 
-        String userId = currentUserId();
+        String userId = AuthUtils.currentUserId();
 
         Order order = orderRepository.findById(orderId)
                 .filter(o -> o.getUser().getId().equals(userId))
@@ -472,13 +468,16 @@ public class BuyerOrderServiceImpl implements BuyerOrderService {
 
         order.confirmReceipt();
 
+        // Settle platform commission now that the order is COMPLETED
+        commissionService.settleOrderCommission(order.getId());
+
         orderNotificationService.notifyOrderStatusChanged(
                 order.getId(), order.getUser().getId(),
                 OrderStatus.DELIVERED.name(), OrderStatus.COMPLETED.name(), null);
     }
 
     private void validateStock(List<ProductVariant> variants,
-                               Map<String, Integer> qtyMap) {
+            Map<String, Integer> qtyMap) {
 
         for (ProductVariant v : variants) {
             long stock = Optional.ofNullable(v.getStock()).orElse(0L);
@@ -490,14 +489,14 @@ public class BuyerOrderServiceImpl implements BuyerOrderService {
     }
 
     private void restoreStock(Order order,
-                              Map<String, ProductVariant> variantMap) {
+            Map<String, ProductVariant> variantMap) {
 
         for (OrderShopGroup group : order.getOrderShopGroups()) {
             if (group.getWarehouse() == null) {
                 log.warn("OrderShopGroup {} has no warehouse, skipping stock release", group.getId());
                 continue;
             }
-            
+
             String warehouseId = group.getWarehouse().getId();
             for (OrderItem item : group.getOrderItems()) {
                 if (item.getProductVariant() != null) {
@@ -511,7 +510,6 @@ public class BuyerOrderServiceImpl implements BuyerOrderService {
             }
         }
     }
-
 
     private Order buildOrder(User user, CheckoutRequest request) {
         String paymentMethod = request.getPayment() == null ? "COD" : request.getPayment().toUpperCase();
@@ -557,35 +555,35 @@ public class BuyerOrderServiceImpl implements BuyerOrderService {
                 ? Collections.emptyList()
                 : order.getOrderShopGroups().stream().map(g -> {
 
-            List<OrderItemResponse> itemResponses = g.getOrderItems() == null
-                    ? Collections.emptyList()
-                    : g.getOrderItems().stream().map(i -> OrderItemResponse.builder()
-                            .id(i.getId())
-                            .productVariantId(i.getProductVariant() == null ? null : i.getProductVariant().getId())
-                            .quantity(i.getQuantity())
-                            .price(i.getPrice())
-                            .productId(i.getProductId())
-                            .productName(i.getProductName())
-                            .productImage(i.getProductImage())
-                            .variantName(i.getVariantName())
-                            .variantSku(i.getVariantSku())
-                            .hasReview(i.getCustomerReview() != null)
-                            .build()
-                    ).toList();
+                    List<OrderItemResponse> itemResponses = g.getOrderItems() == null
+                            ? Collections.emptyList()
+                            : g.getOrderItems().stream().map(i -> OrderItemResponse.builder()
+                                    .id(i.getId())
+                                    .productVariantId(
+                                            i.getProductVariant() == null ? null : i.getProductVariant().getId())
+                                    .quantity(i.getQuantity())
+                                    .price(i.getPrice())
+                                    .productId(i.getProductId())
+                                    .productName(i.getProductName())
+                                    .productImage(i.getProductImage())
+                                    .variantName(i.getVariantName())
+                                    .variantSku(i.getVariantSku())
+                                    .hasReview(i.getCustomerReview() != null)
+                                    .build()).toList();
 
-            return OrderShopGroupResponse.builder()
-                    .id(g.getId())
-                    .shopId(g.getShop() == null ? null : g.getShop().getId())
-                    .subtotal(g.getSubtotal())
-                    .shippingFee(g.getShippingFee())
-                    .totalDiscount(g.getTotalDiscount())
-                    .total(g.getTotal())
-                    .shipment(g.getShipment())
-                    .warehouseId(g.getWarehouse() == null ? null : g.getWarehouse().getId())
-                    .warehouseName(g.getWarehouse() == null ? null : g.getWarehouse().getName())
-                    .items(itemResponses)
-                    .build();
-        }).toList();
+                    return OrderShopGroupResponse.builder()
+                            .id(g.getId())
+                            .shopId(g.getShop() == null ? null : g.getShop().getId())
+                            .subtotal(g.getSubtotal())
+                            .shippingFee(g.getShippingFee())
+                            .totalDiscount(g.getTotalDiscount())
+                            .total(g.getTotal())
+                            .shipment(g.getShipment())
+                            .warehouseId(g.getWarehouse() == null ? null : g.getWarehouse().getId())
+                            .warehouseName(g.getWarehouse() == null ? null : g.getWarehouse().getName())
+                            .items(itemResponses)
+                            .build();
+                }).toList();
 
         return OrderResponse.builder()
                 .id(order.getId())
@@ -619,8 +617,8 @@ public class BuyerOrderServiceImpl implements BuyerOrderService {
     }
 
     private BigDecimal calculateCouponDiscount(Coupon coupon,
-                                               BigDecimal subtotalScope,
-                                               BigDecimal shippingFeeScope) {
+            BigDecimal subtotalScope,
+            BigDecimal shippingFeeScope) {
         if (coupon == null || coupon.getDiscountType() == null) {
             return BigDecimal.ZERO;
         }
@@ -704,16 +702,4 @@ public class BuyerOrderServiceImpl implements BuyerOrderService {
         });
     }
 
-    private String currentUserId() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication == null
-                || !authentication.isAuthenticated()
-                || authentication.getName() == null
-                || authentication.getName().isBlank()
-                || "anonymousUser".equalsIgnoreCase(authentication.getName())) {
-            throw new AppException(ErrorCode.UNAUTHENTICATED);
-        }
-
-        return authentication.getName();
-    }
 }

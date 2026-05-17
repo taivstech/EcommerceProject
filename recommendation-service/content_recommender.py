@@ -1,23 +1,26 @@
 """
-Content-Based Recommender — Enhanced TF-IDF + Feature Engineering.
+Content-Based Recommender — Enhanced BERT Embeddings + FAISS.
 
 Features per product:
-  1. TF-IDF on text (name + description + category_name)
+  1. Dense text embeddings via SentenceTransformer ('all-MiniLM-L6-v2')
   2. Normalized price (min-max scaled)
   3. Normalized popularity (log-scaled total_sold)
   4. Category one-hot encoding
 
-All features are combined into a single sparse matrix and cosine
-similarity is pre-computed for the top-K neighbors per product.
+All features are concatenated into a dense matrix and indexed using FAISS
+for ultra-fast semantic similarity search.
 """
 
 import logging
 import numpy as np
 import pandas as pd
 from scipy import sparse
-from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.metrics.pairwise import cosine_similarity
 from sklearn.preprocessing import normalize
+try:
+    from sentence_transformers import SentenceTransformer
+    import faiss
+except ImportError:
+    logging.warning("sentence-transformers or faiss-cpu not installed.")
 
 logger = logging.getLogger(__name__)
 
@@ -26,18 +29,18 @@ TOP_K_NEIGHBORS = 100
 
 
 class ContentRecommender:
-    """Enhanced content-based filtering using TF-IDF + engineered features."""
+    """Enhanced content-based filtering using BERT + FAISS + engineered features."""
 
     def __init__(self):
-        self.tfidf = TfidfVectorizer(
-            analyzer="word",
-            ngram_range=(1, 2),
-            max_features=10_000,
-            min_df=2,
-            max_df=0.95,
-            sublinear_tf=True,
-        )
-        self.feature_matrix = None          # combined sparse matrix
+        try:
+            # We use a lightweight and very fast model perfect for embeddings
+            self.model = SentenceTransformer('all-MiniLM-L6-v2')
+        except Exception as e:
+            self.model = None
+            logger.error(f"Failed to load SentenceTransformer model: {e}")
+            
+        self.index = None
+        self.feature_matrix = None          # combined dense matrix
         self.product_ids: list[str] = []
         self.id_to_idx: dict[str, int] = {}
         self.neighbors: dict[str, list] = {}  # pid → [(pid, score), ...]
@@ -55,8 +58,8 @@ class ContentRecommender:
 
     def build(self, products_df: pd.DataFrame):
         """Build the content feature matrix and pre-compute neighbors."""
-        if products_df.empty:
-            logger.warning("No products — content model not built.")
+        if products_df.empty or self.model is None:
+            logger.warning("No products or model — content model not built.")
             return
 
         df = products_df.copy()
@@ -64,81 +67,86 @@ class ContentRecommender:
         self.product_ids = df["id"].tolist()
         self.id_to_idx = {pid: idx for idx, pid in enumerate(self.product_ids)}
 
-        # ── 1. TF-IDF on text ────────────────────────────────────────
+        # ── 1. BERT Embeddings on text ───────────────────────────────
         df["text"] = (
             df["name"].fillna("")
-            + " " + df["description"].fillna("")
             + " " + df["category_name"].fillna("")
+            + " " + df["description"].fillna("").str.slice(0, 500) # Trim description to save memory/time
         )
-        tfidf_matrix = self.tfidf.fit_transform(df["text"])  # (n, vocab)
-        logger.info("TF-IDF shape: %s, vocab=%d", tfidf_matrix.shape, len(self.tfidf.vocabulary_))
+        logger.info("Generating BERT embeddings for %d products...", n)
+        embeddings = self.model.encode(df["text"].tolist(), batch_size=64, show_progress_bar=False, convert_to_numpy=True)
+        embeddings_norm = normalize(embeddings, norm="l2")
 
         # ── 2. Price feature (log-scaled, then min-max to [0,1]) ─────
         prices = np.log1p(df["min_price"].values).reshape(-1, 1)
         if prices.max() > prices.min():
             prices = (prices - prices.min()) / (prices.max() - prices.min())
-        price_sparse = sparse.csr_matrix(prices)
+        price_dense = prices
 
         # ── 3. Popularity feature (log-scaled total_sold) ────────────
         popularity = np.log1p(df["total_sold"].values).reshape(-1, 1)
         if popularity.max() > popularity.min():
             popularity = (popularity - popularity.min()) / (popularity.max() - popularity.min())
-        pop_sparse = sparse.csr_matrix(popularity)
+        pop_dense = popularity
 
         # ── 4. Category one-hot ──────────────────────────────────────
         cat_ids = df["category_id"].fillna("__NONE__").values
         unique_cats = list(set(cat_ids))
         cat_to_idx = {c: i for i, c in enumerate(unique_cats)}
-        rows = list(range(n))
-        cols = [cat_to_idx[c] for c in cat_ids]
-        data = [1.0] * n
-        cat_onehot = sparse.csr_matrix(
-            (data, (rows, cols)), shape=(n, len(unique_cats))
-        )
+        cat_dense = np.zeros((n, len(unique_cats)), dtype=np.float32)
+        for i, c in enumerate(cat_ids):
+            cat_dense[i, cat_to_idx[c]] = 1.0
 
         # ── Combine (weighted) ───────────────────────────────────────
-        # TF-IDF gets weight 1.0 (already dominant), price/pop/cat are additive signals
-        tfidf_norm = normalize(tfidf_matrix, norm="l2")
-        cat_norm = normalize(cat_onehot, norm="l2") * 0.3
-        price_weighted = price_sparse * 0.15
-        pop_weighted = pop_sparse * 0.1
+        # BERT embeddings are dense. We concatenate all dense features.
+        # MASSIVELY boost category weight (5.0) so it dominates the L2 norm (text is 1.0).
+        # This guarantees FAISS will always prioritize items in the SAME category, 
+        # and only use text/price as tie-breakers within that category.
+        cat_norm = cat_dense * 5.0
+        price_weighted = price_dense * 0.5
+        pop_weighted = pop_dense * 0.2
 
-        self.feature_matrix = sparse.hstack([
-            tfidf_norm, cat_norm, price_weighted, pop_weighted
-        ]).tocsr()
+        self.feature_matrix = np.hstack([
+            embeddings_norm, cat_norm, price_weighted, pop_weighted
+        ]).astype(np.float32)
 
         logger.info("Combined feature matrix shape: %s", self.feature_matrix.shape)
 
-        # ── Pre-compute top-K neighbors ──────────────────────────────
-        self._precompute_neighbors()
+        # ── Build FAISS Index and Pre-compute top-K neighbors ────────
+        self._build_faiss_and_precompute()
         self._ready = True
         logger.info("Content model ready — %d products, %d neighbors each (max)", n, TOP_K_NEIGHBORS)
 
-    def _precompute_neighbors(self):
-        """Batch cosine similarity: process in chunks to limit memory."""
+    def _build_faiss_and_precompute(self):
+        """Build FAISS index and batch search for neighbors."""
+        d = self.feature_matrix.shape[1]
+        # Using IndexFlatIP for Cosine Similarity (since features are normalized/scaled)
+        normalized_matrix = normalize(self.feature_matrix, norm="l2").astype(np.float32)
+        
+        self.index = faiss.IndexFlatIP(d)
+        self.index.add(normalized_matrix)
+
         n = len(self.product_ids)
         self.neighbors = {}
-        chunk_size = 500
+        
+        # Search Top K+1
+        k_search = min(TOP_K_NEIGHBORS + 1, n)
+        distances, indices = self.index.search(normalized_matrix, k_search)
 
-        for start in range(0, n, chunk_size):
-            end = min(start + chunk_size, n)
-            chunk = self.feature_matrix[start:end]
-            sims = cosine_similarity(chunk, self.feature_matrix)  # (chunk, n)
-
-            for local_idx in range(sims.shape[0]):
-                global_idx = start + local_idx
-                pid = self.product_ids[global_idx]
-                row = sims[local_idx]
-                # Top K+1 indices (skip self)
-                top_indices = np.argsort(row)[::-1][:TOP_K_NEIGHBORS + 1]
-                neighbors = []
-                for idx in top_indices:
-                    if idx == global_idx:
-                        continue
-                    neighbors.append((self.product_ids[idx], float(row[idx])))
-                    if len(neighbors) >= TOP_K_NEIGHBORS:
-                        break
-                self.neighbors[pid] = neighbors
+        for i in range(n):
+            pid = self.product_ids[i]
+            # Convert FAISS IP distance (inner product) to similar scale as cosine (0 to 1ish)
+            # Since vectors are l2 normalized, IP is exactly Cosine Similarity [-1, 1].
+            neighbors = []
+            for j in range(k_search):
+                idx = indices[i, j]
+                if idx == i or idx == -1:
+                    continue
+                score = distances[i, j]
+                neighbors.append((self.product_ids[idx], float(score)))
+                if len(neighbors) >= TOP_K_NEIGHBORS:
+                    break
+            self.neighbors[pid] = neighbors
 
     # ── Query ────────────────────────────────────────────────────────
 

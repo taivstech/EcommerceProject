@@ -28,20 +28,18 @@ public class AsyncConfig {
         executor.setKeepAliveSeconds(60);
         executor.setAllowCoreThreadTimeOut(true);
         executor.setThreadNamePrefix("async-");
-        
 
         executor.setAwaitTerminationSeconds(30);
         executor.setWaitForTasksToCompleteOnShutdown(true);
 
         executor.setRejectedExecutionHandler(
-            new java.util.concurrent.ThreadPoolExecutor.CallerRunsPolicy()
-        );
-        
+                new java.util.concurrent.ThreadPoolExecutor.CallerRunsPolicy());
+
         executor.initialize();
-        
+
         log.info("Async ThreadPoolTaskExecutor initialized: core={}, max={}, queue=1000",
                 executor.getCorePoolSize(), executor.getMaxPoolSize());
-        
+
         return executor;
     }
 
@@ -60,12 +58,26 @@ public class AsyncConfig {
             new java.util.concurrent.ThreadPoolExecutor.DiscardOldestPolicy()
                     .rejectedExecution(r, executor);
         });
-        
+
         scheduler.initialize();
-        
+
         log.info("  ThreadPoolTaskScheduler initialized:");
         log.info("  poolSize: {}", scheduler.getPoolSize());
-        
+
         return scheduler;
+    }
+
+    @Bean(name = "behaviorTrackingExecutor")
+    public Executor behaviorTrackingExecutor() {
+        ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
+        executor.setCorePoolSize(2);
+        executor.setMaxPoolSize(4);
+        executor.setQueueCapacity(500);
+        executor.setThreadNamePrefix("behavior-");
+        executor.setRejectedExecutionHandler(
+                new java.util.concurrent.ThreadPoolExecutor.DiscardPolicy());
+        executor.initialize();
+        log.info("Behavior tracking executor initialized (core=2, max=4, queue=500)");
+        return executor;
     }
 }

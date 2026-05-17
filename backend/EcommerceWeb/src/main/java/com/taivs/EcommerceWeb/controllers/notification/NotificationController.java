@@ -54,4 +54,3 @@ public class NotificationController {
         return ApiResponse.<Void>builder().build();
     }
 }
-

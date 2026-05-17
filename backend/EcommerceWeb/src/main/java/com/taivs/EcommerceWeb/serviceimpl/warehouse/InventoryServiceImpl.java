@@ -19,6 +19,7 @@ import com.taivs.EcommerceWeb.models.shop.Shop;
 import com.taivs.EcommerceWeb.repositories.shop.ShopRepository;
 import com.taivs.EcommerceWeb.exceptions.AppException;
 import com.taivs.EcommerceWeb.exceptions.ErrorCode;
+import com.taivs.EcommerceWeb.utils.AuthUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -202,7 +203,7 @@ public class InventoryServiceImpl implements InventoryService {
     @Override
     @Transactional(readOnly = true)
     public List<RecentSaleDto> getRecentSales(int limit) {
-        String userId = getCurrentUserId();
+        String userId = AuthUtils.currentUserId();
         List<Order> orders = orderRepository.findBySellerUserIdWithShippingAndGroupsOrderByCreatedAtDesc(userId);
 
         List<String> orderIds = orders.stream().map(Order::getId).toList();
@@ -235,12 +236,10 @@ public class InventoryServiceImpl implements InventoryService {
     }
 
     private Shop getMyShop() {
-        String userId = getCurrentUserId();
+        String userId = AuthUtils.currentUserId();
         return shopRepository.findByUser_Id(userId)
                 .orElseThrow(() -> new AppException(ErrorCode.SHOP_NOT_EXISTS));
     }
 
-    private String getCurrentUserId() {
-        return SecurityContextHolder.getContext().getAuthentication().getName();
-    }
+
 }

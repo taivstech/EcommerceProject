@@ -147,6 +147,8 @@ management:
   health:
     mail:
       enabled: false
+  cors:
+    allowed-origins: ${CORS_ALLOWED_ORIGINS:https://ecommerce.pro.vn}
   endpoint:
     health:
       show-details: when-authorized
@@ -171,8 +173,8 @@ app:
   recommendation:
     url: ${RECOMMENDATION_URL:http://recommendation:8000/api/recommendations}
   mail:
-    from: ${APP_MAIL_FROM:taivs0903@gmail.com}
-    from-name: ${APP_MAIL_FROM_NAME:Social Media}
+    from: ${APP_MAIL_FROM:"taivs0903\u0040gmail.com"}
+    from-name: ${APP_MAIL_FROM_NAME:GoCart Support}
   email:
     verification:
       expiration-hours: ${EMAIL_VERIFICATION_EXPIRATION_HOURS:24}
@@ -181,7 +183,7 @@ app:
       expiration-minutes: ${PASSWORD_RESET_EXPIRATION_MINUTES:30}
 
 ghn:
-  api-url: https://online-gateway.ghn.vn/shiip/public-api
+  api-url: ${GHN_API_URL:https://online-gateway.ghn.vn/shiip/public-api}
   token: ${GHN_TOKEN:669398e2-1160-11f1-a3d6-dac90fb956b5}
   shop-id: ${GHN_SHOP_ID:199394}
 
@@ -216,7 +218,10 @@ imagekit:
   private-key: ${PRIVATE_KEY_IMAGE_KIT:not_set}
   url-endpoint: ${IMAGE_KIT_URL_ENDPOINT:https://ik.imagekit.io/taivs93}
 
-spring.security.oauth2.client.registration.google.client-id: ${OUTBOUND_IDENTITY_CLIENT_ID:not_set}
-spring.security.oauth2.client.registration.google.client-secret: ${OUTBOUND_IDENTITY_CLIENT_SECRET:not_set}
+spring.security.oauth2.client.registration.google.client-id: ${GOOGLE_CLIENT_ID:not_set}
+spring.security.oauth2.client.registration.google.client-secret: ${GOOGLE_CLIENT_SECRET:not_set}
+spring.security.oauth2.client.registration.google.redirect-uri: ${OUTBOUND_IDENTITY_REDIRECT_URI:https://ecommerce.pro.vn/authenticate}
+spring.security.oauth2.client.registration.google.scope: email, profile
 
 spring.flyway.enabled: false
+

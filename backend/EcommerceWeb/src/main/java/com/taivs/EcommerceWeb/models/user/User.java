@@ -49,6 +49,10 @@ public class User extends BaseEntity {
 
     private Boolean active = true;
 
+    @Column(name = "email_verified")
+    @Builder.Default
+    private Boolean emailVerified = false;
+
     @Column(name = "profile_picture")
     private String profilePicture;
 

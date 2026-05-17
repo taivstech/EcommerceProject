@@ -15,33 +15,33 @@ import java.util.List;
 @RequiredArgsConstructor
 public class RecommendationController {
 
-    private final RecommendationService recommendationService;
+        private final RecommendationService recommendationService;
 
-    @GetMapping("/recommendations/for-you")
-    @PreAuthorize("isAuthenticated()")
-    public ApiResponse<List<ProductResponse>> forYou(
-            @RequestParam(defaultValue = "20") int limit) {
-        String userId = SecurityContextHolder.getContext().getAuthentication().getName();
-        return ApiResponse.<List<ProductResponse>>builder()
-                .result(recommendationService.getForYou(userId, limit))
-                .build();
-    }
+        @GetMapping("/recommendations/for-you")
+        @PreAuthorize("isAuthenticated()")
+        public ApiResponse<List<ProductResponse>> forYou(
+                        @RequestParam(defaultValue = "20") int limit) {
+                String userId = SecurityContextHolder.getContext().getAuthentication().getName();
+                return ApiResponse.<List<ProductResponse>>builder()
+                                .result(recommendationService.getForYou(userId, limit))
+                                .build();
+        }
 
-    @GetMapping("/{productId}/recommendations/similar")
-    public ApiResponse<List<ProductResponse>> similar(
-            @PathVariable String productId,
-            @RequestParam(defaultValue = "10") int limit) {
-        return ApiResponse.<List<ProductResponse>>builder()
-                .result(recommendationService.getSimilarProducts(productId, limit))
-                .build();
-    }
+        @GetMapping("/{productId}/recommendations/similar")
+        public ApiResponse<List<ProductResponse>> similar(
+                        @PathVariable String productId,
+                        @RequestParam(defaultValue = "10") int limit) {
+                return ApiResponse.<List<ProductResponse>>builder()
+                                .result(recommendationService.getSimilarProducts(productId, limit))
+                                .build();
+        }
 
-    @GetMapping("/{productId}/recommendations/bought-together")
-    public ApiResponse<List<ProductResponse>> boughtTogether(
-            @PathVariable String productId,
-            @RequestParam(defaultValue = "10") int limit) {
-        return ApiResponse.<List<ProductResponse>>builder()
-                .result(recommendationService.getBoughtTogether(productId, limit))
-                .build();
-    }
+        @GetMapping("/{productId}/recommendations/bought-together")
+        public ApiResponse<List<ProductResponse>> boughtTogether(
+                        @PathVariable String productId,
+                        @RequestParam(defaultValue = "10") int limit) {
+                return ApiResponse.<List<ProductResponse>>builder()
+                                .result(recommendationService.getBoughtTogether(productId, limit))
+                                .build();
+        }
 }

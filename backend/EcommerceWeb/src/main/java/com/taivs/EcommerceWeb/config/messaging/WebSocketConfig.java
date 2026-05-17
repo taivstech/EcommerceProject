@@ -35,8 +35,14 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
     @Override
     public void configureMessageBroker(MessageBrokerRegistry config) {
+        org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler taskScheduler = new org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler();
+        taskScheduler.setPoolSize(1);
+        taskScheduler.setThreadNamePrefix("wss-heartbeat-thread-");
+        taskScheduler.initialize();
 
-        config.enableSimpleBroker("/topic", "/queue");
+        config.enableSimpleBroker("/topic", "/queue")
+                .setHeartbeatValue(new long[] { 10000, 10000 })
+                .setTaskScheduler(taskScheduler);
 
         config.setApplicationDestinationPrefixes("/app");
 
@@ -54,6 +60,12 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
                 }
 
                 if (StompCommand.CONNECT.equals(accessor.getCommand())) {
+                    Principal user = accessor.getUser();
+                    if (user != null) {
+                        log.debug("STOMP CONNECT already authenticated via Cookie: userId={}", user.getName());
+                        return message;
+                    }
+
                     try {
                         String auth = accessor.getFirstNativeHeader("Authorization");
                         if (auth != null && auth.startsWith("Bearer ")) {

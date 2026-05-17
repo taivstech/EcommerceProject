@@ -20,10 +20,10 @@ public class RateLimitFilter extends OncePerRequestFilter {
     private final RedisTemplate<String, Object> redisTemplate;
     private final ObjectMapper objectMapper;
 
-    private static final int DEFAULT_LIMIT = 300;
+    private static final int DEFAULT_LIMIT = 5000;
     private static final Duration DEFAULT_WINDOW = Duration.ofMinutes(1);
 
-    private static final int AUTH_LIMIT = 20;
+    private static final int AUTH_LIMIT = 100;
     private static final Duration AUTH_WINDOW = Duration.ofMinutes(1);
 
     private static final String RATE_KEY_PREFIX = "rate:";

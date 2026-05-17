@@ -11,7 +11,7 @@ const MoreProducts = () => {
     const [products, setProducts] = useState([])
     const [loading, setLoading] = useState(false)
     const { isAuthenticated } = useAuth()
-    const displayLimit = 30 // Hiển thị 30 products
+    const displayLimit = 30 // Display 30 products
 
     useEffect(() => {
         const loadProducts = async () => {
@@ -58,7 +58,7 @@ const MoreProducts = () => {
                         href='/login'
                         className='flex items-center gap-2 px-8 py-3.5 bg-orange-500 text-white rounded-md hover:bg-orange-600 transition-all font-medium shadow-sm hover:shadow-md active:scale-95'
                     >
-                        <span>Login to shopping</span>
+                        <span>Login to start shopping</span>
                         <ArrowRight size={18} />
                     </Link>
                 </div>

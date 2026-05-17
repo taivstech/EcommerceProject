@@ -10,6 +10,7 @@ import com.taivs.EcommerceWeb.repositories.notification.NotificationRepository;
 import com.taivs.EcommerceWeb.services.notification.NotificationService;
 import com.taivs.EcommerceWeb.exceptions.AppException;
 import com.taivs.EcommerceWeb.exceptions.ErrorCode;
+import com.taivs.EcommerceWeb.utils.AuthUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
@@ -34,7 +35,7 @@ public class NotificationServiceImpl implements NotificationService {
 
     @Override
     public List<NotificationResponse> getMyNotifications() {
-        String userId = getCurrentUserId();
+        String userId = AuthUtils.currentUserId();
         return notificationRepository.findAllByUserIdOrderByCreatedAtDesc(userId)
                 .stream()
                 .map(this::toResponse)
@@ -43,20 +44,20 @@ public class NotificationServiceImpl implements NotificationService {
 
     @Override
     public long getMyUnreadCount() {
-        String userId = getCurrentUserId();
+        String userId = AuthUtils.currentUserId();
         return notificationRepository.countUnreadByUserId(userId);
     }
 
     @Override
     public long getMyUnreadOrderCount() {
-        String userId = getCurrentUserId();
+        String userId = AuthUtils.currentUserId();
         return notificationRepository.countUnreadOrderNotificationsByUserId(userId);
     }
 
     @Override
     @Transactional
     public void markAsRead(String id) {
-        String userId = getCurrentUserId();
+        String userId = AuthUtils.currentUserId();
         Notification n = notificationRepository.findById(id)
                 .orElseThrow(() -> new AppException(ErrorCode.NOTIFICATION_NOT_FOUND));
         if (!n.getUser().getId().equals(userId)) {
@@ -72,7 +73,7 @@ public class NotificationServiceImpl implements NotificationService {
     @Override
     @Transactional
     public void markAllAsRead() {
-        String userId = getCurrentUserId();
+        String userId = AuthUtils.currentUserId();
         List<Notification> all = notificationRepository.findAllByUserIdOrderByCreatedAtDesc(userId);
         for (Notification n : all) {
             if ("UNREAD".equalsIgnoreCase(n.getStatus())) {
@@ -116,10 +117,6 @@ public class NotificationServiceImpl implements NotificationService {
             log.warn("Could not push notification via WebSocket to user {}: {}", userId, e.getMessage());
         }
         return resp;
-    }
-
-    private String getCurrentUserId() {
-        return SecurityContextHolder.getContext().getAuthentication().getName();
     }
 
     private NotificationResponse toResponse(Notification n) {

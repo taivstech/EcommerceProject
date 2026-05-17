@@ -32,8 +32,8 @@ public class RecommendationServiceImpl implements RecommendationService {
 
     private static final String CACHE_PREFIX_FOR_YOU = "rec:foryou:";
     private static final String CACHE_PREFIX_SIMILAR = "rec:similar:";
-    private static final String CACHE_PREFIX_BOUGHT  = "rec:bought:";
-    private static final long   CACHE_TTL_MINUTES    = 30;
+    private static final String CACHE_PREFIX_BOUGHT = "rec:bought:";
+    private static final long CACHE_TTL_MINUTES = 30;
 
     private final ProductRepository productRepository;
     private final OrderItemRepository orderItemRepository;
@@ -58,7 +58,7 @@ public class RecommendationServiceImpl implements RecommendationService {
         if (topIds.isEmpty()) {
             topIds = computeForYouFallback(userId, limit);
         }
-        
+
         cacheIds(cacheKey, topIds);
         return loadProductResponses(topIds);
     }
@@ -97,8 +97,8 @@ public class RecommendationServiceImpl implements RecommendationService {
                 Product source = productRepository.findById(productId).orElse(null);
                 if (source != null && source.getCategory() != null) {
                     topIds = productRepository.findByCategoryIdAndIdNot(
-                                    source.getCategory().getId(), productId, PageRequest.of(0, limit))
-                            .stream().map(Product::getId).toList();
+                            source.getCategory().getId(), productId, PageRequest.of(1, limit))
+                            .getContent();
                 }
             }
         }
@@ -118,6 +118,8 @@ public class RecommendationServiceImpl implements RecommendationService {
             try {
                 getBoughtTogether(pid, 10);
                 getSimilarProducts(pid, 10);
+                // Small delay to avoid slamming the Python service
+                Thread.sleep(50);
             } catch (Exception e) {
                 log.warn("Cache warm-up failed for product {}: {}", pid, e.getMessage());
             }
@@ -139,7 +141,7 @@ public class RecommendationServiceImpl implements RecommendationService {
                 }
             }
         } catch (Exception e) {
-            log.error("Failed to call ML recommendation API {}, fallback to local DB logic: {}", url, e.getMessage());
+            log.warn("ML recommendation API unavailable at {}, using local DB fallback: {}", url, e.getMessage());
         }
         return Collections.emptyList();
     }
@@ -154,7 +156,8 @@ public class RecommendationServiceImpl implements RecommendationService {
                     categoryIds.add((String) row[0]);
                 }
             }
-        } catch (Exception ignored) {}
+        } catch (Exception ignored) {
+        }
 
         List<Object[]> purchaseData = productRepository.findPurchasedProductDataByUserId(userId);
         Set<String> purchasedIds = new HashSet<>();
@@ -183,7 +186,7 @@ public class RecommendationServiceImpl implements RecommendationService {
 
         if (candidateIds.isEmpty()) {
             return productRepository.findTopByTotalSold(PageRequest.of(0, limit))
-                    .stream().map(Product::getId).toList();
+                    .getContent();
         }
 
         return candidateIds.stream().limit(limit).toList();
@@ -193,12 +196,12 @@ public class RecommendationServiceImpl implements RecommendationService {
         Product source = productRepository.findById(productId).orElse(null);
         if (source == null || source.getCategory() == null) {
             return productRepository.findTopByTotalSold(PageRequest.of(0, limit))
-                    .stream().map(Product::getId).toList();
+                    .getContent();
         }
 
         List<String> sameCategoryIds = productRepository.findByCategoryIdAndIdNot(
-                        source.getCategory().getId(), productId, PageRequest.of(0, limit))
-                .stream().map(Product::getId).toList();
+                source.getCategory().getId(), productId, PageRequest.of(0, limit))
+                .getContent();
 
         if (sameCategoryIds.size() >= limit) {
             return sameCategoryIds;
@@ -223,8 +226,10 @@ public class RecommendationServiceImpl implements RecommendationService {
     private List<String> getCachedIds(String cacheKey) {
         try {
             List<String> cached = (List<String>) redisTemplate.opsForValue().get(cacheKey);
-            if (cached != null && !cached.isEmpty()) return cached;
-        } catch (Exception ignored) {}
+            if (cached != null && !cached.isEmpty())
+                return cached;
+        } catch (Exception ignored) {
+        }
         return null;
     }
 
@@ -232,14 +237,18 @@ public class RecommendationServiceImpl implements RecommendationService {
         if (!ids.isEmpty()) {
             try {
                 redisTemplate.opsForValue().set(cacheKey, new ArrayList<>(ids), CACHE_TTL_MINUTES, TimeUnit.MINUTES);
-            } catch (Exception ignored) {}
+            } catch (Exception ignored) {
+            }
         }
     }
 
     private List<ProductResponse> loadProductResponses(List<String> productIds) {
-        if (productIds.isEmpty()) return Collections.emptyList();
+        if (productIds.isEmpty())
+            return Collections.emptyList();
 
-        List<Product> products = productRepository.findAllById(productIds);
+        // Use findAllBasicByIds which eagerly JOIN FETCHes shop, category, and images
+        // in a single query, avoiding N+1 SELECT issues from the default findAllById
+        List<Product> products = productRepository.findAllBasicByIds(productIds);
 
         Map<String, Product> productMap = products.stream()
                 .collect(Collectors.toMap(Product::getId, p -> p));

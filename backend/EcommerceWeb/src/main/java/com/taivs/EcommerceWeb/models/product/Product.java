@@ -7,7 +7,9 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 @Entity
@@ -35,8 +37,14 @@ public class Product extends BaseEntity {
     @Column(nullable = false, length = 200)
     private String name;
 
+    @Column(length = 100)
+    private String brand;
+
     @Column(columnDefinition = "TEXT")
     private String description;
+
+    @Column(columnDefinition = "TEXT")
+    private String specifications;
 
     private BigDecimal weight;
     private BigDecimal length;
@@ -52,6 +60,13 @@ public class Product extends BaseEntity {
     @Column(nullable = false)
     @Builder.Default
     private Long totalSold = 0L;
+
+    @Column(name = "avg_rating", precision = 3, scale = 1)
+    private BigDecimal avgRating;
+
+    /** Number of ratings used to compute avgRating. */
+    @Column(name = "rating_count")
+    private Long ratingCount;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "shop_id", nullable = false)
@@ -84,6 +99,23 @@ public class Product extends BaseEntity {
             orphanRemoval = true
     )
     private Set<ProductAttribute> attributes = new HashSet<>();
+
+    /**
+     * Semantic keyword tags used for Shopee-style search.
+     * Tags are separated from product name so a product can be found
+     * even if its name doesn't contain the keyword
+     * (e.g. "Unisex Graphic Tee" tagged with ["áo phông", "áo thun", "áo cotton"]).
+     * Max 15 tags per product (enforced at service layer).
+     */
+    @Builder.Default
+    @ElementCollection(fetch = FetchType.LAZY)
+    @CollectionTable(
+            name = "product_tags",
+            joinColumns = @JoinColumn(name = "product_id"),
+            indexes = @Index(name = "idx_product_tags_tag", columnList = "tag")
+    )
+    @Column(name = "tag", length = 100)
+    private List<String> tags = new ArrayList<>();
 
     @Override
     public boolean equals(Object o) {

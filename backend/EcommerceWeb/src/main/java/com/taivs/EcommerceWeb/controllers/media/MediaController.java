@@ -31,7 +31,8 @@ public class MediaController {
             @RequestParam(value = "folder", defaultValue = "/ecommerce") String folder) {
         List<Map<String, String>> results = new ArrayList<>();
         for (MultipartFile file : files) {
-            if (file == null || file.isEmpty()) continue;
+            if (file == null || file.isEmpty())
+                continue;
             results.add(fileStorageService.upload(file, folder));
         }
         return ApiResponse.<List<Map<String, String>>>builder().result(results).build();

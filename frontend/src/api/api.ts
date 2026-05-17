@@ -35,6 +35,7 @@ const PUBLIC_ENDPOINTS = [
   '/coupons/shop',
   '/search/products',  // Only search products is public
   '/search/suggest',  // Only suggest is public
+  '/warehouses/shop', // Shop warehouses are public
 ]
 
 // Protected search endpoints that require authentication

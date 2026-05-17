@@ -18,6 +18,7 @@ import java.util.List;
 public class ProductResponse {
     String id;
     String name;
+    String brand;
     String description;
 
     @JsonProperty("min_price")
@@ -41,6 +42,12 @@ public class ProductResponse {
     LocalDateTime createdAt;
 
     Long totalSold;
+
+    @JsonProperty("avg_rating")
+    BigDecimal avgRating;
+
+    @JsonProperty("rating_count")
+    Long ratingCount;
 
     @Builder.Default
     List<ProductImageResponse> images = new ArrayList<>();

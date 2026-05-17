@@ -96,10 +96,27 @@ public class CustomerReviewServiceImpl implements CustomerReviewService {
         Double avgRating = customerReviewRepository.getAverageRatingByProductId(productId);
         long count = customerReviewRepository.countByProductId(productId);
 
+        List<Object[]> breakdown = customerReviewRepository.getRatingBreakdownByProductId(productId);
+        long fiveStar = 0, fourStar = 0, threeStar = 0, twoStar = 0, oneStar = 0;
+        for (Object[] row : breakdown) {
+            Integer rating = (Integer) row[0];
+            Long cnt = (Long) row[1];
+            if (rating == 5) fiveStar = cnt;
+            else if (rating == 4) fourStar = cnt;
+            else if (rating == 3) threeStar = cnt;
+            else if (rating == 2) twoStar = cnt;
+            else if (rating == 1) oneStar = cnt;
+        }
+
         return ProductRatingStats.builder()
                 .productId(productId)
                 .averageRating(avgRating != null ? avgRating : 0.0)
                 .totalReviews(count)
+                .fiveStar(fiveStar)
+                .fourStar(fourStar)
+                .threeStar(threeStar)
+                .twoStar(twoStar)
+                .oneStar(oneStar)
                 .build();
     }
 

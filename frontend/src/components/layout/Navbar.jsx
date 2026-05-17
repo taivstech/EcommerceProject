@@ -1,4 +1,4 @@
-import { Bell, LogOut, MapPin, Search, ShoppingCart, Store, User, Clock, X, Package, Tag, Edit3 } from "lucide-react";
+import { Bell, LogOut, MapPin, Search, ShoppingCart, Store, User, Clock, X, Package, Tag, Edit3, TrendingUp } from "lucide-react";
 import { Link } from "@/utils/compat";
 import { useRouter } from "@/utils/compat";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -175,7 +175,7 @@ const Navbar = () => {
     const router = useRouter();
 
     const [search, setSearch] = useState('')
-    const [suggestData, setSuggestData] = useState({ keywords: [], shops: [], products: [] })
+    const [suggestData, setSuggestData] = useState({ keywords: [], shops: [], products: [], popularTerms: [] })
     const [recentSearches, setRecentSearches] = useState([])
     const [showSuggestions, setShowSuggestions] = useState(false)
     const [highlightIndex, setHighlightIndex] = useState(-1)
@@ -222,21 +222,31 @@ const Navbar = () => {
     // Debounced suggestion fetch
     const fetchSuggestions = useCallback((query) => {
         if (suggestTimerRef.current) clearTimeout(suggestTimerRef.current)
-        if (!query || query.trim().length < 2) {
-            setSuggestData({ keywords: [], shops: [], products: [] })
+        if (!query || query.trim().length < 1) {
+            setSuggestData({ keywords: [], shops: [], products: [], popularTerms: [] })
             return
         }
         suggestTimerRef.current = setTimeout(async () => {
             try {
                 const result = await searchService.suggest(query, 8)
-                setSuggestData(result)
+                const popular = result.popularTerms || result.popular_terms || []
+                const keywords = result.keywords || []
+                const shops = result.shops || []
+                const products = result.products || []
+                setSuggestData({
+                    keywords,
+                    shops,
+                    products,
+                    popularTerms: popular,
+                })
                 setShowSuggestions(
-                    result.keywords.length > 0 ||
-                    result.shops.length > 0 ||
-                    (result.products && result.products.length > 0)
+                    popular.length > 0 ||
+                    keywords.length > 0 ||
+                    shops.length > 0 ||
+                    products.length > 0
                 )
             } catch {
-                setSuggestData({ keywords: [], shops: [], products: [] })
+                setSuggestData({ keywords: [], shops: [], products: [], popularTerms: [] })
             }
         }, 300)
     }, [])
@@ -245,7 +255,7 @@ const Navbar = () => {
         const val = e.target.value
         setSearch(val)
         setHighlightIndex(-1)
-        if (val.trim().length >= 2) {
+        if (val.trim().length >= 1) {
             fetchSuggestions(val)
         } else {
             setSuggestData({ keywords: [], shops: [], products: [] })
@@ -262,9 +272,9 @@ const Navbar = () => {
         const allItems = []
         const hasShopAction = showSuggestList && suggestData.shops.length > 0
         if (showSuggestList) {
+            ;(suggestData.products || []).forEach(p => allItems.push({ type: 'product', data: p }))
             if (hasShopAction) allItems.push({ type: 'shop-search', data: search.trim() })
             suggestData.keywords.forEach(kw => allItems.push({ type: 'keyword', data: kw }))
-            ;(suggestData.products || []).forEach(p => allItems.push({ type: 'product', data: p }))
         } else if (showRecent) {
             recentSearches.forEach(s => allItems.push({ type: 'keyword', data: s }))
         }
@@ -295,12 +305,12 @@ const Navbar = () => {
     }
 
     const handleSearchFocus = () => {
-        if (search.trim().length >= 2 && (suggestData.keywords.length > 0 || suggestData.shops.length > 0 || (suggestData.products && suggestData.products.length > 0))) {
+        if (search.trim().length >= 1 && (suggestData.keywords.length > 0 || suggestData.shops.length > 0 || (suggestData.products && suggestData.products.length > 0))) {
             setShowSuggestions(true)
         } else if (search.trim().length === 0) {
-            loadRecentSearches().then(() => {
-                setShowSuggestions(true)
-            })
+            // Always show dropdown on focus when empty (will show history or empty state)
+            setShowSuggestions(true)
+            loadRecentSearches()
         }
     }
 
@@ -396,7 +406,12 @@ const Navbar = () => {
 
     // Show recent or suggestions
     const showRecent = search.trim().length === 0 && recentSearches.length > 0
-    const showSuggestList = search.trim().length >= 2 && (suggestData.keywords.length > 0 || suggestData.shops.length > 0 || (suggestData.products && suggestData.products.length > 0))
+    const showSuggestList = search.trim().length >= 1 && (
+        (suggestData.popularTerms && suggestData.popularTerms.length > 0) ||
+        suggestData.keywords.length > 0 ||
+        suggestData.shops.length > 0 ||
+        (suggestData.products && suggestData.products.length > 0)
+    )
 
     return (
         <nav className="relative bg-white">
@@ -459,69 +474,107 @@ const Navbar = () => {
                                     </>
                                 )}
 
-                                {/* Suggestions from Elasticsearch — Shopee style */}
+                                {/* Suggestions — Shopee-style dropdown */}
                                 {showSuggestList && (
                                     <>
-                                        {/* Shop search action at top */}
-                                        {suggestData.shops.length > 0 && (
+                                        {/* ── 1. Search Shop ── */}
+                                        {search.trim().length >= 1 && (
                                             <button
                                                 type="button"
                                                 onClick={() => handleShopSearchClick(search)}
                                                 role="option"
-                                                className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm text-slate-700 hover:bg-green-50 text-left transition border-b border-slate-100 ${highlightIndex === 0 ? 'bg-green-50' : ''}`}
+                                                className="w-full flex items-center justify-between px-4 py-3 text-sm text-slate-700 hover:bg-green-50 transition border-b border-slate-100"
                                             >
-                                                <Store size={16} className="text-green-600 shrink-0" />
-                                                <span className="flex-1 truncate">Tìm Shop "{search.trim()}"</span>
-                                                <Store size={14} className="text-green-500 shrink-0" />
+                                                <div className="flex items-center gap-3 min-w-0">
+                                                    <div className="w-8 h-8 rounded-full bg-green-100 text-green-700 flex items-center justify-center shrink-0">
+                                                        <Store size={14} />
+                                                    </div>
+                                                    <span className="truncate font-medium">Search Shop "{search.trim()}"</span>
+                                                </div>
+                                                <div className="flex items-center gap-1 text-green-600 shrink-0 text-xs font-medium">
+                                                    <span>Search shop</span>
+                                                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+                                                </div>
                                             </button>
                                         )}
 
-                                        {/* Keyword suggestions */}
-                                        {suggestData.keywords.map((s, i) => {
-                                            const idx = (suggestData.shops.length > 0 ? 1 : 0) + i
-                                            return (
-                                                <button
-                                                    key={`kw-${i}`}
-                                                    type="button"
-                                                    onClick={() => handleSuggestionClick(s)}
-                                                    role="option"
-                                                    className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm text-slate-700 hover:bg-green-50 text-left transition ${highlightIndex === idx ? 'bg-green-50' : ''}`}
-                                                >
-                                                    <Search size={16} className="text-slate-400 shrink-0" />
-                                                    <span className="truncate">{s}</span>
-                                                </button>
-                                            )
-                                        })}
+                                        {/* ── 2. Popular Terms from DB ── */}
+                                        {(suggestData.popularTerms || []).length > 0 && (
+                                            <>
+                                                <div className="px-4 py-2 border-b border-slate-100 bg-slate-50 flex items-center gap-1.5">
+                                                    <TrendingUp size={12} className="text-orange-500" />
+                                                    <span className="text-xs text-slate-500 font-medium">Popular Keywords</span>
+                                                </div>
+                                                {suggestData.popularTerms.map((term, i) => (
+                                                    <button
+                                                        key={`popular-${i}`}
+                                                        type="button"
+                                                        onClick={() => handleSuggestionClick(term)}
+                                                        role="option"
+                                                        className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-slate-700 hover:bg-orange-50 text-left transition"
+                                                    >
+                                                        <TrendingUp size={15} className="text-orange-400 shrink-0" />
+                                                        <span className="truncate">{term}</span>
+                                                        <span className="ml-auto text-[10px] text-orange-400 font-medium shrink-0">Hot</span>
+                                                    </button>
+                                                ))}
+                                            </>
+                                        )}
 
-                                        {/* Product results from Elasticsearch */}
+                                        {/* ── 2.5 Suggested keywords ── */}
+                                        {(suggestData.keywords || []).length > 0 && (
+                                            <>
+                                                {!(suggestData.popularTerms && suggestData.popularTerms.length > 0) && (
+                                                    <div className="px-4 py-2 border-b border-slate-100 bg-slate-50 flex items-center gap-1.5">
+                                                        <Search size={12} className="text-blue-500" />
+                                                        <span className="text-xs text-slate-500 font-medium">Suggested Keywords</span>
+                                                    </div>
+                                                )}
+                                                {suggestData.keywords.map((term, i) => (
+                                                    <button
+                                                        key={`keyword-${i}`}
+                                                        type="button"
+                                                        onClick={() => handleSuggestionClick(term)}
+                                                        role="option"
+                                                        className="w-full flex items-center gap-3 px-4 py-2 text-sm text-slate-700 hover:bg-blue-50 text-left transition"
+                                                    >
+                                                        <Search size={15} className="text-blue-400 shrink-0" />
+                                                        <span className="truncate">{term}</span>
+                                                    </button>
+                                                ))}
+                                            </>
+                                        )}
+
+                                        {/* ── 3. Recommended products ── */}
                                         {(suggestData.products || []).length > 0 && (
                                             <>
-                                                <div className="px-4 py-2 border-t border-slate-100 bg-slate-50">
-                                                    <span className="text-xs text-slate-500 font-medium">Sản phẩm gợi ý</span>
+                                                <div className="px-4 py-2 border-b border-t border-slate-100 bg-slate-50">
+                                                    <span className="text-xs text-slate-500 font-medium">Recommended Products</span>
                                                 </div>
-                                                {suggestData.products.map((p, i) => {
-                                                    const idx = (suggestData.shops.length > 0 ? 1 : 0) + suggestData.keywords.length + i
-                                                    const price = p.min_price != null ? Number(p.min_price).toLocaleString('vi-VN') + 'đ' : ''
+                                                {suggestData.products.map((p) => {
+                                                    const price = (p.minPrice ?? p.min_price) != null
+                                                        ? '$' + Number(p.minPrice ?? p.min_price).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})
+                                                        : ''
                                                     return (
                                                         <button
                                                             key={p.id}
                                                             type="button"
                                                             onClick={() => handleProductClick(p.id)}
                                                             role="option"
-                                                            className={`w-full flex items-center gap-3 px-4 py-2 text-sm text-slate-700 hover:bg-green-50 text-left transition ${highlightIndex === idx ? 'bg-green-50' : ''}`}
+                                                            className="w-full flex items-center gap-3 px-4 py-2 text-sm text-slate-700 hover:bg-green-50 text-left transition"
                                                         >
-                                                            {p.main_image_url ? (
-                                                                <img src={p.main_image_url} alt="" className="w-10 h-10 rounded object-cover shrink-0 border border-slate-200" />
+                                                            {(p.mainImageUrl || p.main_image_url) ? (
+                                                                <img src={p.mainImageUrl || p.main_image_url} alt="" className="w-10 h-10 rounded object-cover shrink-0 border border-slate-200" />
                                                             ) : (
                                                                 <div className="w-10 h-10 rounded bg-slate-100 flex items-center justify-center shrink-0">
                                                                     <Package size={16} className="text-slate-400" />
                                                                 </div>
                                                             )}
                                                             <div className="flex-1 min-w-0">
-                                                                <span className="truncate block text-sm">{p.name}</span>
+                                                                <span className="line-clamp-2 text-sm font-medium leading-tight mb-1">{p.name}</span>
                                                                 <div className="flex items-center gap-2">
                                                                     {price && <span className="text-xs font-semibold text-red-500">{price}</span>}
-                                                                    {p.total_sold > 0 && <span className="text-xs text-slate-400">Đã bán {p.total_sold}</span>}
+                                                                    {(p.totalSold ?? p.total_sold) > 0 && <span className="text-xs text-slate-400">{(p.totalSold ?? p.total_sold)} sold</span>}
                                                                 </div>
                                                             </div>
                                                         </button>

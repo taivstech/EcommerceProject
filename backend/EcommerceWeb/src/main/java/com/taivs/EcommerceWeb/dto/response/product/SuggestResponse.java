@@ -11,6 +11,9 @@ import java.util.List;
 @AllArgsConstructor
 @Builder
 public class SuggestResponse {
+    /** Curated popular/trending search terms from the search_suggestions DB table. */
+    private List<String> popularTerms;
+    /** Product name-based keyword hints derived from Elasticsearch hits. */
     private List<String> keywords;
     private List<ShopSuggestion> shops;
     private List<ProductSuggestion> products;

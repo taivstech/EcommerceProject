@@ -1,10 +1,11 @@
 import { assets } from "@/assets/assets"
 import { Image } from "@/utils/compat"
-import { useEffect, useMemo, useState } from "react"
+import { useEffect, useMemo, useState, useCallback } from "react"
 import { toast } from "react-hot-toast"
 import { productService, categoryService } from "@/services"
 import { useRouter, useSearchParams } from "@/utils/compat"
-import { PlusIcon, TrashIcon, ImageIcon } from "lucide-react"
+import { PlusIcon, TrashIcon, ImageIcon, Tag, X } from "lucide-react"
+import api from "@/api/api"
 
 function cartesian(...arrays) {
     return arrays.reduce((a, b) =>
@@ -36,8 +37,22 @@ export default function StoreAddProduct() {
     const [attributes, setAttributes] = useState([])
     const [variants, setVariants] = useState([])
 
+    // ── Tag state ─────────────────────────────────────────────────────────────
+    const [selectedTags, setSelectedTags] = useState([])       // tags seller has chosen
+    const [suggestedTags, setSuggestedTags] = useState([])     // auto-tags from category
+    const [allTags, setAllTags] = useState([])                 // full tag library
+    const [tagSearch, setTagSearch] = useState("")             // filter the tag library
+
     useEffect(() => {
         categoryService.getAllCategories().then(setCategories).catch(() => { })
+        // Load all available tags for the library picker
+        api.get('/products/tags/all')
+            .then(res => {
+                const map = res.result || {}
+                const all = [...new Set(Object.values(map).flat())].sort()
+                setAllTags(all)
+            })
+            .catch(() => {})
     }, [])
 
     useEffect(() => {
@@ -57,6 +72,10 @@ export default function StoreAddProduct() {
                             width: product.width?.toString() || "",
                             height: product.height?.toString() || "",
                         })
+                        // Load existing tags
+                        if (product.tags && product.tags.length > 0) {
+                            setSelectedTags(product.tags)
+                        }
 
 
                         const images = product.images || []
@@ -356,6 +375,7 @@ export default function StoreAddProduct() {
                     image_url: v.imageUrl || undefined,
                     option_names: v.optionNames && v.optionNames.length > 0 ? v.optionNames : undefined,
                 })),
+                tags: selectedTags,
             }
 
             if (isEditMode && editProductId) {
@@ -418,12 +438,127 @@ export default function StoreAddProduct() {
                 </label>
             </div>
 
-            <select onChange={e => setProductInfo({ ...productInfo, categoryId: e.target.value })} value={productInfo.categoryId} className="w-full max-w-lg p-2 px-4 my-6 outline-none border border-slate-200 rounded" required>
+            <select onChange={e => {
+                const catId = e.target.value
+                setProductInfo({ ...productInfo, categoryId: catId })
+                // Auto-load suggested tags when category changes
+                if (catId) {
+                    api.get(`/products/tags/suggest?categoryId=${catId}`)
+                        .then(res => {
+                            const tags = res.result || []
+                            setSuggestedTags(tags)
+                            // Auto-apply category tags that aren't already selected
+                            setSelectedTags(prev => {
+                                const merged = [...new Set([...prev, ...tags])].slice(0, 15)
+                                return merged
+                            })
+                        })
+                        .catch(() => {})
+                } else {
+                    setSuggestedTags([])
+                }
+            }} value={productInfo.categoryId} className="w-full max-w-lg p-2 px-4 my-6 outline-none border border-slate-200 rounded" required>
                 <option value="">Select category</option>
                 {categories.map((cat) => (
                     <option key={cat.id} value={cat.id}>{cat.name}</option>
                 ))}
             </select>
+
+            {/* ── Search Tags ───────────────────────────────────────── */}
+            <div className="my-6 max-w-lg">
+                <div className="flex items-center gap-2 mb-2">
+                    <Tag size={16} className="text-orange-500" />
+                    <span className="font-medium text-slate-700">Search Tags</span>
+                    <span className="text-xs text-slate-400">({selectedTags.length}/15 selected)</span>
+                    {suggestedTags.length > 0 && (
+                        <span className="text-xs bg-orange-100 text-orange-600 px-2 py-0.5 rounded-full">
+                            {suggestedTags.length} auto-tags from category
+                        </span>
+                    )}
+                </div>
+
+                {/* Selected tags — chip display */}
+                {selectedTags.length > 0 && (
+                    <div className="flex flex-wrap gap-1.5 mb-3 p-3 bg-slate-50 border border-slate-200 rounded-lg">
+                        {selectedTags.map(tag => (
+                            <span key={tag} className="inline-flex items-center gap-1 px-2.5 py-1 bg-orange-100 text-orange-700 rounded-full text-xs font-medium">
+                                {tag}
+                                <button type="button" onClick={() => setSelectedTags(prev => prev.filter(t => t !== tag))}
+                                    className="hover:text-red-500 transition">
+                                    <X size={11} />
+                                </button>
+                            </span>
+                        ))}
+                        <button type="button" onClick={() => setSelectedTags([])}
+                            className="text-xs text-slate-400 hover:text-red-400 ml-1">
+                            Clear all
+                        </button>
+                    </div>
+                )}
+
+                {/* Tag library search + picker */}
+                <input
+                    type="text"
+                    value={tagSearch}
+                    onChange={e => setTagSearch(e.target.value)}
+                    placeholder="Search tags (e.g. t-shirt, laptop, sneaker...)"
+                    className="w-full p-2 px-3 border border-slate-200 rounded outline-none text-sm mb-2"
+                />
+                <div className="flex flex-wrap gap-1.5 max-h-36 overflow-y-auto p-2 border border-slate-100 rounded">
+                    {allTags
+                        .filter(t => !tagSearch || t.includes(tagSearch.toLowerCase()))
+                        .map(tag => {
+                            const isSelected = selectedTags.includes(tag)
+                            const isAuto = suggestedTags.includes(tag)
+                            return (
+                                <button
+                                    key={tag}
+                                    type="button"
+                                    disabled={!isSelected && selectedTags.length >= 15}
+                                    onClick={() => {
+                                        if (isSelected) {
+                                            setSelectedTags(prev => prev.filter(t => t !== tag))
+                                        } else if (selectedTags.length < 15) {
+                                            setSelectedTags(prev => [...prev, tag])
+                                        }
+                                    }}
+                                    className={`px-2.5 py-1 rounded-full text-xs font-medium border transition
+                                        ${isSelected
+                                            ? 'bg-orange-500 text-white border-orange-500'
+                                            : isAuto
+                                            ? 'bg-orange-50 text-orange-600 border-orange-200 hover:bg-orange-100'
+                                            : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'
+                                        }
+                                        ${!isSelected && selectedTags.length >= 15 ? 'opacity-40 cursor-not-allowed' : ''}
+                                    `}
+                                >
+                                    {isAuto && !isSelected && <span className="mr-1">✦</span>}
+                                    {tag}
+                                </button>
+                            )
+                        })
+                    }
+                    {allTags.filter(t => !tagSearch || t.includes(tagSearch.toLowerCase())).length === 0 && (
+                        <p className="text-xs text-slate-400 p-1">No tags found. Type a custom tag and press Enter.</p>
+                    )}
+                </div>
+                {/* Custom tag input */}
+                <input
+                    type="text"
+                    placeholder="+ Add custom tag (press Enter)"
+                    className="w-full mt-2 p-2 px-3 border border-dashed border-slate-300 rounded outline-none text-sm text-slate-600"
+                    onKeyDown={e => {
+                        if (e.key === 'Enter') {
+                            e.preventDefault()
+                            const val = e.target.value.trim().toLowerCase()
+                            if (val && !selectedTags.includes(val) && selectedTags.length < 15) {
+                                setSelectedTags(prev => [...prev, val])
+                                e.target.value = ''
+                            }
+                        }
+                    }}
+                />
+            </div>
 
             {/* ── Dimensions ─────────────────────────────────────── */}
             <p className="mt-4 mb-2 font-medium text-slate-700">Dimensions & Weight (optional)</p>

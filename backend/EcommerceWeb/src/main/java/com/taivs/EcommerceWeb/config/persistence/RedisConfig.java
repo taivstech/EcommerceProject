@@ -13,6 +13,9 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.serializer.GenericJackson2JsonRedisSerializer;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
 import redis.clients.jedis.JedisPoolConfig;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 
 @Configuration
 @Slf4j
@@ -47,13 +50,13 @@ public class RedisConfig {
         poolConfig.setJmxEnabled(false);
         poolConfig.setBlockWhenExhausted(true);
         poolConfig.setFairness(true);
-        
+
         log.info("   Jedis Pool Config initialized:");
         log.info("   maxTotal: {}", poolConfig.getMaxTotal());
         log.info("   maxIdle: {}", poolConfig.getMaxIdle());
         log.info("   minIdle: {}", poolConfig.getMinIdle());
         log.info("   maxWaitMillis: {}ms", poolConfig.getMaxWaitMillis());
-        
+
         return poolConfig;
     }
 
@@ -62,18 +65,28 @@ public class RedisConfig {
         RedisStandaloneConfiguration standaloneConfig = new RedisStandaloneConfiguration();
         standaloneConfig.setHostName(redisHost);
         standaloneConfig.setPort(redisPort);
-        
+
         if (redisPassword != null && !redisPassword.isEmpty()) {
             standaloneConfig.setPassword(RedisPassword.of(redisPassword));
         }
-        
-        JedisClientConfiguration jedisClientConfiguration = 
-                JedisClientConfiguration.builder()
+
+        JedisClientConfiguration jedisClientConfiguration = JedisClientConfiguration.builder()
                 .usePooling()
                 .poolConfig(jedisPoolConfig())
                 .build();
-        
+
         return new JedisConnectionFactory(standaloneConfig, jedisClientConfiguration);
+    }
+
+    @Bean
+    public ObjectMapper redisObjectMapper() {
+        ObjectMapper objectMapper = new ObjectMapper();
+        objectMapper.registerModule(new JavaTimeModule());
+        objectMapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
+
+        objectMapper.activateDefaultTyping(objectMapper.getPolymorphicTypeValidator(),
+                ObjectMapper.DefaultTyping.NON_FINAL);
+        return objectMapper;
     }
 
     @Bean
@@ -83,13 +96,14 @@ public class RedisConfig {
         template.setKeySerializer(new StringRedisSerializer());
         template.setHashKeySerializer(new StringRedisSerializer());
 
-        template.setValueSerializer(new GenericJackson2JsonRedisSerializer());
-        template.setHashValueSerializer(new GenericJackson2JsonRedisSerializer());
+        GenericJackson2JsonRedisSerializer serializer = new GenericJackson2JsonRedisSerializer(redisObjectMapper());
+        template.setValueSerializer(serializer);
+        template.setHashValueSerializer(serializer);
 
         template.afterPropertiesSet();
-        
-        log.info("RedisTemplate initialized with Jedis connection pool");
-        
+
+        log.info("RedisTemplate initialized with Jedis connection pool and JavaTimeModule");
+
         return template;
     }
 }

@@ -26,4 +26,7 @@ public class ProductUpdateRequest {
     List<ProductAttributeRequest> attributes;
 
     List<ProductVariantRequest> variants;
+
+    /** Nullable: if null, keep existing tags. Pass empty list [] to clear all tags. */
+    List<String> tags;
 }

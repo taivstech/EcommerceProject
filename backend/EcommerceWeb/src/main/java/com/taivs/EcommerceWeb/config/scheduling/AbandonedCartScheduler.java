@@ -16,7 +16,6 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
-
 @Component
 @RequiredArgsConstructor
 @Slf4j
@@ -57,7 +56,8 @@ public class AbandonedCartScheduler {
 
             String email = items.get(0).getUser().getEmail();
             String username = items.get(0).getUser().getFullName();
-            if (username == null) username = items.get(0).getUser().getUsername();
+            if (username == null)
+                username = items.get(0).getUser().getUsername();
 
             String htmlContent = buildAbandonedCartEmail(username, items);
             emailService.sendEmail(email, "Bạn có sản phẩm chưa thanh toán! 🛒", htmlContent);
@@ -84,44 +84,46 @@ public class AbandonedCartScheduler {
                     """, productName, variantName != null ? variantName : "", ci.getQuantity(), price));
         }
 
-        return String.format("""
-                <!DOCTYPE html>
-                <html>
-                <head>
-                    <style>
-                        body { font-family: Arial, sans-serif; color: #333; }
-                        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-                        .header { background: #ff6b35; color: white; padding: 20px; text-align: center; border-radius: 5px 5px 0 0; }
-                        .content { padding: 20px; background: #f9f9f9; border-radius: 0 0 5px 5px; }
-                        table { width: 100%%; border-collapse: collapse; margin: 15px 0; }
-                        th { background: #ff6b35; color: white; padding: 10px; text-align: left; }
-                        .button { display: inline-block; padding: 12px 24px; background: #ff6b35; color: white; text-decoration: none; border-radius: 5px; margin-top: 15px; }
-                    </style>
-                </head>
-                <body>
-                    <div class="container">
-                        <div class="header">
-                            <h2>Giỏ hàng của bạn đang chờ!</h2>
-                        </div>
-                        <div class="content">
-                            <p>Xin chào <strong>%s</strong>,</p>
-                            <p>Bạn có %d sản phẩm trong giỏ hàng chưa thanh toán:</p>
-                            <table>
-                                <tr>
-                                    <th>Sản phẩm</th>
-                                    <th>SL</th>
-                                    <th>Giá</th>
-                                </tr>
-                                %s
-                            </table>
-                            <p>Đừng để bỏ lỡ — sản phẩm có thể hết hàng bất cứ lúc nào!</p>
-                            <p style="color: #999; font-size: 12px; margin-top: 20px;">
-                                Nếu bạn đã thanh toán, vui lòng bỏ qua email này.
-                            </p>
-                        </div>
-                    </div>
-                </body>
-                </html>
-                """, username, items.size(), itemRows);
+        return String.format(
+                """
+                        <!DOCTYPE html>
+                        <html>
+                        <head>
+                            <style>
+                                body { font-family: Arial, sans-serif; color: #333; }
+                                .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+                                .header { background: #ff6b35; color: white; padding: 20px; text-align: center; border-radius: 5px 5px 0 0; }
+                                .content { padding: 20px; background: #f9f9f9; border-radius: 0 0 5px 5px; }
+                                table { width: 100%%; border-collapse: collapse; margin: 15px 0; }
+                                th { background: #ff6b35; color: white; padding: 10px; text-align: left; }
+                                .button { display: inline-block; padding: 12px 24px; background: #ff6b35; color: white; text-decoration: none; border-radius: 5px; margin-top: 15px; }
+                            </style>
+                        </head>
+                        <body>
+                            <div class="container">
+                                <div class="header">
+                                    <h2>Giỏ hàng của bạn đang chờ!</h2>
+                                </div>
+                                <div class="content">
+                                    <p>Xin chào <strong>%s</strong>,</p>
+                                    <p>Bạn có %d sản phẩm trong giỏ hàng chưa thanh toán:</p>
+                                    <table>
+                                        <tr>
+                                            <th>Sản phẩm</th>
+                                            <th>SL</th>
+                                            <th>Giá</th>
+                                        </tr>
+                                        %s
+                                    </table>
+                                    <p>Đừng để bỏ lỡ — sản phẩm có thể hết hàng bất cứ lúc nào!</p>
+                                    <p style="color: #999; font-size: 12px; margin-top: 20px;">
+                                        Nếu bạn đã thanh toán, vui lòng bỏ qua email này.
+                                    </p>
+                                </div>
+                            </div>
+                        </body>
+                        </html>
+                        """,
+                username, items.size(), itemRows);
     }
 }

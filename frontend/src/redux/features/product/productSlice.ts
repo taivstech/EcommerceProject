@@ -23,6 +23,7 @@ export function normalizeProduct(p: ProductResponse) {
               stock: v.stock,
               soldCount: v.sold_count ?? 0,
               status: v.status,
+              imageUrl: v.imageUrl || v.image_url || null,
               detailAttributes: Array.isArray(v.detail_attributes) ? v.detail_attributes : [],
           }))
         : []
@@ -52,9 +53,19 @@ export function normalizeProduct(p: ProductResponse) {
         primaryPrice = Number(p.max_price)
     }
 
+    // Derive the main image: prefer product-level images, fallback to first variant image
+    // This is critical for seeded Amazon data which only has images in product_variants
+    const firstVariantImageUrl = variants.find((v: any) => v.imageUrl)?.imageUrl || null
+    const normalizedImages = images.length
+        ? images
+        : firstVariantImageUrl
+            ? [{ url: firstVariantImageUrl, is_main: true }]
+            : []
+
     return {
         id: p?.id,
         name: p?.name,
+        brand: p?.brand || null,
         description: p?.description,
         price: Number.isFinite(primaryPrice) ? primaryPrice : 0,
         minPrice: typeof p?.min_price !== 'undefined' && p?.min_price !== null ? Number(p.min_price) : null,
@@ -66,7 +77,7 @@ export function normalizeProduct(p: ProductResponse) {
         createdAt: p?.created_at,
         totalSold: p?.total_sold ?? 0,
 
-        images: images.length ? images : [],
+        images: normalizedImages,
 
         variants,
 
@@ -75,6 +86,8 @@ export function normalizeProduct(p: ProductResponse) {
         rating: [],
         mrp: null,
         store: null,
+        averageRating: p?.avg_rating != null ? Number(p.avg_rating) : ((p as any)?.avgRating != null ? Number((p as any).avgRating) : null),
+        ratingCount: p?.rating_count != null ? Number(p.rating_count) : ((p as any)?.ratingCount != null ? Number((p as any).ratingCount) : null),
     }
 }
 

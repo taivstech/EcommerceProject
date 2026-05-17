@@ -39,4 +39,10 @@ public interface AuthenticationService {
     Map<String, String> generateTokensForOAuth2(User user, HttpServletRequest httpRequest);
 
     AuthenticationTokens authenticateWithOAuth2Code(ExchangeTokenRequest request, HttpServletRequest httpRequest);
+
+    boolean checkUsernameAvailable(String username);
+
+    boolean checkEmailAvailable(String email);
+
+    AuthenticationTokens verifyEmail(String token);
 }

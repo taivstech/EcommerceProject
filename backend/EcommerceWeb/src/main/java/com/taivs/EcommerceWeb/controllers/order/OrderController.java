@@ -51,7 +51,7 @@ public class OrderController {
     @PutMapping("/{id}/cancel")
     @PreAuthorize("hasAuthority('order:manage') or hasRole('USER') or hasRole('SELLER') or hasRole('ADMIN')")
     public ApiResponse<Void> cancelMyOrder(@PathVariable("id") String id,
-                                           @RequestParam(required = false) String reason) {
+            @RequestParam(required = false) String reason) {
         buyerOrderService.cancelMyOrder(id, reason);
         return ApiResponse.<Void>builder().build();
     }

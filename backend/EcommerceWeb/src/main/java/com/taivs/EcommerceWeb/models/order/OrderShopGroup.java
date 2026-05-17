@@ -37,6 +37,27 @@ public class OrderShopGroup extends BaseEntity {
     private BigDecimal shippingFee;
     private BigDecimal totalDiscount;
 
+    /**
+     * Commission rate applied to this group's subtotal (snapshot at order time).
+     * E.g. 0.05 = 5%. Null until the order is COMPLETED and commission is settled.
+     */
+    @Column(name = "commission_rate", precision = 5, scale = 4)
+    private BigDecimal commissionRate;
+
+    /**
+     * Platform fee = subtotal × commissionRate.
+     * Null until the order is COMPLETED.
+     */
+    @Column(name = "commission_amount", precision = 15, scale = 2)
+    private BigDecimal commissionAmount;
+
+    /**
+     * Seller receives: subtotal - commissionAmount.
+     * Null until the order is COMPLETED.
+     */
+    @Column(name = "net_amount", precision = 15, scale = 2)
+    private BigDecimal netAmount;
+
     @Column(length = 20)
     private String shipment;
 

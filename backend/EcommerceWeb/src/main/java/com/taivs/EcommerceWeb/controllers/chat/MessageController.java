@@ -84,7 +84,7 @@ public class MessageController {
     @PostMapping(value = "/rooms/{roomId}/messages", consumes = MediaType.APPLICATION_JSON_VALUE)
     @PreAuthorize("hasAuthority('message:manage') or hasRole('USER') or hasRole('SELLER') or hasRole('ADMIN')")
     public ApiResponse<MessageResponse> send(@PathVariable("roomId") String roomId,
-                                             @RequestBody @Valid SendRoomMessageRequest request) {
+            @RequestBody @Valid SendRoomMessageRequest request) {
         SendMessageRequest send = new SendMessageRequest();
         send.setRoomId(roomId);
         send.setContent(request.getContent());

@@ -36,7 +36,8 @@ public class CartController {
 
     @PutMapping("/items/{id}")
     @PreAuthorize("hasAuthority('cart:manage') or hasRole('USER') or hasRole('SELLER') or hasRole('ADMIN')")
-    public ApiResponse<Void> updateQty(@PathVariable("id") String id, @RequestBody @Valid UpdateCartItemRequest request) {
+    public ApiResponse<Void> updateQty(@PathVariable("id") String id,
+            @RequestBody @Valid UpdateCartItemRequest request) {
         cartService.updateQuantity(id, request);
         return ApiResponse.<Void>builder().build();
     }
@@ -55,4 +56,3 @@ public class CartController {
         return ApiResponse.<Void>builder().build();
     }
 }
-

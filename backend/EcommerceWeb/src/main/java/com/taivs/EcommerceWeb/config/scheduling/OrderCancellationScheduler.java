@@ -5,7 +5,6 @@ import com.taivs.EcommerceWeb.models.order.OrderItem;
 import com.taivs.EcommerceWeb.models.order.OrderShopGroup;
 import com.taivs.EcommerceWeb.enums.order.OrderStatus;
 import com.taivs.EcommerceWeb.repositories.order.OrderRepository;
-import com.taivs.EcommerceWeb.models.product.ProductVariant;
 import com.taivs.EcommerceWeb.repositories.product.ProductVariantRepository;
 import com.taivs.EcommerceWeb.services.warehouse.WarehouseStockService;
 import lombok.RequiredArgsConstructor;
@@ -41,9 +40,8 @@ public class OrderCancellationScheduler {
         LocalDateTime threshold = LocalDateTime.now().minusMinutes(paymentTimeoutMinutes);
 
         List<Order> unpaidOrders = orderRepository.findByStatusAndCreatedAtBefore(
-                OrderStatus.AWAITING_PAYMENT, 
-                threshold
-        );
+                OrderStatus.AWAITING_PAYMENT,
+                threshold);
 
         if (unpaidOrders.isEmpty()) {
             log.debug("No unpaid orders to cancel");
@@ -55,7 +53,7 @@ public class OrderCancellationScheduler {
         for (Order order : unpaidOrders) {
             try {
                 cancelOrderAndRestoreStock(order);
-                log.info("Cancelled unpaid order: {} (created at: {})", 
+                log.info("Cancelled unpaid order: {} (created at: {})",
                         order.getId(), order.getCreatedAt());
             } catch (Exception e) {
                 log.error("Failed to cancel order: {}", order.getId(), e);
@@ -79,7 +77,8 @@ public class OrderCancellationScheduler {
                         log.info("Released reservation: {} units of variant {} from warehouse {} (timeout cancel)",
                                 quantity, variantId, warehouseId);
                     } catch (Exception e) {
-                        log.error("Failed to release reservation for variant {} warehouse {}: {}", variantId, warehouseId, e.getMessage());
+                        log.error("Failed to release reservation for variant {} warehouse {}: {}", variantId,
+                                warehouseId, e.getMessage());
                     }
                 }
             }
@@ -90,7 +89,7 @@ public class OrderCancellationScheduler {
         orderRepository.save(order);
     }
 
-    @Scheduled(fixedRate = 3_600_000) // 1 hour
+    @Scheduled(fixedRate = 3_600_000)
     @Transactional
     public void autoCompleteDeliveredOrders() {
         log.debug("Running scheduled job to auto-complete long-delivered orders");
@@ -104,7 +103,8 @@ public class OrderCancellationScheduler {
             return;
         }
 
-        log.info("Auto-completing {} delivered orders (delivered > {} days ago)", deliveredOrders.size(), autoCompleteDays);
+        log.info("Auto-completing {} delivered orders (delivered > {} days ago)", deliveredOrders.size(),
+                autoCompleteDays);
         for (Order order : deliveredOrders) {
             try {
                 order.changeStatus(OrderStatus.COMPLETED);

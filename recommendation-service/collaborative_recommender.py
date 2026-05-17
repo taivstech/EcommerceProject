@@ -54,6 +54,7 @@ class CollaborativeRecommender:
         interactions_df: pd.DataFrame,
         ratings_df: pd.DataFrame,
         valid_product_ids: set[str],
+        behavior_df: pd.DataFrame = None,
     ):
         """
         Build the user-item matrix and compute SVD factors.
@@ -62,6 +63,10 @@ class CollaborativeRecommender:
             interactions_df: columns [user_id, product_id, total_qty, last_order_date]
             ratings_df:      columns [user_id, product_id, avg_rating]
             valid_product_ids: set of active product IDs (filter out deleted)
+            behavior_df:     columns [user_id, product_id, signal_score]  ← NEW
+                             Pre-weighted implicit signals from user_behavior_events.
+                             signal_score = weighted sum of (view*0.3 + click*0.5 +
+                             wishlist*1.5 + cart*2.0), already decayed by recency.
         """
         # Filter to valid products only
         if not interactions_df.empty:
@@ -72,13 +77,22 @@ class CollaborativeRecommender:
             ratings_df = ratings_df[
                 ratings_df["product_id"].isin(valid_product_ids)
             ].copy()
+        if behavior_df is not None and not behavior_df.empty:
+            behavior_df = behavior_df[
+                behavior_df["product_id"].isin(valid_product_ids)
+            ].copy()
 
-        # Need at least some interactions
-        if interactions_df.empty and ratings_df.empty:
+        # Need at least some interactions (any source)
+        has_any_data = (
+            not interactions_df.empty
+            or not ratings_df.empty
+            or (behavior_df is not None and not behavior_df.empty)
+        )
+        if not has_any_data:
             logger.warning("No interaction data — collaborative model not built.")
             return
 
-        # Collect unique users and items
+        # Collect unique users and items (from all sources)
         all_users = set()
         all_items = set()
         if not interactions_df.empty:
@@ -87,6 +101,9 @@ class CollaborativeRecommender:
         if not ratings_df.empty:
             all_users.update(ratings_df["user_id"].unique())
             all_items.update(ratings_df["product_id"].unique())
+        if behavior_df is not None and not behavior_df.empty:
+            all_users.update(behavior_df["user_id"].unique())
+            all_items.update(behavior_df["product_id"].unique())
 
         self.user_ids = sorted(all_users)
         self.item_ids = sorted(all_items)
@@ -136,6 +153,19 @@ class CollaborativeRecommender:
                     rows.append(uid_idx)
                     cols.append(iid_idx)
                     values.append(rating_signal)
+
+        # ── Behavior signals (pre-weighted in data_loader) ────────────
+        # These cover VIEW, CLICK, WISHLIST, CART_ADD events.
+        # signal_score is already recency-decayed and capped by data_loader.
+        if behavior_df is not None and not behavior_df.empty:
+            for row in behavior_df.itertuples(index=False):
+                uid_idx = self.user_to_idx.get(row.user_id)
+                iid_idx = self.item_to_idx.get(row.product_id)
+                if uid_idx is not None and iid_idx is not None:
+                    rows.append(uid_idx)
+                    cols.append(iid_idx)
+                    values.append(float(row.signal_score))
+            logger.info("Added %d behavior signals to interaction matrix", len(behavior_df))
 
         if not rows:
             logger.warning("Empty interaction matrix — collaborative model not built.")

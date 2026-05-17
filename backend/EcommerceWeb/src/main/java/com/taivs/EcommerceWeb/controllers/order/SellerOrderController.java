@@ -62,7 +62,7 @@ public class SellerOrderController {
     @PutMapping("/{id}/cancel")
     @PreAuthorize("hasRole('SELLER') or hasRole('ADMIN')")
     public ApiResponse<Void> cancelOrder(@PathVariable("id") String id,
-                                          @RequestParam(required = false) String reason) {
+            @RequestParam(required = false) String reason) {
         sellerOrderService.cancelOrder(id, reason);
         return ApiResponse.<Void>builder().build();
     }
@@ -75,7 +75,8 @@ public class SellerOrderController {
         byte[] data = exportService.exportSellerOrdersExcel(from, to);
         return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=my-orders-report.xlsx")
-                .contentType(MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
+                .contentType(
+                        MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
                 .body(data);
     }
 }

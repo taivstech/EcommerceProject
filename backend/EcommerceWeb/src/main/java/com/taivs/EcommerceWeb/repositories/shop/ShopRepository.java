@@ -82,5 +82,13 @@ public interface ShopRepository extends JpaRepository<Shop, String> {
     @Query(value = "SELECT s.id FROM Shop s WHERE UPPER(s.status) = UPPER(:status) ORDER BY s.createdAt DESC",
            countQuery = "SELECT COUNT(s) FROM Shop s WHERE UPPER(s.status) = UPPER(:status)")
     org.springframework.data.domain.Page<String> findShopIdsByStatus(@Param("status") String status, org.springframework.data.domain.Pageable pageable);
+
+    /**
+     * Returns usernames of all approved shops — used for sitemap generation.
+     * URLs are /shop/{username}.
+     */
+    @Query("SELECT s.user.username FROM Shop s WHERE UPPER(s.status) = 'APPROVED'")
+    List<String> findActiveShopUsernames();
 }
+
 

@@ -45,14 +45,19 @@ const OrderSummary = ({ totalPrice, items, shopId, isHorizontal = false, showPla
 
     // Get unique shop IDs from cart items (or use provided shopId)
     const shopIds = useMemo(() => {
-        if (shopId) return [shopId];
         const ids = new Set()
-        items.forEach(item => {
-            const itemShopId = item.shop_id || item.product?.shop_id
-            if (itemShopId) ids.add(itemShopId)
-        })
-        return Array.from(ids)
+        if (shopId) ids.add(shopId)
+        else if (items) {
+            items.forEach(item => {
+                const itemShopId = item.shop_id || item.product?.shop_id || item.shopId
+                if (itemShopId) ids.add(itemShopId)
+            })
+        }
+        return Array.from(ids).sort()
     }, [items, shopId])
+
+    // Create a stable string representation for dependencies
+    const shopIdsKey = shopIds.join(',')
 
     // ─── Calculate shipping fee via GHN API when address changes ──────────
     const calculateShippingFee = useCallback(async () => {
@@ -78,11 +83,12 @@ const OrderSummary = ({ totalPrice, items, shopId, isHorizontal = false, showPla
                         selectedAddress.district_id
                     );
                     setAvailableServices(services);
-                    // If current selection not available, fallback to first available
+                    // If current selection not available, fallback to first available (default: standard/2)
                     if (services.length > 0 && !services.some(s => s.service_type_id === selectedServiceType)) {
                         setSelectedServiceType(services[0].service_type_id);
                     }
-                } catch {
+                } catch (e) {
+                    console.error('GHN available services failed:', e);
                     setAvailableServices([]);
                 }
             }
@@ -90,22 +96,22 @@ const OrderSummary = ({ totalPrice, items, shopId, isHorizontal = false, showPla
             // 2. Group items by shop to calculate per-shop weight
             const weightByShop = {};
             items.forEach(item => {
-                const shopId = item.shop_id || item.product?.shop_id;
-                if (!shopId) return;
+                const itemShopId = item.shop_id || item.product?.shop_id || item.shopId;
+                if (!itemShopId) return;
                 const weight = (item.product?.weight || 0.3) * 1000; // kg → grams, default 300g
                 const qty = item.quantity || 1;
-                weightByShop[shopId] = (weightByShop[shopId] || 0) + (weight * qty);
+                weightByShop[itemShopId] = (weightByShop[itemShopId] || 0) + (weight * qty);
             });
 
             // 3. Calculate shipping fee per shop via GHN API
             let totalFee = 0;
-            for (const shopId of shopIds) {
-                const shopAddr = shopAddrMap[shopId];
+            for (const sId of shopIds) {
+                const shopAddr = shopAddrMap[sId];
                 const fromDistrictId = shopAddr?.district_id || shopAddr?.districtId;
                 const fromWardCode = shopAddr?.ward_code || shopAddr?.wardCode || '';
 
                 if (!fromDistrictId) {
-                    // Shop has no address configured — use fallback fee
+                    console.warn(`Shop ${sId} has no district_id configured, using fallback`);
                     totalFee += 2.50;
                     continue;
                 }
@@ -117,13 +123,13 @@ const OrderSummary = ({ totalPrice, items, shopId, isHorizontal = false, showPla
                         from_ward_code: fromWardCode,
                         to_district_id: selectedAddress.district_id,
                         to_ward_code: selectedAddress.ward_code,
-                        weight: Math.max(1, Math.round(weightByShop[shopId] || 300)),
+                        weight: Math.max(1, Math.round(weightByShop[sId] || 300)),
                     });
                     // GHN returns fee in VND — convert to USD (approx 1 USD = 25,000 VND)
                     const feeUsd = feeVnd ? feeVnd / 25000 : 2.50;
                     totalFee += Math.round(feeUsd * 100) / 100; // round to 2 decimals
                 } catch (err) {
-                    console.warn(`GHN fee failed for shop ${shopId}, using fallback`, err);
+                    console.warn(`GHN fee failed for shop ${sId}, using fallback`, err);
                     totalFee += 2.50; // fallback per shop
                 }
             }
@@ -136,7 +142,8 @@ const OrderSummary = ({ totalPrice, items, shopId, isHorizontal = false, showPla
         } finally {
             setLoadingShipping(false);
         }
-    }, [selectedAddress, shopIds, items, selectedServiceType]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [selectedAddress?.district_id, selectedAddress?.ward_code, shopIdsKey, items, selectedServiceType]);
 
     useEffect(() => {
         if (!selectedAddress || !selectedAddress.district_id || !selectedAddress.ward_code) {
@@ -144,7 +151,8 @@ const OrderSummary = ({ totalPrice, items, shopId, isHorizontal = false, showPla
             return;
         }
         calculateShippingFee();
-    }, [selectedAddress, calculateShippingFee, selectedServiceType]);
+    }, [selectedAddress?.district_id, selectedAddress?.ward_code, calculateShippingFee]);
+
 
     // Fetch platform coupons
     const fetchPlatformCoupons = async () => {
@@ -285,9 +293,9 @@ const OrderSummary = ({ totalPrice, items, shopId, isHorizontal = false, showPla
             && coupon.current_user_usage_count >= coupon.max_usage_per_user) return false
         // Backward-compatible field for old API payloads
         if (coupon.used_by_current_user && (coupon.max_usage_per_user == null || coupon.max_usage_per_user <= 1)) return false
-        // Hết lượt sử dụng tổng (phòng trường hợp backend vẫn trả ra)
+        // Out of total usage limit (in case backend still returned it)
         if (coupon.max_usage != null && coupon.current_usage != null && coupon.current_usage >= coupon.max_usage) return false
-        // Không đủ giá trị đơn hàng tối thiểu
+        // Order total less than minimum order amount
         if (coupon.min_order_amount && totalPrice < coupon.min_order_amount) return false
         // Backend does not allow stacking two FREE_SHIPPING coupons
         if (coupon.discount_type === 'FREE_SHIPPING') {
@@ -449,7 +457,7 @@ const OrderSummary = ({ totalPrice, items, shopId, isHorizontal = false, showPla
                             <div className='flex items-center gap-2 text-slate-600'>
                                 <TruckIcon size={16} />
                                 <span>Shipping:</span>
-                                <span className="ml-1 px-2 py-0.5 bg-orange-500 text-white text-[10px] font-bold rounded" title="Giao Hàng Nhanh">GHN</span>
+                                <span className="ml-1 px-2 py-0.5 bg-orange-500 text-white text-[10px] font-bold rounded" title="GHN Express">GHN</span>
                             </div>
                             {!selectedAddress
                                 ? <span className='text-slate-400 text-sm'>Select address</span>
@@ -788,7 +796,7 @@ const OrderSummary = ({ totalPrice, items, shopId, isHorizontal = false, showPla
                         <p>Subtotal:</p>
                         <p className='flex items-center gap-1'>
                             <TruckIcon size={13} /> Shipping:
-                            <span className="ml-1 px-1.5 py-0.5 bg-orange-500 text-white text-[9px] font-bold rounded" title="Giao Hàng Nhanh">GHN</span>
+                            <span className="ml-1 px-1.5 py-0.5 bg-orange-500 text-white text-[9px] font-bold rounded" title="GHN Express">GHN</span>
                         </p>
                         {platformDiscount > 0 && <p>GoCart coupon:</p>}
                         {shopDiscount > 0 && <p>Shop coupon:</p>}

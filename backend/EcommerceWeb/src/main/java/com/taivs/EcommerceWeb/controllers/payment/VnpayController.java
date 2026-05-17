@@ -17,29 +17,28 @@ import java.util.Map;
 @RequestMapping("/payment/vnpay")
 @RequiredArgsConstructor
 public class VnpayController {
-    private final VnpayService vnpayService;
-    private final OrderRepository orderRepository;
+        private final VnpayService vnpayService;
+        private final OrderRepository orderRepository;
 
-    @PostMapping("/create-payment-url/{orderId}")
-    public ApiResponse<String> createPaymentUrl(@PathVariable("orderId") String orderId,
-                                                 HttpServletRequest request) {
-        Order order = orderRepository.findById(orderId)
-                .orElseThrow(() -> new AppException(ErrorCode.ORDER_NOT_EXISTS));
-        
-        String clientIp = request.getRemoteAddr();
-        String paymentUrl = vnpayService.createPaymentUrl(
-                orderId, 
-                order.getTotal(), 
-                "Payment for order " + orderId, 
-                clientIp
-        );
-        return ApiResponse.<String>builder()
-                .result(paymentUrl)
-                .build();
-    }
+        @PostMapping("/create-payment-url/{orderId}")
+        public ApiResponse<String> createPaymentUrl(@PathVariable("orderId") String orderId,
+                        HttpServletRequest request) {
+                Order order = orderRepository.findById(orderId)
+                                .orElseThrow(() -> new AppException(ErrorCode.ORDER_NOT_EXISTS));
 
-    @PostMapping("/ipn")
-    public ApiResponse<String> vnpayIpn(@RequestParam Map<String, String> params) {
-        return vnpayService.vnpayCallback(params);
-    }
+                String clientIp = request.getRemoteAddr();
+                String paymentUrl = vnpayService.createPaymentUrl(
+                                orderId,
+                                order.getTotal(),
+                                "Payment for order " + orderId,
+                                clientIp);
+                return ApiResponse.<String>builder()
+                                .result(paymentUrl)
+                                .build();
+        }
+
+        @PostMapping("/ipn")
+        public ApiResponse<String> vnpayIpn(@RequestParam Map<String, String> params) {
+                return vnpayService.vnpayCallback(params);
+        }
 }

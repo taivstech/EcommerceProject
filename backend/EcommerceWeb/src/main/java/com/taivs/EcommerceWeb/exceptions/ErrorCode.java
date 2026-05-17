@@ -56,6 +56,8 @@ public enum ErrorCode {
     COUPON_ALREADY_APPLIED(1056, "Coupon already applied to this order", HttpStatus.BAD_REQUEST),
     COUPON_INVALID_FOR_SCOPE(1057, "Coupon is not applicable in this scope", HttpStatus.BAD_REQUEST),
     RETURN_WINDOW_EXPIRED(1058, "Return window has expired (30 days after delivery)", HttpStatus.BAD_REQUEST),
+    EMAIL_NOT_VERIFIED(1059, "Email not verified. Please check your email and verify your account.", HttpStatus.FORBIDDEN),
+    EMAIL_ALREADY_VERIFIED(1060, "Email is already verified", HttpStatus.BAD_REQUEST),
 
     INTERNAL_SERVER_ERROR(500, "Internal server error", HttpStatus.INTERNAL_SERVER_ERROR);
 

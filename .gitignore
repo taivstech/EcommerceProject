@@ -1,10 +1,107 @@
+# ==========================================
+# 🔐 HỒ SƠ BẢO MẬT & MÔI TRƯỜNG (Environment & Secrets)
+# ==========================================
 .env
 .env.*
+*.env
+*.env.local
 backend/EcommerceWeb/.env
 backend/EcommerceWeb/.env.local
+backend/EcommerceWeb/src/main/resources/application-local.properties
 
-node_modules
-target
-dist
-build
+# ==========================================
+# 💻 IDE & CÔNG CỤ LẬP TRÌNH (IDEs & Editors)
+# ==========================================
+.idea/
+.vscode/
+*.iml
+*.iws
+*.ipr
+.project
+.classpath
+.settings/
+.factorypath
+.DS_Store
+Thumbs.db
+
+# ==========================================
+# ☕ JAVA & SPRING BOOT BACKEND
+# ==========================================
+# Build directories
+target/
+**/target/
+bin/
+**/bin/
+out/
+**/out/
+
+# Compiled files
+*.class
+*.jar
+*.war
+*.ear
+
+# Logs & temporary files
 *.log
+logs/
+**/logs/
+temp/
+**/temp/
+
+# ==========================================
+# ⚛️ NODE.JS & REACT FRONTEND
+# ==========================================
+# Dependencies
+node_modules/
+**/node_modules/
+
+# Production build outputs
+dist/
+**/dist/
+build/
+**/build/
+.vite/
+**/ .vite/
+.eslintcache
+
+# ==========================================
+# 🐍 PYTHON & AI RECOMMENDATION SERVICE
+# ==========================================
+# Virtual environments
+.venv/
+**/ .venv/
+venv/
+**/venv/
+env/
+**/env/
+ENV/
+
+# Python cache & compiler files
+__pycache__/
+**/__pycache__/
+*.pyc
+*.py[cod]
+*$py.class
+.pytest_cache/
+.mypy_cache/
+.ipynb_checkpoints/
+
+# recommendation engine dynamic training data directories (do not push to git)
+data_for_recommend_base_behavior/
+data_for_recommend_base_content/
+
+# Personal school reports, AI notes, local datasets & backups
+*.pdf
+*.docx
+*.pptx
+*.xlsx
+*.xls
+*.csv
+* - Copy.*
+* - Copy.sh
+seed-output.txt
+
+# Ignore all markdown files except README.md and README_*.md
+*.md
+!README.md
+!README_*.md

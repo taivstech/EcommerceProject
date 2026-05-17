@@ -41,7 +41,7 @@ const CategorySection = () => {
         actionLabel="Shop all products"
       />
 
-      {/* Grid layout: 5 columns, 2 rows (5 trên, 5 dưới) */}
+      {/* Grid layout: 5 columns, 2 rows (5 top, 5 bottom) */}
       <div className="mt-8 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 sm:gap-6">
         {items.slice(0, 10).map((c) => (
           <Link

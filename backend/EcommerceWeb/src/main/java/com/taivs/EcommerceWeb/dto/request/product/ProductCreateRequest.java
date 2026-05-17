@@ -41,4 +41,12 @@ public class ProductCreateRequest {
      */
     @Builder.Default
     List<ProductVariantRequest> variants = new ArrayList<>();
+
+    /**
+     * Semantic keyword tags for Shopee-style search.
+     * Seller selects from suggested tags (by category) + can add custom ones.
+     * Max 15 tags. e.g. ["áo phông", "áo thun", "áo cotton", "unisex"]
+     */
+    @Builder.Default
+    List<String> tags = new ArrayList<>();
 }

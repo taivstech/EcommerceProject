@@ -146,6 +146,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                 .fullName(request.getFullName())
                 .dob(request.getDob())
                 .active(true)
+                .emailVerified(false)
                 .build();
         User saved = userRepository.save(user);
 
@@ -166,8 +167,9 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
         setPasswordChangeTimestamp(saved.getId());
 
+        // Send email verification instead of welcome email
         if (saved.getEmail() != null && !saved.getEmail().isBlank()) {
-            emailService.sendWelcomeEmail(saved.getEmail(), saved.getUsername());
+            sendEmailVerification(saved);
         }
 
         return userMapper.toUserResponse(saved);
@@ -714,6 +716,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                 .profilePicture(picture)
                 .password(null)
                 .active(true)
+                .emailVerified(true)  // Google already verified the email
                 .build();
         User saved = userRepository.save(user);
         log.info(saved.toString());
@@ -759,5 +762,70 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         userIdentity.setProviderEmail(providerEmail);
         userIdentity.setLinkedAt(Instant.now());
         return userIdentityRepository.save(userIdentity);
+    }
+
+    // ─── New methods ──────────────────────────────────────────────────────────────
+
+    @Override
+    public boolean checkUsernameAvailable(String username) {
+        if (username == null || username.isBlank()) return false;
+        return !userRepository.existsByUsername(username.trim());
+    }
+
+    @Override
+    public boolean checkEmailAvailable(String email) {
+        if (email == null || email.isBlank()) return false;
+        return !userRepository.existsByEmail(email.trim());
+    }
+
+    @Override
+    @Transactional
+    public AuthenticationTokens verifyEmail(String token) {
+        if (token == null || token.isBlank()) {
+            throw new AppException(ErrorCode.INVALID_TOKEN);
+        }
+
+        String hashedToken = hashToken(token);
+        String key = "email_verify:" + hashedToken;
+
+        Object userIdObj = redisTemplate.opsForValue().get(key);
+        if (userIdObj == null) {
+            throw new AppException(ErrorCode.INVALID_TOKEN);
+        }
+
+        String userId = userIdObj.toString();
+        User user = userRepository.findByIdWithRoles(userId)
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
+
+        if (Boolean.TRUE.equals(user.getEmailVerified())) {
+            throw new AppException(ErrorCode.EMAIL_ALREADY_VERIFIED);
+        }
+
+        user.setEmailVerified(true);
+        userRepository.save(user);
+        redisTemplate.delete(key);
+
+        log.info("Email verified for userId: {}", userId);
+
+        // Auto-login: return JWT tokens
+        Map<String, String> tokens = generateTokens(user);
+        persistSessionTokens(user.getId(), tokens.get("accessToken"), tokens.get("refreshToken"));
+
+        return AuthenticationTokens.builder()
+                .accessToken(tokens.get("accessToken"))
+                .refreshToken(tokens.get("refreshToken"))
+                .authenticated(true)
+                .build();
+    }
+
+    private void sendEmailVerification(User user) {
+        String rawToken = UUID.randomUUID().toString();
+        String hashedToken = hashToken(rawToken);
+        String key = "email_verify:" + hashedToken;
+
+        // Token valid for 24 hours
+        redisTemplate.opsForValue().set(key, user.getId(), 24, TimeUnit.HOURS);
+
+        emailService.sendVerificationEmail(user.getEmail(), user.getUsername(), rawToken);
     }
 }

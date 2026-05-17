@@ -45,7 +45,8 @@ public class WebSocketAuthInterceptor implements HandshakeInterceptor {
             log.debug("WebSocket handshake: attached userId={} from cookie token", userId);
             return true;
         } catch (Exception e) {
-            log.warn("WebSocket handshake: invalid/expired cookie token (will authenticate on STOMP CONNECT) - {}", e.getMessage());
+            log.warn("WebSocket handshake: invalid/expired cookie token (will authenticate on STOMP CONNECT) - {}",
+                    e.getMessage());
             return true;
         }
     }
@@ -59,4 +60,3 @@ public class WebSocketAuthInterceptor implements HandshakeInterceptor {
 
     }
 }
-

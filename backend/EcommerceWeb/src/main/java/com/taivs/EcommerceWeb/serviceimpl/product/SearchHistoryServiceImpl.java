@@ -7,6 +7,7 @@ import com.taivs.EcommerceWeb.repositories.admin.SearchHistoryRepository;
 import com.taivs.EcommerceWeb.services.product.SearchHistoryService;
 import com.taivs.EcommerceWeb.exceptions.AppException;
 import com.taivs.EcommerceWeb.exceptions.ErrorCode;
+import com.taivs.EcommerceWeb.utils.AuthUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -31,7 +32,7 @@ public class SearchHistoryServiceImpl implements SearchHistoryService {
     public void save(String keyword) {
         if (keyword == null || keyword.isBlank()) return;
 
-        String userId = getCurrentUserId();
+        String userId = AuthUtils.currentUserId();
         String trimmed = keyword.trim();
         if (trimmed.length() > 200) trimmed = trimmed.substring(0, 200);
 
@@ -62,7 +63,7 @@ public class SearchHistoryServiceImpl implements SearchHistoryService {
 
     @Override
     public List<String> getRecentSearches() {
-        String userId = getCurrentUserId();
+        String userId = AuthUtils.currentUserId();
         return searchHistoryRepository.findRecentByUserId(userId)
                 .stream()
                 .limit(MAX_HISTORY)
@@ -73,18 +74,16 @@ public class SearchHistoryServiceImpl implements SearchHistoryService {
     @Override
     @Transactional
     public void delete(String id) {
-        String userId = getCurrentUserId();
+        String userId = AuthUtils.currentUserId();
         searchHistoryRepository.deleteByIdAndUserId(id, userId);
     }
 
     @Override
     @Transactional
     public void clearAll() {
-        String userId = getCurrentUserId();
+        String userId = AuthUtils.currentUserId();
         searchHistoryRepository.deleteAllByUserId(userId);
     }
 
-    private String getCurrentUserId() {
-        return SecurityContextHolder.getContext().getAuthentication().getName();
-    }
+
 }

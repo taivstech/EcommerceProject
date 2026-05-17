@@ -3,56 +3,46 @@ services:
   # ─────────────────────────────────────────
   # MySQL 8 (internal only)
   # ─────────────────────────────────────────
-  mysql:
-    image: mysql:8.0
-    container_name: gocart-mysql
-    restart: unless-stopped
-    environment:
-      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
-      MYSQL_DATABASE: ${MYSQL_DATABASE:-ecommerce_db}
-      MYSQL_USER: ${MYSQL_USER:-gocart}
-      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
-    volumes:
-      - mysql_data:/var/lib/mysql
-    ports:
-      - "3307:3306"
-    command: >
-      --character-set-server=utf8mb4
-      --collation-server=utf8mb4_unicode_ci
-      --innodb-buffer-pool-size=128M
-      --max-connections=80
-      --slow-query-log=1
-      --long-query-time=2
-    healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-    networks:
-      - gocart-net
-
+#  mysql:
+#    image: mysql:8.0
+#    container_name: gocart-mysql
+#    restart: unless-stopped
+#    environment:
+#      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+#      MYSQL_DATABASE: ${MYSQL_DATABASE:-ecommerce_db}
+#      MYSQL_USER: root
+#      MYSQL_PASSWORD: taiteasicale
+#    volumes:
+#      - mysql_data:/var/lib/mysql
+#    ports:
+#      - "3307:3306"
+#    command: >
+#      --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci --innodb-buffer-pool-size=128M --max-connections=80 --slow-query-log=1 --long-query-time=2
+#    healthcheck:
+#      test: [ "CMD", "mysqladmin", "ping", "-h", "localhost" ]
+#      interval: 10s
+#      timeout: 5s
+#      retries: 5
+#    networks:
+#      - gocart-net
 
   redis:
     image: redis:7-alpine
     container_name: gocart-redis
     restart: unless-stopped
     command: >
-      redis-server
-      --maxmemory 50mb
-      --maxmemory-policy allkeys-lru
-      --requirepass ${REDIS_PASSWORD}
+      redis-server --maxmemory 50mb --maxmemory-policy allkeys-lru --requirepass ${REDIS_PASSWORD}
     volumes:
       - redis_data:/data
     ports:
       - "6379:6379"
     healthcheck:
-      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD}", "ping"]
+      test: [ "CMD", "redis-cli", "-a", "${REDIS_PASSWORD}", "ping" ]
       interval: 10s
       timeout: 3s
       retries: 3
     networks:
       - gocart-net
-
 
   # ─────────────────────────────────────────
   # Elasticsearch 8 (product search index)
@@ -70,13 +60,12 @@ services:
     volumes:
       - elasticsearch_data:/usr/share/elasticsearch/data
     healthcheck:
-      test: ["CMD-SHELL", "curl -sf http://localhost:9200/_cluster/health >/dev/null || exit 1"]
+      test: [ "CMD-SHELL", "curl -sf http://localhost:9200/_cluster/health >/dev/null || exit 1" ]
       interval: 20s
       timeout: 10s
       retries: 10
     networks:
       - gocart-net
-
 
   # ─────────────────────────────────────────
   # Backend (Spring Boot)
@@ -88,8 +77,6 @@ services:
     container_name: gocart-backend
     restart: unless-stopped
     depends_on:
-      mysql:
-        condition: service_healthy
       redis:
         condition: service_healthy
       elasticsearch:
@@ -99,9 +86,9 @@ services:
     environment:
       SPRING_PROFILES_ACTIVE: prod
 
-      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/${MYSQL_DATABASE:-ecommerce_db}
-      SPRING_DATASOURCE_USERNAME: ${MYSQL_USER:-gocart}
-      SPRING_DATASOURCE_PASSWORD: ${MYSQL_PASSWORD}
+      SPRING_DATASOURCE_URL: jdbc:mysql://host.docker.internal:3306/${MYSQL_DATABASE:-ecommerce_db}
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: taiteasicale
 
       SPRING_DATA_REDIS_HOST: redis
       SPRING_DATA_REDIS_PORT: 6379
@@ -119,7 +106,7 @@ services:
       JAVA_OPTS: "-Xms256m -Xmx512m -XX:+UseG1GC -XX:MaxGCPauseMillis=200"
 
     healthcheck:
-      test: ["CMD-SHELL", "curl -sf http://localhost:8088/api/actuator/health || exit 1"]
+      test: [ "CMD-SHELL", "curl -sf http://localhost:8088/api/actuator/health || exit 1" ]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -130,7 +117,8 @@ services:
       resources:
         limits:
           memory: 700m
-
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
 
   # ─────────────────────────────────────────
   # Recommendation Service (Python FastAPI)
@@ -142,30 +130,33 @@ services:
     container_name: gocart-recommendation
     restart: unless-stopped
     depends_on:
-      mysql:
+      redis:
         condition: service_healthy
     ports:
       - "8000:8000"
     environment:
-      DB_HOST: mysql
+      DB_HOST: host.docker.internal
       DB_PORT: 3306
       DB_NAME: ${MYSQL_DATABASE:-ecommerce_db}
-      SPRING_DATASOURCE_USERNAME: ${MYSQL_USER:-gocart}
-      SPRING_DATASOURCE_PASSWORD: ${MYSQL_PASSWORD}
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: taiteasicale
       REFRESH_INTERVAL_MINUTES: 30
     healthcheck:
-      test: ["CMD-SHELL", "curl -sf http://localhost:8000/api/health || exit 1"]
+      test: [ "CMD-SHELL", "curl -sf http://localhost:8000/api/health || exit 1" ]
       interval: 30s
       timeout: 10s
       retries: 3
       start_period: 30s
     networks:
       - gocart-net
+    volumes:
+      - huggingface_data:/root/.cache/huggingface
     deploy:
       resources:
         limits:
           memory: 1g
-
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
 
   # ─────────────────────────────────────────
   # Frontend (React + Vite)
@@ -184,13 +175,12 @@ services:
     ports:
       - "3000:3000"
     healthcheck:
-      test: ["CMD-SHELL", "curl -sf http://localhost:3000/ || exit 1"]
+      test: [ "CMD-SHELL", "curl -sf http://localhost:3000/ || exit 1" ]
       interval: 30s
       timeout: 10s
       retries: 3
     networks:
       - gocart-net
-
 
 # ─────────────────────────────────────────
 # Volumes
@@ -199,10 +189,11 @@ volumes:
   mysql_data:
   redis_data:
   elasticsearch_data:
+  huggingface_data:
 
-# ─────────────────────────────────────────
-# Network
-# ─────────────────────────────────────────
+    # ─────────────────────────────────────────
+    # Network
+    # ─────────────────────────────────────────
 networks:
   gocart-net:
     driver: bridge

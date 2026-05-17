@@ -181,7 +181,7 @@ function OrderListModal({ title, orders, onClose, currency }) {
                                     <td className="py-3 px-4 font-num text-slate-800">{currency}{Number(o.shipping_fee || 0).toLocaleString()}</td>
                                     <td className="py-3 px-4 text-slate-500 text-xs max-w-[120px] truncate">{o.note || '—'}</td>
                                     <td className="py-3 px-4 text-xs text-slate-500 font-num">
-                                        {o.created_at ? new Date(o.created_at).toLocaleDateString('vi-VN') : '—'}
+                                        {o.created_at ? new Date(o.created_at).toLocaleDateString('en-US') : '—'}
                                     </td>
                                     <td className="py-3 px-4">
                                         <button className="text-green-600 hover:text-green-700 text-xs font-medium">Details</button>

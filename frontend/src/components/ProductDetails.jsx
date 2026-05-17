@@ -7,6 +7,7 @@ import Counter from "./ui/Counter";
 import { useDispatch, useSelector } from "react-redux";
 import { productService } from "@/services";
 import NumberBadge from "./ui/NumberBadge";
+import { useAuth } from "@/hooks/useAuth";
 
 const ProductDetails = ({ product }) => {
     const productId = product.id;
@@ -15,6 +16,7 @@ const ProductDetails = ({ product }) => {
     const cartItems = useSelector(state => state.cart.items);
     const dispatch = useDispatch();
     const router = useRouter();
+    const { isAuthenticated } = useAuth();
 
     // ─── Attributes & Variants ──────────────────────────────────────────
     const attributes = product.attributes || [];
@@ -117,6 +119,7 @@ const ProductDetails = ({ product }) => {
     );
 
     const addToCartHandler = () => {
+        if (!isAuthenticated) return router.push('/login');
         const variantId = activeVariant?.id || productId;
         dispatch(addToCart({ product_variant_id: variantId, quantity: 1 }));
     };
@@ -130,8 +133,11 @@ const ProductDetails = ({ product }) => {
             .catch(() => {})
     }, [productId])
 
-    const averageRating = ratingStats?.average_rating || 0;
-    const totalReviews = ratingStats?.total_reviews || 0;
+    const apiAvg = ratingStats?.average_rating ?? ratingStats?.averageRating;
+    const apiCount = ratingStats?.total_reviews ?? ratingStats?.totalReviews;
+
+    const averageRating = apiAvg ? apiAvg : (product?.averageRating ?? product?.avgRating ?? product?.avg_rating ?? 0);
+    const totalReviews = apiCount ? apiCount : (product?.ratingCount ?? product?.rating_count ?? 0);
 
     return (
         <div className="flex max-lg:flex-col gap-12">
@@ -152,6 +158,13 @@ const ProductDetails = ({ product }) => {
             {/* ── Details ────────────────────────────────────────── */}
             <div className="flex-1">
                 <h1 className="text-3xl font-semibold text-slate-800">{product.name}</h1>
+
+                {/* Brand */}
+                {product.brand && (
+                    <p className="text-sm text-slate-500 mt-1">
+                        Brand: <span className="font-medium text-slate-700">{product.brand}</span>
+                    </p>
+                )}
 
                 {/* Rating & Sold */}
                 <div className='flex items-center mt-2 gap-3'>
@@ -289,7 +302,10 @@ const ProductDetails = ({ product }) => {
                         </div>
                     )}
                     <button
-                        onClick={() => !cartItem ? addToCartHandler() : router.push('/cart')}
+                        onClick={() => {
+                            if (!isAuthenticated) return router.push('/login');
+                            !cartItem ? addToCartHandler() : router.push('/cart');
+                        }}
                         disabled={activeStock !== null && activeStock <= 0}
                         className="bg-slate-800 text-white px-10 py-3 text-sm font-medium rounded hover:bg-slate-900 active:scale-95 transition disabled:opacity-50 disabled:cursor-not-allowed"
                     >

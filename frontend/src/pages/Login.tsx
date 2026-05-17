@@ -183,13 +183,13 @@ function LoginContent() {
             )}
 
             <div className="space-y-2">
-              <label htmlFor="emailOrPhone" className="text-sm font-medium text-slate-700">
-                Email or Phone
+              <label htmlFor="emailOrUsername" className="text-sm font-medium text-slate-700">
+                Email or Username
               </label>
               <input
-                id="emailOrPhone"
+                id="emailOrUsername"
                 type="text"
-                placeholder="Enter your email or phone number"
+                placeholder="Enter your email or username"
                 value={emailOrPhone}
                 onChange={(e) => setEmailOrPhone(e.target.value)}
                 disabled={loading}
@@ -221,6 +221,12 @@ function LoginContent() {
                   {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </button>
               </div>
+            </div>
+
+            <div className="flex justify-end -mt-2">
+              <a href="/forgot-password" className="text-xs text-green-700 hover:underline">
+                Forgot password?
+              </a>
             </div>
 
             <button

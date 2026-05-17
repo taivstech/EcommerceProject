@@ -35,7 +35,7 @@ const ShopInfo = ({ shopId, shopUsername }) => {
                         warehouseService.getShopWarehouses(shopIdToUse).catch(() => [])
                     ])
                     setFollowerCount(followers)
-                    setProductCount(products?.totalElements || 0)
+                    setProductCount(products?.totalElements ?? products?.page?.totalElements ?? products?.content?.length ?? 0)
                     setWarehouses(shopWarehouses || [])
                 }
             } catch (err) {
@@ -76,7 +76,7 @@ const ShopInfo = ({ shopId, shopUsername }) => {
     if (!shopInfo) return null
 
     const createdDate = shopInfo.created_at 
-        ? new Date(shopInfo.created_at).toLocaleDateString('vi-VN', { 
+        ? new Date(shopInfo.created_at).toLocaleDateString('en-US', { 
             year: 'numeric', 
             month: 'long' 
         })

@@ -38,188 +38,203 @@ import com.taivs.EcommerceWeb.models.warehouse.Warehouse;
 
 @Configuration
 @EnableWebSecurity
-@EnableMethodSecurity  // Enable @PreAuthorize, @PostAuthorize, @Secured
+@EnableMethodSecurity
 @RequiredArgsConstructor
 public class SecurityConfig {
 
-    private final String[] PUBLIC_ENDPOINTS = {
-            // Auth
-            "/auth/token",
-            "/auth/introspect",
-            "/auth/logout",
-            "/auth/refresh",
-            "/auth/verify-email",
-            "/auth/resend-verification",
-            "/auth/forgot-password",
-            "/auth/reset-password",
-            "/auth/outbound/authentication",
-            // User registration
-            "/users/registration",
-            // Files
-            "/file/**",
-            "/files/**",
-            // WebSocket
-            "/ws/**",
-            // Public catalog
-            "/categories/**",
-            "/products/**",
-            "/reviews/**",
-            "/ghn/**",
-            // Public shop endpoints
-            "/shops/public",
-            "/shops/{id}",
-            "/shops/{id}/follower-count",
-            "/shops/byProvinceId/**",
-            "/shops/getUserId/**",
-            "/shops/getShopId/**",
-            // Coupons (read-only)
-            "/coupons/platform",
-            "/coupons/shop/**",
-            "/coupons/{code}",
-            // Order items (read-only utility)
-            "/orderItems/**",
-            // OAuth2
-            "/oauth2/**",
-            "/login/oauth2/**",
-            // OAuth2 state
-            "/auth/outbound/state",
-            // Payment callbacks (IPN/webhooks from payment gateways)
-            "/payment/callback/**",
-            "/payment/vnpay/ipn",
-            // Elasticsearch search (public)
-            "/search/products",
-            "/search/suggest",
-            // Flash sale (public read)
-            "/flash-sales/active",
-            "/flash-sales/{id}",
-            // Actuator health (Docker/LB probes)
-            "/actuator/health",
-            "/actuator/health/**",
+        private final String[] PUBLIC_ENDPOINTS = {
+                        // Auth
+                        "/auth/token",
+                        "/auth/introspect",
+                        "/auth/logout",
+                        "/auth/refresh",
+                        "/auth/verify-email",
+                        "/auth/resend-verification",
+                        "/auth/forgot-password",
+                        "/auth/reset-password",
+                        "/auth/check-username",
+                        "/auth/check-email",
+                        "/auth/outbound/authentication",
+                        // User registration
+                        "/users/registration",
+                        // Files
+                        "/file/**",
+                        "/files/**",
+                        // WebSocket
+                        "/ws/**",
+                        // Public catalog
+                        "/categories/**",
+                        "/products/**",
+                        "/product/**",
+                        "/reviews/**",
+                        "/ghn/**",
+                        // Public shop endpoints
+                        "/shops/public",
+                        "/shops/{id}",
+                        "/shops/{id}/follower-count",
+                        "/shops/byProvinceId/**",
+                        "/shops/getUserId/**",
+                        "/shops/getShopId/**",
+                        // Coupons (read-only)
+                        "/coupons/platform",
+                        "/coupons/shop/**",
+                        "/coupons/{code}",
+                        // Order items (read-only utility)
+                        "/orderItems/**",
+                        // Public warehouse info (for shop page/product details)
+                        "/warehouses/shop/**",
+                        // OAuth2
+                        "/oauth2/**",
+                        "/login/oauth2/**",
+                        // OAuth2 state
+                        "/auth/outbound/state",
+                        // Payment callbacks (IPN/webhooks from payment gateways)
+                        "/payment/callback/**",
+                        "/payment/vnpay/ipn",
+                        // Elasticsearch search (public)
+                        "/search/products",
+                        "/search/suggest",
+                        "/search/suggestions/popular",
+                        "/search/provinces",
+                        "/search/reindex",
+                        // Product tag suggestions (read-only, public for add-product form)
+                        "/products/tags/**",
+                        // Flash sale (public read)
+                        "/flash-sales/active",
+                        "/flash-sales/{id}",
+                        // Actuator health (Docker/LB probes)
+                        "/actuator/health",
+                        "/actuator/health/**",
+                        // SEO: sitemap
+                        "/sitemap.xml",
+                        // Behavior tracking (fire-and-forget, works for anonymous too)
+                        "/behavior/track",
 
-    };
+        };
 
-    // Warehouse & employee endpoints are NOT public — they require authentication.
-    @Autowired(required = false)
-    private CustomJwtDecoder customJwtDecoder;
+        // Warehouse & employee endpoints are NOT public — they require authentication.
+        @Autowired(required = false)
+        private CustomJwtDecoder customJwtDecoder;
 
-    @Autowired
-    private CookieBearerTokenResolver cookieBearerTokenResolver;
+        @Autowired
+        private CookieBearerTokenResolver cookieBearerTokenResolver;
 
-    private final CustomOAuth2UserService customOAuth2UserService;
+        private final CustomOAuth2UserService customOAuth2UserService;
 
-    @Autowired
-    private RedisTemplate<String, Object> redisTemplate;
+        @Autowired
+        private RedisTemplate<String, Object> redisTemplate;
 
-    @Autowired
-    private ObjectMapper objectMapper;
+        @Autowired
+        private ObjectMapper objectMapper;
 
-    @Value("${app.rate-limit.enabled:true}")
-    private boolean rateLimitEnabled;
+        @Value("${app.rate-limit.enabled:true}")
+        private boolean rateLimitEnabled;
 
-    @Value("${app.cors.allowed-origins:http://localhost:*}")
-    private List<String> allowedOrigins;
+        @Value("${app.cors.allowed-origins:http://localhost:*}")
+        private List<String> allowedOrigins;
 
-    @Bean
-    public SecurityFilterChain filterChain(
-            HttpSecurity httpSecurity, Converter<Jwt, AbstractAuthenticationToken> jwtAuthConverter) throws Exception {
+        @Bean
+        public SecurityFilterChain filterChain(
+                        HttpSecurity httpSecurity, Converter<Jwt, AbstractAuthenticationToken> jwtAuthConverter)
+                        throws Exception {
 
-        HttpSecurity builder = httpSecurity
-                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-                .csrf(AbstractHttpConfigurer::disable)
-                .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .headers(headers -> headers
-                        .frameOptions(frame -> frame.deny())
-                        .contentTypeOptions(opt -> {})
-                        .httpStrictTransportSecurity(hsts -> hsts
-                                .includeSubDomains(true)
-                                .maxAgeInSeconds(31536000))
-                        .referrerPolicy(referrer -> referrer
-                                .policy(org.springframework.security.web.header.writers.ReferrerPolicyHeaderWriter.ReferrerPolicy.STRICT_ORIGIN_WHEN_CROSS_ORIGIN))
-                        .permissionsPolicy(perms -> perms
-                                .policy("camera=(), microphone=(), geolocation=()")))
-                .authorizeHttpRequests(req -> req
-                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                        .requestMatchers(PUBLIC_ENDPOINTS).permitAll()
-                        .anyRequest().authenticated())
+                HttpSecurity builder = httpSecurity
+                                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+                                .csrf(AbstractHttpConfigurer::disable)
+                                .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                                .headers(headers -> headers
+                                                .frameOptions(frame -> frame.deny())
+                                                .contentTypeOptions(opt -> {
+                                                })
+                                                .httpStrictTransportSecurity(hsts -> hsts
+                                                                .includeSubDomains(true)
+                                                                .maxAgeInSeconds(31536000))
+                                                .referrerPolicy(referrer -> referrer
+                                                                .policy(org.springframework.security.web.header.writers.ReferrerPolicyHeaderWriter.ReferrerPolicy.STRICT_ORIGIN_WHEN_CROSS_ORIGIN))
+                                                .permissionsPolicy(perms -> perms
+                                                                .policy("camera=(), microphone=(), geolocation=()")))
+                                .authorizeHttpRequests(req -> req
+                                                .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                                                .requestMatchers(PUBLIC_ENDPOINTS).permitAll()
+                                                .anyRequest().authenticated())
 
-                .oauth2ResourceServer(oauth2 -> oauth2
-                        .jwt(jwtConfigurer -> {
-                            jwtConfigurer.decoder(customJwtDecoder);
-                            jwtConfigurer.jwtAuthenticationConverter(jwtAuthConverter);
-                        })
-                        .bearerTokenResolver(cookieBearerTokenResolver)
-                        .authenticationEntryPoint(new JwtAuthenticationEntryPoint()));
+                                .oauth2ResourceServer(oauth2 -> oauth2
+                                                .jwt(jwtConfigurer -> {
+                                                        jwtConfigurer.decoder(customJwtDecoder);
+                                                        jwtConfigurer.jwtAuthenticationConverter(jwtAuthConverter);
+                                                })
+                                                .bearerTokenResolver(cookieBearerTokenResolver)
+                                                .authenticationEntryPoint(new JwtAuthenticationEntryPoint()));
 
-        // Register rate limit filter (before auth) if enabled
-        if (rateLimitEnabled) {
-            builder.addFilterBefore(
-                    new RateLimitFilter(redisTemplate, objectMapper),
-                    UsernamePasswordAuthenticationFilter.class
-            );
+                // Register rate limit filter (before auth) if enabled
+                if (rateLimitEnabled) {
+                        builder.addFilterBefore(
+                                        new RateLimitFilter(redisTemplate, objectMapper),
+                                        UsernamePasswordAuthenticationFilter.class);
+                }
+
+                return builder.build();
         }
 
-        return builder.build();
-    }
+        @Bean
+        public CorsConfigurationSource corsConfigurationSource() {
+                CorsConfiguration configuration = new CorsConfiguration();
 
-    @Bean
-    public CorsConfigurationSource corsConfigurationSource() {
-        CorsConfiguration configuration = new CorsConfiguration();
+                configuration.setAllowedOriginPatterns(allowedOrigins);
 
-        configuration.setAllowedOriginPatterns(allowedOrigins);
+                // Allow credentials (cookies)
+                configuration.setAllowCredentials(true);
 
-        // Allow credentials (cookies)
-        configuration.setAllowCredentials(true);
+                configuration.setAllowedHeaders(Arrays.asList(
+                                "Authorization", "Content-Type", "Accept", "Origin",
+                                "X-Requested-With", "Cache-Control", "ngrok-skip-browser-warning",
+                                "X-Session-ID"));
 
-        configuration.setAllowedHeaders(Arrays.asList(
-                "Authorization", "Content-Type", "Accept", "Origin",
-                "X-Requested-With", "Cache-Control", "ngrok-skip-browser-warning"));
+                // Allow all methods
+                configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
 
-        // Allow all methods
-        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
+                // Expose headers for frontend
+                configuration.setExposedHeaders(Arrays.asList("Authorization", "Content-Type"));
 
-        // Expose headers for frontend
-        configuration.setExposedHeaders(Arrays.asList("Authorization", "Content-Type"));
+                // Max age for preflight requests
+                configuration.setMaxAge(3600L);
 
-        // Max age for preflight requests
-        configuration.setMaxAge(3600L);
+                UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+                source.registerCorsConfiguration("/**", configuration);
 
-        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/**", configuration);
+                return source;
+        }
 
-        return source;
-    }
+        @Bean
+        AuthenticationManager authenticationManager(AuthenticationConfiguration configuration) throws Exception {
+                return configuration.getAuthenticationManager();
+        }
 
-    @Bean
-    AuthenticationManager authenticationManager(AuthenticationConfiguration configuration) throws Exception {
-        return configuration.getAuthenticationManager();
-    }
+        @Bean
+        public PasswordEncoder passwordEncoder() {
+                return new BCryptPasswordEncoder(12);
+        }
 
-    @Bean
-    public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder(12);
-    }
+        @Bean
+        DaoAuthenticationProvider daoAuthenticationProvider(CustomUserDetailsService userDetailsService,
+                        PasswordEncoder passwordEncoder) {
+                DaoAuthenticationProvider provider = new DaoAuthenticationProvider();
+                provider.setUserDetailsService(userDetailsService);
+                provider.setPasswordEncoder(passwordEncoder);
+                return provider;
+        }
 
-    @Bean
-    DaoAuthenticationProvider daoAuthenticationProvider(CustomUserDetailsService userDetailsService,
-                                                        PasswordEncoder passwordEncoder){
-        DaoAuthenticationProvider provider = new DaoAuthenticationProvider();
-        provider.setUserDetailsService(userDetailsService);
-        provider.setPasswordEncoder(passwordEncoder);
-        return provider;
-    }
+        @Bean
+        JwtAuthenticationConverter jwtAuthenticationConverter(
+                        RbacJwtAuthenticationConverter rbacConverter) {
+                JwtAuthenticationConverter converter = new JwtAuthenticationConverter();
 
-    @Bean
-    JwtAuthenticationConverter jwtAuthenticationConverter(
-            RbacJwtAuthenticationConverter rbacConverter
-    ) {
-        JwtAuthenticationConverter converter = new JwtAuthenticationConverter();
+                // principal = sub
+                converter.setPrincipalClaimName("sub");
 
-        // principal = sub
-        converter.setPrincipalClaimName("sub");
+                // dùng custom RBAC converter
+                converter.setJwtGrantedAuthoritiesConverter(rbacConverter);
 
-        // dùng custom RBAC converter
-        converter.setJwtGrantedAuthoritiesConverter(rbacConverter);
-
-        return converter;
-    }
+                return converter;
+        }
 }
