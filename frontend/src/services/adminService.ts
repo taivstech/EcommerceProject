@@ -89,24 +89,24 @@ export const adminService = {
 
   // Category management
   getAllCategoriesAdmin: async (): Promise<CategoryResponse[]> => {
-    const res = await api.get<CategoryResponse[]>("/admin/categories")
+    const res = await api.get<CategoryResponse[]>("/categories")
     return res.result || []
   },
 
   createCategoryAdmin: async (data: CategoryRequest): Promise<CategoryResponse> => {
-    const res = await api.post<CategoryResponse>("/admin/categories", data)
+    const res = await api.post<CategoryResponse>("/categories", data)
     if (!res.result) throw new Error("Failed to create category")
     return res.result
   },
 
   updateCategoryAdmin: async (id: string, data: CategoryRequest): Promise<CategoryResponse> => {
-    const res = await api.put<CategoryResponse>(`/admin/categories/${id}`, data)
+    const res = await api.put<CategoryResponse>(`/categories/${id}`, data)
     if (!res.result) throw new Error("Failed to update category")
     return res.result
   },
 
   deleteCategoryAdmin: async (id: string): Promise<void> => {
-    await api.del<void>(`/admin/categories/${id}`)
+    await api.del<void>(`/categories/${id}`)
   },
 
   // Statistics

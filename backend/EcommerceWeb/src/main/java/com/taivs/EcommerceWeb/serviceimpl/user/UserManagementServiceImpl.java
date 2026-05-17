@@ -148,6 +148,37 @@ public class UserManagementServiceImpl implements UserManagementService {
 
     @Override
     @Transactional
+    public void updateUserRoles(String id, List<String> roleNamesOrIds) {
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
+
+        Set<String> newRoleIdsOrNames = new HashSet<>(roleNamesOrIds);
+        Set<String> resolvedRoleIds = new HashSet<>();
+
+        for (String roleStr : newRoleIdsOrNames) {
+            if (roleRepository.existsById(roleStr)) {
+                resolvedRoleIds.add(roleStr);
+            } else {
+                roleRepository.findByName(roleStr.toUpperCase())
+                        .ifPresent(r -> resolvedRoleIds.add(r.getId()));
+            }
+        }
+
+        user.getUserRoles().removeIf(ur -> !resolvedRoleIds.contains(ur.getRole().getId()));
+        for (String roleId : resolvedRoleIds) {
+            boolean alreadyHas = user.getUserRoles().stream()
+                    .anyMatch(ur -> ur.getRole().getId().equals(roleId));
+            if (!alreadyHas) {
+                Role role = roleRepository.findById(roleId)
+                        .orElseThrow(() -> new AppException(ErrorCode.ROLE_NOT_EXISTS));
+                UserRole userRole = UserRole.builder().user(user).role(role).build();
+                userRoleRepository.save(userRole);
+            }
+        }
+    }
+
+    @Override
+    @Transactional
     public UserResponse updateUser(UserUpdateRequest request) {
         User user = userRepository.findByUsernameAndActive(
                         SecurityContextHolder.getContext().getAuthentication().getName(), true)

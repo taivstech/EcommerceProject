@@ -27,6 +27,8 @@ public interface UserManagementService {
 
     void deactivateUser(DeactivateUser deactivateUser);
 
+    void updateUserRoles(String id, List<String> roleNamesOrIds);
+
     UserResponse updateUser(UserUpdateRequest request);
 
     UserResponse getUser(String id);
