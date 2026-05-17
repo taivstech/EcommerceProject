@@ -181,6 +181,7 @@ services:
       dockerfile: Dockerfile
       args:
         - VITE_API_URL=https://ecommerce.pro.vn/api
+        - VITE_GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
     container_name: gocart-frontend
     restart: always
     ports:

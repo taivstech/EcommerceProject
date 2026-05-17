@@ -16,8 +16,10 @@ COPY . .
 # Build-time env vars (overridden at runtime via docker-compose)
 ARG VITE_API_URL=https://feeds-hull-jaguar-dreams.trycloudflare.com/api
 ARG VITE_CURRENCY_SYMBOL=$
+ARG VITE_GOOGLE_CLIENT_ID
 ENV VITE_API_URL=$VITE_API_URL
 ENV VITE_CURRENCY_SYMBOL=$VITE_CURRENCY_SYMBOL
+ENV VITE_GOOGLE_CLIENT_ID=$VITE_GOOGLE_CLIENT_ID
 
 RUN npm run build
 
