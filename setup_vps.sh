@@ -49,7 +49,7 @@ if ! command -v docker-compose &> /dev/null && ! docker compose version &> /dev/
 else
     echo "Docker Compose đã có sẵn, bỏ qua."
 fi
-─
+
 echo ""
 echo "[5/8] Cấu hình hệ thống cho Elasticsearch..."
 echo "vm.max_map_count=262144" >> /etc/sysctl.conf
