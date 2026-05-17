@@ -156,12 +156,12 @@ services:
       # Bind to localhost only
       - "127.0.0.1:8000:8000"
     environment:
-      # ── Database (used correct env var names for Python service) ─────────────
+      # ── Database ────────────────────────────────────────────────────────────
       DB_HOST: mysql
       DB_PORT: 3306
       DB_NAME: ${MYSQL_DATABASE:-ecommerce_db}
-      DB_USER: ${MYSQL_USER:-gocart}
-      DB_PASSWORD: ${MYSQL_PASSWORD}
+      SPRING_DATASOURCE_USERNAME: ${MYSQL_USER:-gocart}
+      SPRING_DATASOURCE_PASSWORD: ${MYSQL_PASSWORD}
       # ── Backend base URL (to call Spring Boot APIs) ──────────────────────────
       BACKEND_URL: http://backend:8088
     healthcheck:
