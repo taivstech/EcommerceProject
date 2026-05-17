@@ -235,7 +235,7 @@ public class ProductSearchServiceImpl implements ProductSearchService {
         }
 
         if (province != null && !province.isBlank()) {
-            boolBuilder.filter(f -> f.term(t -> t.field("shopProvince").value(province.trim())));
+            boolBuilder.filter(f -> f.term(t -> t.field("shopProvince").value(province.trim()).caseInsensitive(true)));
         }
 
         // ─── Rating filter ────────────────────────────────────────────────────────
@@ -245,7 +245,7 @@ public class ProductSearchServiceImpl implements ProductSearchService {
 
         // ─── Brand filter ─────────────────────────────────────────────────────────
         if (brand != null && !brand.isBlank()) {
-            boolBuilder.filter(f -> f.term(t -> t.field("brand").value(brand.trim())));
+            boolBuilder.filter(f -> f.term(t -> t.field("brand").value(brand.trim()).caseInsensitive(true)));
         }
 
         NativeQueryBuilder nativeQueryBuilder = new NativeQueryBuilder()
