@@ -39,7 +39,8 @@ else
 fi
 
 echo " Restarting and Building services..."
-$DOCKER_COMPOSE -f $COMPOSE_FILE --env-file $ENV_FILE build --no-cache
+# Giới hạn build tuần tự (concurrency = 1) để tránh làm sập/treo RAM/CPU trên VPS khi build Java và Frontend cùng lúc
+COMPOSE_PARALLEL_LIMIT=1 $DOCKER_COMPOSE -f $COMPOSE_FILE --env-file $ENV_FILE build --no-cache
 $DOCKER_COMPOSE -f $COMPOSE_FILE --env-file $ENV_FILE up -d --remove-orphans
 
 echo " Cleaning up old Docker images..."

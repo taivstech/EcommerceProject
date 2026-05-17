@@ -8,6 +8,7 @@ RUN npm ci --prefer-offline
 # ── Stage 2: Build ─────────────────────────────────────────────
 FROM node:20-alpine AS build
 WORKDIR /app
+ENV NODE_OPTIONS="--max-old-space-size=1024"
 
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
