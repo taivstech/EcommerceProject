@@ -68,13 +68,13 @@ public class EmailService {
                     <title>Welcome to our Store!</title>
                 </head>
                 <body style="margin: 0; padding: 0; background-color: #f6f9fc; font-family: Helvetica, Arial, sans-serif; color: #333333;">
-                    <table width="100%" border="0" cellspacing="0" cellpadding="0" style="background-color: #f6f9fc; padding: 40px 0;">
+                    <table width="100%%" border="0" cellspacing="0" cellpadding="0" style="background-color: #f6f9fc; padding: 40px 0;">
                         <tr>
                             <td align="center">
                                 <table width="600" border="0" cellspacing="0" cellpadding="0" style="background-color: #ffffff; border-radius: 8px; box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05); overflow: hidden;">
                                     <!-- Header -->
                                     <tr>
-                                        <td style="background: linear-gradient(135deg, #10B981 0%, #059669 100%); padding: 30px; text-align: center; color: #ffffff;">
+                                        <td style="background: linear-gradient(135deg, #10B981 0%%, #059669 100%%); padding: 30px; text-align: center; color: #ffffff;">
                                             <h1 style="margin: 0; font-size: 26px; font-weight: 700; letter-spacing: -0.5px;">Welcome to our Store!</h1>
                                         </td>
                                     </tr>
@@ -91,7 +91,7 @@ public class EmailService {
                                             </ul>
                                             
                                             <!-- Button -->
-                                            <table width="100%" border="0" cellspacing="0" cellpadding="0" style="margin: 30px 0;">
+                                            <table width="100%%" border="0" cellspacing="0" cellpadding="0" style="margin: 30px 0;">
                                                 <tr>
                                                     <td align="center">
                                                         <a href="%s" target="_blank" style="display: inline-block; padding: 14px 30px; background-color: #10B981; color: #ffffff !important; text-decoration: none; border-radius: 6px; font-weight: bold; font-size: 16px; box-shadow: 0 4px 6px rgba(16, 185, 129, 0.2); transition: background-color 0.2s;">Start Shopping</a>
@@ -123,13 +123,13 @@ public class EmailService {
                     <title>Verify Your Email</title>
                 </head>
                 <body style="margin: 0; padding: 0; background-color: #f6f9fc; font-family: Helvetica, Arial, sans-serif; color: #333333;">
-                    <table width="100%" border="0" cellspacing="0" cellpadding="0" style="background-color: #f6f9fc; padding: 40px 0;">
+                    <table width="100%%" border="0" cellspacing="0" cellpadding="0" style="background-color: #f6f9fc; padding: 40px 0;">
                         <tr>
                             <td align="center">
                                 <table width="600" border="0" cellspacing="0" cellpadding="0" style="background-color: #ffffff; border-radius: 8px; box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05); overflow: hidden;">
                                     <!-- Header -->
                                     <tr>
-                                        <td style="background: linear-gradient(135deg, #10B981 0%, #059669 100%); padding: 30px; text-align: center; color: #ffffff;">
+                                        <td style="background: linear-gradient(135deg, #10B981 0%%, #059669 100%%); padding: 30px; text-align: center; color: #ffffff;">
                                             <h1 style="margin: 0; font-size: 26px; font-weight: 700; letter-spacing: -0.5px;">Verify Your Email</h1>
                                         </td>
                                     </tr>
@@ -140,7 +140,7 @@ public class EmailService {
                                             <p style="margin: 0 0 25px 0; font-size: 16px; color: #4b5563;">Thank you for registering on our E-commerce store! Please verify your email address to activate your account and start shopping:</p>
                                             
                                             <!-- Button -->
-                                            <table width="100%" border="0" cellspacing="0" cellpadding="0" style="margin: 30px 0;">
+                                            <table width="100%%" border="0" cellspacing="0" cellpadding="0" style="margin: 30px 0;">
                                                 <tr>
                                                     <td align="center">
                                                         <a href="%s" target="_blank" style="display: inline-block; padding: 14px 30px; background-color: #10B981; color: #ffffff !important; text-decoration: none; border-radius: 6px; font-weight: bold; font-size: 16px; box-shadow: 0 4px 6px rgba(16, 185, 129, 0.2); transition: background-color 0.2s;">Verify Email Address</a>
@@ -180,13 +180,13 @@ public class EmailService {
                     <title>Reset Your Password</title>
                 </head>
                 <body style="margin: 0; padding: 0; background-color: #f6f9fc; font-family: Helvetica, Arial, sans-serif; color: #333333;">
-                    <table width="100%" border="0" cellspacing="0" cellpadding="0" style="background-color: #f6f9fc; padding: 40px 0;">
+                    <table width="100%%" border="0" cellspacing="0" cellpadding="0" style="background-color: #f6f9fc; padding: 40px 0;">
                         <tr>
                             <td align="center">
                                 <table width="600" border="0" cellspacing="0" cellpadding="0" style="background-color: #ffffff; border-radius: 8px; box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05); overflow: hidden;">
                                     <!-- Header -->
                                     <tr>
-                                        <td style="background: linear-gradient(135deg, #F59E0B 0%, #D97706 100%); padding: 30px; text-align: center; color: #ffffff;">
+                                        <td style="background: linear-gradient(135deg, #F59E0B 0%%, #D97706 100%%); padding: 30px; text-align: center; color: #ffffff;">
                                             <h1 style="margin: 0; font-size: 26px; font-weight: 700; letter-spacing: -0.5px;">Reset Your Password</h1>
                                         </td>
                                     </tr>
@@ -197,7 +197,7 @@ public class EmailService {
                                             <p style="margin: 0 0 25px 0; font-size: 16px; color: #4b5563;">We received a request to reset your password. Click the button below to set a new password:</p>
                                             
                                             <!-- Button -->
-                                            <table width="100%" border="0" cellspacing="0" cellpadding="0" style="margin: 30px 0;">
+                                            <table width="100%%" border="0" cellspacing="0" cellpadding="0" style="margin: 30px 0;">
                                                 <tr>
                                                     <td align="center">
                                                         <a href="%s" target="_blank" style="display: inline-block; padding: 14px 30px; background-color: #F59E0B; color: #ffffff !important; text-decoration: none; border-radius: 6px; font-weight: bold; font-size: 16px; box-shadow: 0 4px 6px rgba(245, 158, 11, 0.2); transition: background-color 0.2s;">Reset Password</a>
@@ -260,7 +260,7 @@ public class EmailService {
                             box-shadow: 0 4px 6px rgba(0,0,0,0.1);
                         }
                         .header {
-                            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                            background: linear-gradient(135deg, #667eea 0%%, #764ba2 100%%);
                             color: white;
                             padding: 30px;
                             text-align: center;
@@ -279,7 +279,7 @@ public class EmailService {
                         .button {
                             display: inline-block;
                             padding: 15px 30px;
-                            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                            background: linear-gradient(135deg, #667eea 0%%, #764ba2 100%%);
                             color: white;
                             text-decoration: none;
                             border-radius: 5px;
