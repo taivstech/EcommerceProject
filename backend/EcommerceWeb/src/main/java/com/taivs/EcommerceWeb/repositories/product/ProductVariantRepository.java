@@ -55,4 +55,11 @@ public interface ProductVariantRepository extends JpaRepository<ProductVariant, 
     List<ProductVariant> findByIdsForUpdateWithProduct(
             @Param("ids") Set<String> ids
     );
+
+    @Query("""
+        SELECT pv FROM ProductVariant pv
+        JOIN FETCH pv.product p
+        JOIN FETCH p.shop s
+    """)
+    List<ProductVariant> findAllWithProductAndShop();
 }

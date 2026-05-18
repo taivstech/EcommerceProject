@@ -26,6 +26,9 @@ import com.taivs.EcommerceWeb.exceptions.ErrorCode;
 import com.taivs.EcommerceWeb.utils.AuthUtils;
 import com.taivs.EcommerceWeb.utils.RedisCacheHelper;
 import com.taivs.EcommerceWeb.utils.CategoryTagMapping;
+import com.taivs.EcommerceWeb.repositories.warehouse.WarehouseRepository;
+import com.taivs.EcommerceWeb.services.warehouse.WarehouseStockService;
+import com.taivs.EcommerceWeb.models.warehouse.Warehouse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.*;
@@ -52,6 +55,8 @@ public class ProductServiceImpl implements ProductService {
     private final FileStorageService fileStorageService;
     private final ProductSearchService productSearchService;
     private final RedisCacheHelper cacheHelper;
+    private final WarehouseRepository warehouseRepository;
+    private final WarehouseStockService warehouseStockService;
 
     private static final String CACHE_PRODUCT_PREFIX = "product:detail:";
     private static final int CACHE_PRODUCT_TTL = 300;
@@ -195,6 +200,10 @@ public class ProductServiceImpl implements ProductService {
 
         recalculateProductStats(saved.getId());
         saved = productRepository.findById(saved.getId()).orElse(saved);
+        
+        // Sync variant stocks to the warehouse
+        syncVariantsStockToWarehouse(shop, saved.getVariants());
+        
         productSearchService.indexProduct(saved.getId());
 
         return productMapper.toResponse(saved);
@@ -258,6 +267,9 @@ public class ProductServiceImpl implements ProductService {
 
         recalculateProductStats(saved.getId());
         saved = productRepository.findByIdWithAllRelations(productId).orElse(saved);
+
+        // Sync variant stocks to the warehouse
+        syncVariantsStockToWarehouse(shop, saved.getVariants());
 
         cacheHelper.deleteCache(CACHE_PRODUCT_PREFIX + saved.getId());
         productSearchService.indexProduct(saved.getId());
@@ -747,6 +759,34 @@ public class ProductServiceImpl implements ProductService {
         return products.stream()
                 .map(productMapper::toResponse)
                 .toList();
+    }
+
+    private void syncVariantsStockToWarehouse(Shop shop, Collection<ProductVariant> variants) {
+        if (variants == null || variants.isEmpty()) {
+            return;
+        }
+        
+        Warehouse defaultWarehouse = warehouseRepository.findDefaultByShopId(shop.getId())
+                .or(() -> warehouseRepository.findActiveByShopId(shop.getId()).stream().findFirst())
+                .orElse(null);
+
+        if (defaultWarehouse != null) {
+            log.info("Syncing {} variants stock to warehouse {} for shop {}", 
+                    variants.size(), defaultWarehouse.getName(), shop.getId());
+            for (ProductVariant v : variants) {
+                try {
+                    warehouseStockService.updateStockQuantity(
+                            defaultWarehouse.getId(), 
+                            v.getId(), 
+                            v.getStock() != null ? v.getStock() : 0L
+                    );
+                } catch (Exception e) {
+                    log.error("Failed to sync stock for variant {} to warehouse: {}", v.getId(), e.getMessage());
+                }
+            }
+        } else {
+            log.warn("No active or default warehouse found for shop {}, cannot sync variant stocks", shop.getId());
+        }
     }
 
 }

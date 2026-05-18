@@ -9,6 +9,8 @@ import com.taivs.EcommerceWeb.services.warehouse.WarehouseSelectionService;
 import com.taivs.EcommerceWeb.models.warehouse.Warehouse;
 import com.taivs.EcommerceWeb.repositories.warehouse.WarehouseRepository;
 import com.taivs.EcommerceWeb.services.warehouse.WarehouseStockService;
+import com.taivs.EcommerceWeb.exceptions.AppException;
+import com.taivs.EcommerceWeb.exceptions.ErrorCode;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -45,7 +47,7 @@ public class WarehouseSelectionServiceImpl implements WarehouseSelectionService 
         }
 
         if (!hasTotalSufficientStock(shopId, items)) {
-            throw new IllegalStateException("Insufficient stock across all warehouses");
+            throw new AppException(ErrorCode.INSUFFICIENT_STOCK, "Insufficient stock across all warehouses");
         }
 
         List<WarehouseCandidate> candidates = warehouses.stream()
@@ -153,7 +155,7 @@ public class WarehouseSelectionServiceImpl implements WarehouseSelectionService 
         boolean allFulfilled = remainingQuantities.values().stream().allMatch(qty -> qty <= 0);
         if (!allFulfilled) {
             log.error("Failed to fulfill all items. Remaining: {}", remainingQuantities);
-            throw new IllegalStateException("Failed to fulfill all items across warehouses");
+            throw new AppException(ErrorCode.INSUFFICIENT_STOCK, "Failed to fulfill all items across warehouses");
         }
 
         return results;
