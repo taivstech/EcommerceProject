@@ -48,7 +48,6 @@ public interface ProductVariantRepository extends JpaRepository<ProductVariant, 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("""
             select distinct pv from ProductVariant pv
-            join fetch pv.product p
             where pv.id in :ids
             """)
     List<ProductVariant> findByIdsForUpdateWithProduct(
