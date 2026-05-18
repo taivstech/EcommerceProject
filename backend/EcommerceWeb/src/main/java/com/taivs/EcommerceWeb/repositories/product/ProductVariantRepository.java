@@ -49,7 +49,6 @@ public interface ProductVariantRepository extends JpaRepository<ProductVariant, 
     @Query("""
             select distinct pv from ProductVariant pv
             join fetch pv.product p
-            left join fetch p.images
             where pv.id in :ids
             """)
     List<ProductVariant> findByIdsForUpdateWithProduct(
