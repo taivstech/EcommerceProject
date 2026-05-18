@@ -70,4 +70,10 @@ public interface WarehouseStockRepository extends JpaRepository<WarehouseStock, 
         AND ws.deletedAt IS NULL
     """)
     Long getTotalAvailableStockForVariant(@Param("variantId") String variantId);
+
+    @Query("""
+        SELECT DISTINCT ws.productVariant.id FROM WarehouseStock ws
+        WHERE ws.deletedAt IS NULL
+    """)
+    List<String> findDistinctVariantIdsWithStock();
 }

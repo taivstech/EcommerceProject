@@ -6,6 +6,7 @@ import com.taivs.EcommerceWeb.models.shop.ShopAddress;
 import com.taivs.EcommerceWeb.models.warehouse.Warehouse;
 import com.taivs.EcommerceWeb.repositories.product.ProductVariantRepository;
 import com.taivs.EcommerceWeb.repositories.warehouse.WarehouseRepository;
+import com.taivs.EcommerceWeb.repositories.warehouse.WarehouseStockRepository;
 import com.taivs.EcommerceWeb.services.warehouse.WarehouseStockService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -15,6 +16,8 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Set;
+import java.util.HashSet;
 
 @Component
 @RequiredArgsConstructor
@@ -24,6 +27,7 @@ public class WarehouseStockInitializer implements ApplicationRunner {
     private final ProductVariantRepository productVariantRepository;
     private final WarehouseRepository warehouseRepository;
     private final WarehouseStockService warehouseStockService;
+    private final WarehouseStockRepository warehouseStockRepository;
 
     @Override
     @Transactional
@@ -32,10 +36,12 @@ public class WarehouseStockInitializer implements ApplicationRunner {
         
         try {
             // Find all variants that do not have a WarehouseStock entry
+            List<String> syncedIds = warehouseStockRepository.findDistinctVariantIdsWithStock();
+            Set<String> syncedVariantIds = new HashSet<>(syncedIds);
+            
             List<ProductVariant> unsyncedVariants = productVariantRepository.findAllWithProductAndShop().stream()
                     .filter(v -> {
-                        // Return true if no WarehouseStock exists for this variant
-                        return warehouseStockService.getTotalAvailableStock(v.getId()) <= 0 && 
+                        return !syncedVariantIds.contains(v.getId()) && 
                                (v.getStock() != null && v.getStock() > 0);
                     })
                     .toList();
