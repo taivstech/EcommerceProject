@@ -5,6 +5,8 @@ import { useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useRouter, useSearchParams } from "@/utils/compat";
 import { Link } from "@/utils/compat";
+import { productService } from "@/services";
+import { normalizeProduct } from "@/redux/features/product/productSlice";
 
 export default function Checkout() {
     return (
@@ -23,7 +25,7 @@ function CheckoutContent() {
     const products = useSelector(state => state.product.list);
     const dispatch = useDispatch();
 
-    const [enrichedCartItems, setEnrichedCartItems] = useState([]);
+    const [fetchedProducts, setFetchedProducts] = useState([]);
 
     // Hide navbar for clean checkout experience
     useEffect(() => {
@@ -45,12 +47,35 @@ function CheckoutContent() {
     useEffect(() => {
         if (!shopId) {
             router.push('/cart');
-            return;
         }
+    }, [shopId, router]);
 
-        const enriched = cartItems
+    useEffect(() => {
+        if (!cartItems.length) return;
+        const fetchMissingProducts = async () => {
+            const productIds = cartItems.map(item => item.product_id);
+            const missingIds = productIds.filter(id => !products.find(p => p.id === id));
+            if (missingIds.length === 0) {
+                setFetchedProducts([]);
+                return;
+            }
+            try {
+                const productPromises = missingIds.map(id => productService.getProductById(id).catch(() => null));
+                const fetched = (await Promise.all(productPromises)).filter(Boolean).map(normalizeProduct);
+                setFetchedProducts(fetched);
+            } catch (error) {
+                console.error('Failed to fetch products:', error);
+            }
+        };
+        fetchMissingProducts();
+    }, [cartItems, products]);
+
+    const enrichedCartItems = useMemo(() => {
+        if (!shopId) return [];
+        const allProducts = [...products, ...fetchedProducts];
+        return cartItems
             .map(item => {
-                const product = products.find(p => p.id === item.product_id);
+                const product = allProducts.find(p => p.id === item.product_id);
                 if (!product) return null;
 
                 const variant = (product.variants || []).find(v => v.id === item.product_variant_id);
@@ -73,9 +98,7 @@ function CheckoutContent() {
                 };
             })
             .filter(item => item !== null);
-
-        setEnrichedCartItems(enriched);
-    }, [cartItems, products, shopId, router]);
+    }, [cartItems, products, fetchedProducts, shopId]);
 
     const totalPrice = useMemo(() => {
         return enrichedCartItems.reduce((sum, item) => {
