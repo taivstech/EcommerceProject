@@ -11,6 +11,9 @@ import type {
   CategoryResponse,
   CategoryRequest,
 } from "@/types/dto"
+import { fetchEventSource } from '@microsoft/fetch-event-source'
+import { API_BASE_URL } from "@/api/config"
+import { authService } from "@/utils/auth"
 
 export const adminService = {
 
@@ -19,6 +22,26 @@ export const adminService = {
     return res.result || null
   },
 
+  getDashboardStream: (onMessage: (data: DashboardStats) => void, onError: (err: any) => void): AbortController => {
+    const token = authService.getAccessToken();
+    const controller = new AbortController();
+    fetchEventSource(`${API_BASE_URL}/dashboard/stream/admin`, {
+      method: 'GET',
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+      signal: controller.signal,
+      onmessage(msg) {
+        if (msg.event === 'STATS_UPDATE') {
+          onMessage(JSON.parse(msg.data));
+        }
+      },
+      onerror(err) {
+        onError(err);
+      }
+    });
+    return controller;
+  },
 
   getAllShops: async (status?: string): Promise<ShopResponse[]> => {
     const query = status ? `?status=${encodeURIComponent(status)}` : ""

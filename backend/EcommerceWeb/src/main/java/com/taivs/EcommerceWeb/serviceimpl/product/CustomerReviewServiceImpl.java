@@ -54,8 +54,8 @@ public class CustomerReviewServiceImpl implements CustomerReviewService {
         }
 
         String orderStatus = orderItem.getOrderShopGroup().getOrder().getStatus().toString();
-        if (!"DELIVERED".equalsIgnoreCase(orderStatus) && !"COMPLETED".equalsIgnoreCase(orderStatus)) {
-            log.warn("Cannot review orderItem {} - order status is {} (must be DELIVERED or COMPLETED)", request.getOrderItemId(), orderStatus);
+        if (!"COMPLETED".equalsIgnoreCase(orderStatus)) {
+            log.warn("Cannot review orderItem {} - order status is {} (must be COMPLETED)", request.getOrderItemId(), orderStatus);
             throw new AppException(ErrorCode.INVALID_REQUEST);
         }
 

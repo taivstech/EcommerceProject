@@ -30,6 +30,7 @@ public class ActivityLogService {
                     .userId(userId)
                     .details(details)
                     .ipAddress(ipAddress)
+
                     .build();
 
             activityLogRepository.save(log);

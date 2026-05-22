@@ -17,6 +17,7 @@ import java.util.List;
 public class ProductCreateRequest {
     @NotBlank
     String name;
+    String brand;
 
     String description;
     BigDecimal price;

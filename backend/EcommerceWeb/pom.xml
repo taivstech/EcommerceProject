@@ -38,6 +38,11 @@
         </dependency>
 
         <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
+        </dependency>
+
+        <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-web</artifactId>
         </dependency>
@@ -194,7 +199,11 @@
             <artifactId>spring-boot-starter-test</artifactId>
             <scope>test</scope>
         </dependency>
-
+        <dependency>
+            <groupId>com.fasterxml.jackson.datatype</groupId>
+            <artifactId>jackson-datatype-jdk8</artifactId>
+            <version>2.15.3</version>
+        </dependency>
     </dependencies>
 
     <dependencyManagement>
@@ -280,7 +289,32 @@
                     </excludes>
                 </configuration>
             </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-resources-plugin</artifactId>
+                <version>3.3.1</version>
+                <configuration>
+                    <nonFilteredFileExtensions>
+                        <!-- Các file chứng chỉ bảo mật, JWT key -->
+                        <nonFilteredFileExtension>p12</nonFilteredFileExtension>
+                        <nonFilteredFileExtension>jks</nonFilteredFileExtension>
+                        <nonFilteredFileExtension>keystore</nonFilteredFileExtension>
+                        <nonFilteredFileExtension>pem</nonFilteredFileExtension>
+                        <nonFilteredFileExtension>crt</nonFilteredFileExtension>
 
+                        <!-- File Excel (do bạn có dùng Apache POI) -->
+                        <nonFilteredFileExtension>xlsx</nonFilteredFileExtension>
+                        <nonFilteredFileExtension>xls</nonFilteredFileExtension>
+
+                        <!-- Font chữ và hình ảnh (nếu có) -->
+                        <nonFilteredFileExtension>ttf</nonFilteredFileExtension>
+                        <nonFilteredFileExtension>woff</nonFilteredFileExtension>
+                        <nonFilteredFileExtension>woff2</nonFilteredFileExtension>
+                        <nonFilteredFileExtension>png</nonFilteredFileExtension>
+                        <nonFilteredFileExtension>jpg</nonFilteredFileExtension>
+                    </nonFilteredFileExtensions>
+                </configuration>
+            </plugin>
         </plugins>
     </build>
 

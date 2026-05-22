@@ -1,5 +1,6 @@
 package com.taivs.EcommerceWeb.models.admin;
 
+import com.taivs.EcommerceWeb.models.common.BaseEntity;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
@@ -18,7 +19,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class AuditLog {
+public class AuditLog extends BaseEntity {
 
     @Id
     @Column(length = 36)

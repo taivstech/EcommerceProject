@@ -42,6 +42,7 @@ public class MessageServiceImpl implements MessageService {
     private final RoomMemberRepository roomMemberRepository;
     private final ChatMessageRepository chatMessageRepository;
     private final UserRepository userRepository;
+    private final com.taivs.EcommerceWeb.repositories.shop.ShopRepository shopRepository;
     private final SimpMessagingTemplate messagingTemplate;
     private final NotificationService notificationService;
 
@@ -249,5 +250,45 @@ public class MessageServiceImpl implements MessageService {
                 .content(msg.getContent())
                 .type(msg.getType())
                 .build();
+    }
+
+    @Override
+    public List<com.taivs.EcommerceWeb.dto.response.chat.ChatContactResponse> searchContacts(String query) {
+        if (query == null || query.trim().isEmpty()) {
+            return java.util.Collections.emptyList();
+        }
+        
+        List<com.taivs.EcommerceWeb.dto.response.chat.ChatContactResponse> results = new java.util.ArrayList<>();
+        String currentUserId = AuthUtils.currentUserId();
+
+        // Search Users
+        Page<User> usersPage = userRepository.searchUsers(query, PageRequest.of(0, 5));
+        for (User u : usersPage.getContent()) {
+            if (!u.getId().equals(currentUserId)) {
+                results.add(com.taivs.EcommerceWeb.dto.response.chat.ChatContactResponse.builder()
+                        .id(u.getId())
+                        .name(displayName(u))
+                        .type("USER")
+                        .avatar(u.getProfilePicture())
+                        .build());
+            }
+        }
+
+        // Search Shops
+        List<com.taivs.EcommerceWeb.models.shop.Shop> shops = shopRepository.searchByName(query, PageRequest.of(0, 5));
+        for (com.taivs.EcommerceWeb.models.shop.Shop s : shops) {
+            // Only add if shop owner is not me
+            if (s.getUser() != null && !s.getUser().getId().equals(currentUserId)) {
+                results.add(com.taivs.EcommerceWeb.dto.response.chat.ChatContactResponse.builder()
+                        .id(s.getUser().getId()) // Chat is with the shop owner
+                        .name(s.getName())
+                        .shopName(s.getName())
+                        .type("SHOP")
+                        .avatar(s.getLogo())
+                        .build());
+            }
+        }
+
+        return results;
     }
 }

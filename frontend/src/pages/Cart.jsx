@@ -1,6 +1,5 @@
 import Counter from '@/components/ui/Counter'
 import PageTitle from '@/components/ui/PageTitle'
-import RequireAuth from '@/components/RequireAuth'
 import { removeCartItem, fetchCartItems } from '@/redux/features/cart/cartSlice'
 import { normalizeProduct } from '@/redux/features/product/productSlice'
 import { productService } from '@/services'
@@ -9,13 +8,10 @@ import { Image } from "@/utils/compat"
 import { useEffect, useMemo, useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { useRouter } from "@/utils/compat"
+import { authService } from '@/utils/auth'
 
 export default function Cart() {
-  return (
-    <RequireAuth>
-      <CartContent />
-    </RequireAuth>
-  )
+  return <CartContent />
 }
 
 function CartContent() {
@@ -98,6 +94,11 @@ function CartContent() {
 
   const handleCheckout = () => {
     if (!selectedShopId) return
+    if (!authService.isAuthenticated()) {
+      sessionStorage.setItem('returnUrl', '/cart')
+      router.push('/login')
+      return
+    }
     router.push(`/checkout?shopId=${selectedShopId}`)
   }
 

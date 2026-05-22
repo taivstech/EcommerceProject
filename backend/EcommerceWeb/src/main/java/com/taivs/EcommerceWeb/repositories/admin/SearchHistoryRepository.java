@@ -16,7 +16,7 @@ public interface SearchHistoryRepository extends JpaRepository<SearchHistory, St
     @Query("""
             SELECT sh FROM SearchHistory sh
             WHERE sh.user.id = :userId
-            ORDER BY sh.searchedAt DESC
+            ORDER BY sh.createdAt DESC
             """)
     List<SearchHistory> findRecentByUserId(@Param("userId") String userId);
 

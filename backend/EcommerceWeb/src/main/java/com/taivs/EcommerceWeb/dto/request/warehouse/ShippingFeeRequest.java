@@ -1,6 +1,5 @@
 package com.taivs.EcommerceWeb.dto.request.warehouse;
 
-import com.taivs.EcommerceWeb.models.promotion.Coupon;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.*;

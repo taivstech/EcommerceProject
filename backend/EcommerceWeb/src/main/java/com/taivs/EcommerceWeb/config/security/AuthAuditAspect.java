@@ -15,6 +15,8 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
+import java.time.LocalDateTime;
+
 @Aspect
 @Component
 @RequiredArgsConstructor
@@ -103,6 +105,7 @@ public class AuthAuditAspect {
                 .ipAddress(httpReq != null ? getClientIp(httpReq) : null)
                 .userAgent(httpReq != null ? httpReq.getHeader("User-Agent") : null)
                 .details(details)
+                .createdAt(LocalDateTime.now())
                 .build();
 
         auditLogRepository.save(auditLog);

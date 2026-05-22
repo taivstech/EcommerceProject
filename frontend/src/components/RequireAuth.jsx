@@ -9,6 +9,7 @@ export default function RequireAuth({ children }) {
 
     useEffect(() => {
         if (!loading && !isAuthenticated) {
+            sessionStorage.setItem('returnUrl', window.location.pathname + window.location.search)
             router.replace('/login')
         }
     }, [loading, isAuthenticated, router])

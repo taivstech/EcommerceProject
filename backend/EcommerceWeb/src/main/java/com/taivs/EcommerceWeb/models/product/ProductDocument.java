@@ -94,11 +94,6 @@ public class ProductDocument {
     @Field(type = FieldType.Long)
     private Long ratingCount;     // number of ratings — used for scoring confidence
 
-    /**
-     * Semantic tags indexed separately from product name.
-     * Allows finding products by category keywords even when product name
-     * doesn't contain them (e.g. search "áo phông" finds "Unisex Graphic Tee").
-     */
     @Field(type = FieldType.Text, analyzer = "product_index_analyzer", searchAnalyzer = "product_search_analyzer")
     @Builder.Default
     private List<String> tags = new ArrayList<>();

@@ -237,12 +237,16 @@ export default function Dashboard() {
     const [dashboardData, setDashboardData] = useState({
         totalProducts: 0,
         totalEarnings: 0,
+        totalGmv: 0,
+        totalCommission: 0,
         totalOrders: 0,
         totalFollowers: 0,
         shopInfo: null,
         recentOrders: [],
         products: [],
     })
+
+    const [topProductsTab, setTopProductsTab] = useState('best_selling')
 
     // ── Filter orders by date ──
     const filteredOrders = useMemo(() => {
@@ -323,10 +327,16 @@ export default function Dashboard() {
     // ── Top selling products ──
     const topProducts = useMemo(() => {
         const products = dashboardData.products || []
+        if (topProductsTab === 'high_returns') {
+            return [...products]
+                .sort((a, b) => (b.totalSold || b.total_sold || 0) - (a.totalSold || a.total_sold || 0))
+                .slice(0, 10).map(p => ({ ...p, metricValue: Math.floor((p.totalSold || 0) * 0.1) })) // Mock returns
+                .sort((a, b) => b.metricValue - a.metricValue)
+        }
         return [...products]
             .sort((a, b) => (b.totalSold || b.total_sold || 0) - (a.totalSold || a.total_sold || 0))
-            .slice(0, 10)
-    }, [dashboardData.products])
+            .slice(0, 10).map(p => ({ ...p, metricValue: p.totalSold || p.total_sold || 0 }))
+    }, [dashboardData.products, topProductsTab])
 
     // ── Donut chart data ──
     const donutData = useMemo(() => [
@@ -372,13 +382,23 @@ export default function Dashboard() {
                 products = productsPage.content || []
                 recentOrders = ordersRes || []
                 totalOrders = recentOrders.length
-                totalFollowers = followers
                 totalEarnings = recentOrders
                     .filter(o => o.status !== 'CANCELLED')
                     .reduce((sum, o) => sum + (o.total || 0), 0)
+                totalFollowers = followers
             }
 
-            setDashboardData({ totalProducts, totalEarnings, totalOrders, totalFollowers, shopInfo, recentOrders, products })
+            setDashboardData({ 
+                totalProducts, 
+                totalGmv: totalEarnings,
+                totalCommission: totalEarnings * 0.05, // Mock 5% commission
+                totalEarnings: totalEarnings * 0.95, 
+                totalOrders, 
+                totalFollowers, 
+                shopInfo, 
+                recentOrders, 
+                products 
+            })
         } catch (err) {
             console.error('Failed to load dashboard:', err)
         } finally {
@@ -387,6 +407,23 @@ export default function Dashboard() {
     }
 
     useEffect(() => { fetchDashboardData() }, [])
+
+    useEffect(() => {
+        const controller = shopService.getDashboardStream((stats) => {
+            setDashboardData(prev => ({
+                ...prev,
+                totalProducts: stats?.totalProducts ?? prev.totalProducts,
+                totalOrders: stats?.totalOrders ?? prev.totalOrders,
+                totalFollowers: stats?.totalFollowers ?? prev.totalFollowers,
+                totalGmv: stats?.totalGmv ?? prev.totalGmv,
+                totalEarnings: stats?.totalEarnings ?? prev.totalEarnings,
+                totalCommission: stats?.totalCommission ?? prev.totalCommission,
+            }))
+        }, (err) => {
+            console.error('SSE Error Seller:', err)
+        })
+        return () => controller.abort()
+    }, [])
 
     // ── Export CSV ──
     const exportCSV = useCallback(() => {
@@ -431,25 +468,25 @@ export default function Dashboard() {
 
                 <div className="flex items-center gap-3 flex-wrap">
                     {/* Date Filter Tabs */}
-                    <div className="flex items-center bg-white border border-slate-200 rounded-lg overflow-hidden">
+                    <div className="flex items-center bg-white border border-slate-200 rounded-lg">
                         {DATE_PRESETS.map(p => (
                             <button
                                 key={p.value}
                                 onClick={() => { setDateFilter(p.value); setShowCustomDate(false) }}
                                 className={`px-4 py-2.5 text-sm font-medium transition border-r border-slate-100 last:border-r-0 ${
                                     dateFilter === p.value
-                                        ? 'bg-green-600 text-white'
-                                        : 'text-slate-600 hover:bg-green-50 hover:text-green-700'
+                                        ? 'bg-green-600 text-white first:rounded-l-lg last:rounded-r-lg'
+                                        : 'text-slate-600 hover:bg-green-50 hover:text-green-700 first:rounded-l-lg last:rounded-r-lg'
                                 }`}
                             >
                                 {p.label}
                             </button>
                         ))}
                         {/* Custom Date */}
-                        <div className="relative">
+                        <div className="relative border-l border-slate-100">
                             <button
                                 onClick={() => setShowCustomDate(!showCustomDate)}
-                                className={`px-4 py-2.5 text-sm font-medium transition flex items-center gap-1.5 ${
+                                className={`px-4 py-2.5 text-sm font-medium transition flex items-center gap-1.5 rounded-r-lg ${
                                     dateFilter === 'custom'
                                         ? 'bg-green-600 text-white'
                                         : 'text-slate-600 hover:bg-green-50 hover:text-green-700'
@@ -505,7 +542,7 @@ export default function Dashboard() {
                             <span className="text-xs text-slate-400 ml-1">Items</span>
                         </div>
                         <div>
-                            <span className="text-sm font-medium text-slate-600 font-num">{currency}{orderStats.codTotal.toLocaleString()}</span>
+                            <span className="text-sm font-medium text-slate-600 font-num">{currency}{orderStats.codTotal.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}</span>
                             <span className="text-xs text-slate-400 ml-1">CoD</span>
                         </div>
                     </div>
@@ -523,7 +560,7 @@ export default function Dashboard() {
                             <span className="text-lg font-semibold text-slate-700 font-num">{orderStats.completionRate}%</span>
                         </div>
                         <div>
-                            <span className="text-sm font-medium text-slate-600 font-num">{currency}{orderStats.totalRevenue.toLocaleString()}</span>
+                            <span className="text-sm font-medium text-slate-600 font-num">{currency}{orderStats.totalRevenue.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}</span>
                         </div>
                     </div>
                 </div>
@@ -548,11 +585,11 @@ export default function Dashboard() {
                     <p className="text-sm font-medium text-slate-500 mb-3">Shipping Fees</p>
                     <div className="flex items-baseline gap-6">
                         <div>
-                            <span className="text-sm font-medium text-slate-600 font-num">{currency}{orderStats.totalShipping.toLocaleString()}</span>
+                            <span className="text-sm font-medium text-slate-600 font-num">{currency}{orderStats.totalShipping.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}</span>
                             <span className="text-xs text-slate-400 ml-1">Delivered</span>
                         </div>
                         <div>
-                            <span className="text-sm font-medium text-slate-800 font-num">{currency}{orderStats.shippingRefund.toLocaleString()}</span>
+                            <span className="text-sm font-medium text-slate-800 font-num">{currency}{orderStats.shippingRefund.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}</span>
                             <span className="text-xs text-slate-400 ml-1">Returned</span>
                         </div>
                     </div>
@@ -590,24 +627,31 @@ export default function Dashboard() {
                     <div className="flex items-center justify-between mb-4">
                         <h3 className="font-bold text-slate-800">Top Products</h3>
                         <div className="flex bg-slate-100 rounded-lg p-0.5">
-                            <button className="px-3 py-1 text-xs font-medium bg-white text-green-700 rounded-md shadow-sm">Best Selling</button>
-                            <button className="px-3 py-1 text-xs font-medium text-slate-500 hover:text-slate-700 rounded-md">High Returns</button>
+                            <button 
+                                onClick={() => setTopProductsTab('best_selling')}
+                                className={`px-3 py-1 text-xs font-medium rounded-md transition ${topProductsTab === 'best_selling' ? 'bg-white text-green-700 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}>
+                                Best Selling
+                            </button>
+                            <button 
+                                onClick={() => setTopProductsTab('high_returns')}
+                                className={`px-3 py-1 text-xs font-medium rounded-md transition ${topProductsTab === 'high_returns' ? 'bg-white text-green-700 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}>
+                                High Returns
+                            </button>
                         </div>
                     </div>
                     {topProducts.length > 0 ? (
                         <div className="space-y-2.5">
-                            {topProducts.slice(0, 8).map((p, i) => {
-                                const sold = p.totalSold || p.total_sold || 0
-                                return (
-                                    <div key={p.id || i} className="flex items-center gap-3 py-1.5">
-                                        <span className="w-5 text-xs font-bold text-slate-400 font-num">{i + 1}</span>
-                                        <div className="flex-1 min-w-0">
-                                            <p className="text-sm text-slate-700 truncate">{p.name}</p>
-                                        </div>
-                                        <span className="text-sm font-semibold text-green-700 font-num">{sold}</span>
+                            {topProducts.slice(0, 8).map((p, i) => (
+                                <div key={p.id || i} className="flex items-center gap-3 py-1.5">
+                                    <span className="w-5 text-xs font-bold text-slate-400 font-num">{i + 1}</span>
+                                    <div className="flex-1 min-w-0">
+                                        <p className="text-sm text-slate-700 truncate">{p.name}</p>
                                     </div>
-                                )
-                            })}
+                                    <span className={`text-sm font-semibold font-num ${topProductsTab === 'high_returns' ? 'text-red-600' : 'text-green-700'}`}>
+                                        {p.metricValue}
+                                    </span>
+                                </div>
+                            ))}
                         </div>
                     ) : (
                         <div className="text-center py-8">
@@ -619,16 +663,18 @@ export default function Dashboard() {
             </div>
 
             {/* ── KPI Row ── */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mt-6">
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 mb-6">
                 {[
-                    { title: 'Total Products', value: dashboardData.totalProducts, icon: ShoppingBasketIcon, color: 'text-green-600 bg-green-50' },
-                    { title: 'Revenue', value: `${currency}${orderStats.totalRevenue.toLocaleString()}`, icon: CircleDollarSignIcon, color: 'text-emerald-600 bg-emerald-50' },
-                    { title: 'Orders', value: filteredOrders.length, icon: TagsIcon, color: 'text-green-600 bg-green-50' },
-                    { title: 'Followers', value: dashboardData.totalFollowers, icon: UsersIcon, color: 'text-green-600 bg-green-50' },
+                    { label: 'Total GMV', value: `${currency}${Number(dashboardData.totalGmv || 0).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`, icon: CircleDollarSignIcon, color: 'text-blue-600 bg-blue-50' },
+                    { label: 'Net Earnings', value: `${currency}${Number(dashboardData.totalEarnings || 0).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`, icon: CircleDollarSignIcon, color: 'text-green-600 bg-green-50' },
+                    { label: 'Platform Fee (5%)', value: `-${currency}${Number(dashboardData.totalCommission || 0).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`, icon: TrendingUpIcon, color: 'text-red-500 bg-red-50' },
+                    { label: 'Products', value: dashboardData.totalProducts, icon: PackageIcon, color: 'text-orange-600 bg-orange-50' },
+                    { label: 'Orders', value: dashboardData.totalOrders, icon: ShoppingBasketIcon, color: 'text-indigo-600 bg-indigo-50' },
+                    { label: 'Followers', value: dashboardData.totalFollowers, icon: UsersIcon, color: 'text-pink-600 bg-pink-50' },
                 ].map((card, index) => (
                     <div key={index} className="bg-white border border-slate-200 p-5 rounded-xl hover:shadow-sm transition">
                         <div className="flex items-center justify-between mb-3">
-                            <p className="text-xs font-medium text-slate-500">{card.title}</p>
+                            <p className="text-xs font-medium text-slate-500">{card.label}</p>
                             <div className={`w-9 h-9 rounded-lg flex items-center justify-center ${card.color}`}>
                                 <card.icon size={18} />
                             </div>

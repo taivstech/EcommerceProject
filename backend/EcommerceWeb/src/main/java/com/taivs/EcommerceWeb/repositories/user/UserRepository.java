@@ -72,4 +72,14 @@ public interface UserRepository extends JpaRepository<User,String> {
         ORDER BY FUNCTION('DATE', u.createdAt) ASC
     """)
     List<Object[]> findDailyUserRegistrations(@Param("since") LocalDateTime since);
+
+    @Query("""
+        SELECT u FROM User u
+        WHERE u.active = true
+          AND (LOWER(u.username) LIKE LOWER(CONCAT('%', :keyword, '%'))
+               OR LOWER(u.fullName) LIKE LOWER(CONCAT('%', :keyword, '%'))
+               OR LOWER(u.email) LIKE LOWER(CONCAT('%', :keyword, '%')))
+        ORDER BY u.fullName
+    """)
+    org.springframework.data.domain.Page<User> searchUsers(@Param("keyword") String keyword, org.springframework.data.domain.Pageable pageable);
 }

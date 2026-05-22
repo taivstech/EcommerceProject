@@ -12,6 +12,7 @@ import {
 import { useRouter } from "@/utils/compat"
 import { useEffect, useState, useMemo, useCallback } from "react"
 import { adminService } from "@/services"
+import api from "@/api/api"
 
 const STATUS_LABELS = {
     AWAITING_PAYMENT: 'Awaiting Payment',
@@ -79,6 +80,7 @@ export default function AdminDashboard() {
         total_shops: 0, total_users: 0, active_users: 0,
         pending_shops: 0, approved_shops: 0, approved_products: 0,
         pending_orders: 0, allOrders: [],
+        commission: { totalGmv: 0, totalPlatformRevenue: 0, pendingCommission: 0 }
     })
     const [revenueChart, setRevenueChart] = useState([])
     const [topProducts, setTopProducts] = useState([])
@@ -130,23 +132,15 @@ export default function AdminDashboard() {
 
     const fetchDashboardData = async () => {
         try {
-            const [stats, orders] = await Promise.all([
-                adminService.getDashboardStats().catch(() => null),
+            const [orders, commRev] = await Promise.all([
                 adminService.getAllOrders().catch(() => []),
+                api.get('/admin/commission/revenue?days=365').catch(() => null)
             ])
-            setDashboardData({
-                total_products: stats?.total_products || 0,
-                total_revenue: stats?.total_revenue || 0,
-                total_orders: stats?.total_orders || 0,
-                total_shops: stats?.total_shops || 0,
-                total_users: stats?.total_users || 0,
-                active_users: stats?.active_users || 0,
-                pending_shops: stats?.pending_shops || 0,
-                approved_shops: stats?.approved_shops || 0,
-                approved_products: stats?.approved_products || 0,
-                pending_orders: stats?.pending_orders || 0,
+            setDashboardData(prev => ({
+                ...prev,
                 allOrders: orders || [],
-            })
+                commission: commRev?.result || { totalGmv: 0, totalPlatformRevenue: 0, pendingCommission: 0 }
+            }))
         } catch (err) {
             console.error('Failed to load dashboard:', err)
         } finally {
@@ -155,6 +149,27 @@ export default function AdminDashboard() {
     }
 
     useEffect(() => { fetchDashboardData() }, [])
+
+    useEffect(() => {
+        const controller = adminService.getDashboardStream((stats) => {
+            setDashboardData(prev => ({
+                ...prev,
+                total_products: stats?.totalProducts ?? stats?.total_products ?? prev.total_products,
+                total_revenue: stats?.totalRevenue ?? stats?.total_revenue ?? prev.total_revenue,
+                total_orders: stats?.totalOrders ?? stats?.total_orders ?? prev.total_orders,
+                total_shops: stats?.totalShops ?? stats?.total_shops ?? prev.total_shops,
+                total_users: stats?.totalUsers ?? stats?.total_users ?? prev.total_users,
+                active_users: stats?.activeUsers ?? stats?.active_users ?? prev.active_users,
+                pending_shops: stats?.pendingShops ?? stats?.pending_shops ?? prev.pending_shops,
+                approved_shops: stats?.approvedShops ?? stats?.approved_shops ?? prev.approved_shops,
+                approved_products: stats?.approvedProducts ?? stats?.approved_products ?? prev.approved_products,
+                pending_orders: stats?.pendingOrders ?? stats?.pending_orders ?? prev.pending_orders,
+            }))
+        }, (err) => {
+            console.error('SSE Error Admin:', err)
+        })
+        return () => controller.abort()
+    }, [])
 
     // Fetch advanced analytics
     useEffect(() => {
@@ -208,9 +223,10 @@ export default function AdminDashboard() {
             </div>
 
             {/* Summary Cards */}
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 mt-6">
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mt-6">
                 {[
                     { title: 'Total Revenue', value: `${currency}${orderStats.totalRevenue.toFixed(2)}`, icon: CircleDollarSignIcon, color: 'bg-green-50 text-green-600' },
+                    { title: 'Platform Revenue', value: `${currency}${dashboardData.commission?.totalPlatformRevenue?.toFixed(2) || '0.00'}`, icon: CircleDollarSignIcon, color: 'bg-emerald-50 text-emerald-600' },
                     { title: 'Total Orders', value: filteredOrders.length, icon: TagsIcon, color: 'bg-blue-50 text-blue-600' },
                     { title: 'Total Products', value: dashboardData.total_products, icon: ShoppingBasketIcon, color: 'bg-purple-50 text-purple-600' },
                     { title: 'Total Stores', value: dashboardData.total_shops, icon: StoreIcon, color: 'bg-orange-50 text-orange-600' },

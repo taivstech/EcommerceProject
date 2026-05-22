@@ -56,5 +56,10 @@ export const messageService = {
     if (!res.result) throw new Error("Failed to send image message")
     return res.result
   },
+
+  searchContacts: async (query: string): Promise<any[]> => {
+    const res = await api.get<any[]>(`/messages/contacts/search?q=${encodeURIComponent(query)}`)
+    return res.result || []
+  },
 }
 

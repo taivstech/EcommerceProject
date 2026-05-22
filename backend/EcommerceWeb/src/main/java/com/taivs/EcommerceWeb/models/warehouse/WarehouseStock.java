@@ -44,7 +44,6 @@ public class WarehouseStock extends BaseEntity {
     @Builder.Default
     private Long reservedQuantity = 0L;
 
-    /** Computed at runtime — not persisted. stockQuantity - reservedQuantity (floored at 0). */
     public Long getAvailableQuantity() {
         return Math.max(0, stockQuantity - reservedQuantity);
     }

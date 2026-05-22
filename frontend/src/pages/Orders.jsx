@@ -311,7 +311,7 @@ function OrderCard({
             <div className="divide-y divide-slate-50">
                 {allItems.map((item, i) => {
                     const itemId = String(item.id || '').trim()
-                    const canReview = (order.status === 'DELIVERED' || order.status === 'COMPLETED') && !item.has_review && !reviewedItems[itemId] && itemId
+                    const canReview = order.status === 'COMPLETED' && !item.has_review && !reviewedItems[itemId] && itemId
                     const isReviewed = item.has_review || reviewedItems[itemId]
 
                     return (

@@ -1,6 +1,5 @@
 package com.taivs.EcommerceWeb.security;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -10,7 +9,7 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.web.filter.OncePerRequestFilter;
-
+import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
 import java.time.Duration;
 import java.util.Map;
@@ -59,8 +58,16 @@ public class RateLimitFilter extends OncePerRequestFilter {
 
         try {
             Long currentCount = redisTemplate.opsForValue().increment(key);
-            if (currentCount != null && currentCount == 1) {
-                redisTemplate.expire(key, window);
+            if (currentCount != null) {
+                if (currentCount == 1) {
+                    redisTemplate.expire(key, window);
+                } else {
+                    // Dự phòng: Nếu key tồn tại nhưng bị mất TTL (TTL = -1), set lại expire
+                    Long ttl = redisTemplate.getExpire(key);
+                    if (ttl == null || ttl < 0) {
+                        redisTemplate.expire(key, window);
+                    }
+                }
             }
 
             if (currentCount != null && currentCount > limit) {

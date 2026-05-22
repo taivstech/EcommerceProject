@@ -14,6 +14,8 @@ export default function ChatWidget() {
   const [messages, setMessages] = useState([])
   const [newMessage, setNewMessage] = useState('')
   const [searchQuery, setSearchQuery] = useState('')
+  const [searchResults, setSearchResults] = useState([])
+  const [isSearching, setIsSearching] = useState(false)
   const [loading, setLoading] = useState(false)
   const [unreadCount, setUnreadCount] = useState(0)
   const [unreadMap, setUnreadMap] = useState({})
@@ -109,6 +111,30 @@ export default function ChatWidget() {
     const interval = setInterval(checkOnline, 60000) // Increase to 60s
     return () => clearInterval(interval)
   }, [isAuthenticated, rooms])
+
+  // Debounced search
+  useEffect(() => {
+    if (!searchQuery.trim()) {
+      setSearchResults([])
+      setIsSearching(false)
+      return
+    }
+
+    const delayDebounceFn = setTimeout(async () => {
+      setIsSearching(true)
+      try {
+        const results = await messageService.searchContacts(searchQuery.trim())
+        setSearchResults(results)
+      } catch (error) {
+        console.error('Failed to search contacts:', error)
+        setSearchResults([])
+      } finally {
+        setIsSearching(false)
+      }
+    }, 500)
+
+    return () => clearTimeout(delayDebounceFn)
+  }, [searchQuery])
 
   const loadRooms = async () => {
     try {
@@ -298,12 +324,40 @@ export default function ChatWidget() {
                 </div>
               </div>
 
-              {/* Rooms */}
+              {/* Rooms & Search Results */}
               <div className="flex-1 overflow-y-auto">
-                {filteredRooms.length === 0 ? (
+                {searchQuery.trim() ? (
+                  isSearching ? (
+                    <div className="flex items-center justify-center h-32 text-sm text-slate-400">Searching...</div>
+                  ) : searchResults.length === 0 ? (
+                    <div className="flex items-center justify-center h-32 text-sm text-slate-400">No users or shops found.</div>
+                  ) : (
+                    searchResults.map((contact) => (
+                      <button
+                        key={contact.id}
+                        onClick={() => startChatWith(contact.id, contact.name)}
+                        className="w-full p-3 hover:bg-slate-50 transition text-left border-b border-slate-50 flex items-center gap-3"
+                      >
+                        <div className="w-10 h-10 rounded-full bg-green-100 text-green-700 flex items-center justify-center text-sm font-bold flex-shrink-0 overflow-hidden">
+                          {contact.avatar ? (
+                            <img src={contact.avatar} alt={contact.name} className="w-full h-full object-cover" />
+                          ) : (
+                            (contact.name || 'U').charAt(0).toUpperCase()
+                          )}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-semibold text-slate-800 truncate">
+                            {contact.name}
+                          </p>
+                          <p className="text-[10px] text-green-600 truncate">{contact.type === 'SHOP' ? 'Shop' : 'User'}</p>
+                        </div>
+                      </button>
+                    ))
+                  )
+                ) : filteredRooms.length === 0 ? (
                   <div className="flex flex-col items-center justify-center h-full text-slate-400 px-6">
                     <MessageSquare size={48} className="mb-3 opacity-30" />
-                    <p className="text-sm text-center">No conversations yet.<br />Visit a shop and start chatting!</p>
+                    <p className="text-sm text-center">No conversations yet.<br />Search for a user or shop to chat!</p>
                   </div>
                 ) : (
                   filteredRooms.map((room) => {

@@ -1,11 +1,9 @@
 package com.taivs.EcommerceWeb.models.admin;
 
+import com.taivs.EcommerceWeb.models.common.BaseEntity;
 import com.taivs.EcommerceWeb.models.user.User;
 import jakarta.persistence.*;
 import lombok.*;
-import org.hibernate.annotations.CreationTimestamp;
-
-import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "search_history",
@@ -18,7 +16,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class SearchHistory {
+public class SearchHistory extends BaseEntity {
 
     @Id
     @Column(length = 36)
@@ -31,8 +29,4 @@ public class SearchHistory {
 
     @Column(nullable = false, length = 200)
     private String keyword;
-
-    @Column(name = "searched_at", nullable = false)
-    @CreationTimestamp
-    private LocalDateTime searchedAt;
 }

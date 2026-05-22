@@ -1,6 +1,7 @@
 package com.taivs.EcommerceWeb.models.product;
 
 import com.taivs.EcommerceWeb.enums.product.BehaviorEventType;
+import com.taivs.EcommerceWeb.models.common.BaseEntity;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
@@ -40,7 +41,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class UserBehaviorEvent {
+public class UserBehaviorEvent extends BaseEntity {
 
     @Id
     @Column(length = 36)
@@ -75,7 +76,4 @@ public class UserBehaviorEvent {
     @Column(name = "page_context", length = 100)
     private String pageContext;
 
-    @CreationTimestamp
-    @Column(name = "created_at", updatable = false)
-    private LocalDateTime createdAt;
 }

@@ -113,6 +113,13 @@ public class ProductController {
                                 .build();
         }
 
+        @GetMapping("/brands")
+        public ApiResponse<List<String>> getBrands() {
+                return ApiResponse.<List<String>>builder()
+                                .result(productService.getBrands())
+                                .build();
+        }
+
         @GetMapping("/shop/{shopId}")
         public ApiResponse<Page<ProductResponse>> getByShop(
                         @PathVariable String shopId,

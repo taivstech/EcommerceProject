@@ -12,10 +12,6 @@ import java.time.LocalDateTime;
 @Repository
 public interface UserBehaviorEventRepository extends JpaRepository<UserBehaviorEvent, String> {
 
-    /**
-     * Count recent events to support de-duplication in service layer.
-     * Prevents flooding the table when a user rapidly re-views the same product.
-     */
     long countByUserIdAndProductIdAndEventTypeAndCreatedAtAfter(
             String userId,
             String productId,
@@ -23,9 +19,6 @@ public interface UserBehaviorEventRepository extends JpaRepository<UserBehaviorE
             LocalDateTime after
     );
 
-    /**
-     * Same de-dup check for anonymous sessions.
-     */
     long countBySessionIdAndProductIdAndEventTypeAndCreatedAtAfter(
             String sessionId,
             String productId,
@@ -33,10 +26,6 @@ public interface UserBehaviorEventRepository extends JpaRepository<UserBehaviorE
             LocalDateTime after
     );
 
-    /**
-     * Total number of distinct behavior events in a time window.
-     * Used by the recommendation service stats endpoint.
-     */
     @Query("""
         SELECT COUNT(e) FROM UserBehaviorEvent e
         WHERE e.createdAt >= :since

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ChevronRight } from 'lucide-react';
 import { shopService } from '@/services';
+import api from '@/api/api';
 
 /**
  * BrandMall — hiển thị danh sách shop/brand có trên nền tảng.
@@ -20,12 +21,26 @@ const PREMIUM_BRANDS = [
   { id: 'b8', name: 'Zara', image: 'https://images.unsplash.com/photo-1445205170230-053b83016050?q=80&w=200&h=200&auto=format&fit=crop' },
   { id: 'b9', name: 'Lego', image: 'https://images.unsplash.com/photo-1585366119957-e9730b6d0f60?q=80&w=200&h=200&auto=format&fit=crop' },
   { id: 'b10', name: 'Disney', image: 'https://images.unsplash.com/photo-1509198397868-475647b2a1e5?q=80&w=200&h=200&auto=format&fit=crop' },
-  { id: 'b11', name: 'Xiaomi', image: 'https://images.unsplash.com/photo-1505156868547-9b49f4df4e04?q=80&w=200&h=200&auto=format&fit=crop' },
-  { id: 'b12', name: 'H&M', image: 'https://images.unsplash.com/photo-1532453288672-3a27e9be9efd?q=80&w=200&h=200&auto=format&fit=crop' },
+  { id: 'b11', name: 'Xiaomi', image: 'https://images.unsplash.com/photo-1505156868547-9b49f4df4e04?q=80&w=200&h=200&auto=format&fit=crop' }
 ];
 
 export default function BrandMall() {
   const navigate = useNavigate();
+  const [activeBrands, setActiveBrands] = useState([]);
+
+  useEffect(() => {
+    api.get('/products/brands')
+      .then(res => {
+        const dbBrands = res.result || [];
+        const filtered = PREMIUM_BRANDS.filter(b => dbBrands.includes(b.name));
+        setActiveBrands(filtered);
+      })
+      .catch(() => setActiveBrands(PREMIUM_BRANDS));
+  }, []);
+
+  if (activeBrands.length === 0) {
+    return null;
+  }
 
   return (
     <div className="bg-white rounded-xl shadow-sm border border-slate-100 p-5">
@@ -48,7 +63,7 @@ export default function BrandMall() {
 
       {/* Brand grid */}
         <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-4">
-          {PREMIUM_BRANDS.map((brand) => {
+          {activeBrands.map((brand) => {
             return (
               <button
                 key={brand.id}

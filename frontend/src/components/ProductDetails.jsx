@@ -119,9 +119,14 @@ const ProductDetails = ({ product }) => {
     );
 
     const addToCartHandler = () => {
-        if (!isAuthenticated) return router.push('/login');
         const variantId = activeVariant?.id || productId;
-        dispatch(addToCart({ product_variant_id: variantId, quantity: 1 }));
+        const shopId = product.shopId || product.shop_id || product.shop?.id || product.shopInfo?.id;
+        dispatch(addToCart({ 
+            product_variant_id: variantId, 
+            quantity: 1, 
+            product_id: productId, 
+            shop_id: shopId 
+        }));
     };
 
     // Fetch real rating stats from API
@@ -303,7 +308,6 @@ const ProductDetails = ({ product }) => {
                     )}
                     <button
                         onClick={() => {
-                            if (!isAuthenticated) return router.push('/login');
                             !cartItem ? addToCartHandler() : router.push('/cart');
                         }}
                         disabled={activeStock !== null && activeStock <= 0}

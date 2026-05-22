@@ -518,7 +518,7 @@ public class BuyerOrderServiceImpl implements BuyerOrderService {
                 ? OrderStatus.PENDING
                 : OrderStatus.AWAITING_PAYMENT;
 
-        Boolean isPaid = "COD".equals(paymentMethod);
+        Boolean isPaid = false;
 
         return Order.builder()
                 .status(initialStatus)

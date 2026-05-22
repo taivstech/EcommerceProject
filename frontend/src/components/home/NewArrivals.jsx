@@ -43,14 +43,17 @@ export default function NewArrivals() {
 
   return (
     <section>
-      <div className="flex items-center justify-between mb-4">
-        <h2 className="text-lg font-bold text-slate-900">New Arrivals</h2>
-        <button
-          onClick={() => navigate('/shop?sortBy=newest')}
-          className="text-sm font-medium text-slate-500 hover:text-slate-800 transition-colors"
-        >
-          View All
-        </button>
+      <div className="flex flex-col gap-1 mb-4">
+        <div className="flex items-center justify-between">
+          <h2 className="text-lg font-bold text-slate-900">New Arrivals</h2>
+          <button
+            onClick={() => navigate('/shop?sortBy=newest')}
+            className="text-sm font-medium text-slate-500 hover:text-slate-800 transition-colors"
+          >
+            View All
+          </button>
+        </div>
+        <p className="text-xs text-slate-500">Recently listed products from our sellers</p>
       </div>
 
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">

@@ -76,6 +76,7 @@ const OrderSummary = ({ totalPrice, items, shopId, isHorizontal = false, showPla
             // 1.5 Fetch available shipping services (using first shop's district)
             const firstShopAddr = shopAddresses[0];
             const firstFromDistrict = firstShopAddr?.district_id || firstShopAddr?.districtId;
+            let serviceTypeToUse = selectedServiceType;
             if (firstFromDistrict && selectedAddress.district_id) {
                 try {
                     const services = await ghnService.getAvailableServices(
@@ -83,9 +84,14 @@ const OrderSummary = ({ totalPrice, items, shopId, isHorizontal = false, showPla
                         selectedAddress.district_id
                     );
                     setAvailableServices(services);
-                    // If current selection not available, fallback to first available (default: standard/2)
-                    if (services.length > 0 && !services.some(s => s.service_type_id === selectedServiceType)) {
-                        setSelectedServiceType(services[0].service_type_id);
+                    const hasStandard = services.some(s => s.service_type_id === 2);
+                    if (hasStandard) {
+                        serviceTypeToUse = 2;
+                    } else if (services.length > 0) {
+                        serviceTypeToUse = services[0].service_type_id;
+                    }
+                    if (serviceTypeToUse !== selectedServiceType) {
+                        setSelectedServiceType(serviceTypeToUse);
                     }
                 } catch (e) {
                     console.error('GHN available services failed:', e);
@@ -118,7 +124,7 @@ const OrderSummary = ({ totalPrice, items, shopId, isHorizontal = false, showPla
 
                 try {
                     const feeVnd = await ghnService.calculateFee({
-                        service_type_id: selectedServiceType,
+                        service_type_id: serviceTypeToUse,
                         from_district_id: fromDistrictId,
                         from_ward_code: fromWardCode,
                         to_district_id: selectedAddress.district_id,
@@ -468,23 +474,6 @@ const OrderSummary = ({ totalPrice, items, shopId, isHorizontal = false, showPla
                                         : <span className='text-green-600 font-semibold'>Free</span>}
                         </div>
 
-                        {/* Shipping Method Selector */}
-                        {availableServices.length > 1 && selectedAddress && (
-                            <div className="flex items-center gap-2 pl-6">
-                                <span className="text-xs text-slate-500 shrink-0">Method:</span>
-                                <select
-                                    value={selectedServiceType}
-                                    onChange={(e) => setSelectedServiceType(Number(e.target.value))}
-                                    className="flex-1 text-xs px-2 py-1.5 border border-slate-200 rounded-md outline-none focus:border-green-400 bg-white"
-                                >
-                                    {availableServices.map(svc => (
-                                        <option key={svc.service_type_id} value={svc.service_type_id}>
-                                            {svc.short_name || (svc.service_type_id === 1 ? 'Express' : svc.service_type_id === 2 ? 'Standard' : svc.service_type_id === 5 ? 'Same Day' : `Service ${svc.service_type_id}`)}
-                                        </option>
-                                    ))}
-                                </select>
-                            </div>
-                        )}
                         {platformDiscount > 0 && (
                             <div className='flex justify-between items-center text-base'>
                                 <span className='text-slate-600'>GoCart coupon:</span>
@@ -669,23 +658,6 @@ const OrderSummary = ({ totalPrice, items, shopId, isHorizontal = false, showPla
                 <span className='text-slate-500 font-medium'>GHN Express</span>
             </div>
 
-            {/* Shipping Method Selector (horizontal layout) */}
-            {availableServices.length > 1 && selectedAddress && (
-                <div className="mt-2 flex items-center gap-2 text-xs">
-                    <span className="text-slate-500 shrink-0">Delivery:</span>
-                    <select
-                        value={selectedServiceType}
-                        onChange={(e) => setSelectedServiceType(Number(e.target.value))}
-                        className="text-xs px-2 py-1 border border-slate-200 rounded-md outline-none focus:border-green-400 bg-white"
-                    >
-                        {availableServices.map(svc => (
-                            <option key={svc.service_type_id} value={svc.service_type_id}>
-                                {svc.short_name || (svc.service_type_id === 1 ? 'Express' : svc.service_type_id === 2 ? 'Standard' : svc.service_type_id === 5 ? 'Same Day' : `Service ${svc.service_type_id}`)}
-                            </option>
-                        ))}
-                    </select>
-                </div>
-            )}
 
             {/* Address */}
             <div className='my-4 py-4 border-y border-slate-200 text-slate-400'>
@@ -827,7 +799,7 @@ const OrderSummary = ({ totalPrice, items, shopId, isHorizontal = false, showPla
                 {['VNPAY', 'PAYPAL', 'MOMO'].includes(paymentMethod) ? `Pay with ${paymentMethod}` : 'Place Order'}
             </button>
 
-            {showAddressModal && <AddressModal setShowAddressModal={setShowAddressModal} />}
+            {showAddressModal && <AddressModal setShowAddressModal={setShowAddressModal} onAddressSelected={setSelectedAddress} />}
 
             {/* ─── Coupon Selection Modal ─────────────────────────────── */}
             {showCouponModal && (

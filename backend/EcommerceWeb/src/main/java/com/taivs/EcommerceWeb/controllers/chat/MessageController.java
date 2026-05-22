@@ -120,4 +120,12 @@ public class MessageController {
                 .result(presenceService.isOnline(UUID.fromString(userId)))
                 .build();
     }
+
+    @GetMapping("/contacts/search")
+    @PreAuthorize("hasAuthority('message:read') or hasRole('USER') or hasRole('SELLER') or hasRole('ADMIN')")
+    public ApiResponse<List<com.taivs.EcommerceWeb.dto.response.chat.ChatContactResponse>> searchContacts(@RequestParam("q") String query) {
+        return ApiResponse.<List<com.taivs.EcommerceWeb.dto.response.chat.ChatContactResponse>>builder()
+                .result(messageService.searchContacts(query))
+                .build();
+    }
 }

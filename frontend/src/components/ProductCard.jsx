@@ -7,7 +7,7 @@ import { addToCart } from '@/redux/features/cart/cartSlice'
 import { useAuth } from "@/hooks/useAuth"
 import { behaviorService } from "@/services/behaviorService"
 
-const ProductCard = ({ product, showSoldBadge = true, pageContext = "listing" }) => {
+const ProductCard = ({ product, showSoldBadge = false, pageContext = "listing" }) => {
     const dispatch = useDispatch()
     const router = useRouter()
     const { isAuthenticated } = useAuth()
@@ -60,7 +60,6 @@ const ProductCard = ({ product, showSoldBadge = true, pageContext = "listing" })
 
     const handleAddToCart = (e) => {
         e.preventDefault()
-        if (!isAuthenticated) return router.push('/login')
         dispatch(addToCart({ 
             productId: product.id, 
             quantity: 1, 

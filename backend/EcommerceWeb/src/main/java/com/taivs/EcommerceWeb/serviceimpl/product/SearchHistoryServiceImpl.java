@@ -9,7 +9,7 @@ import com.taivs.EcommerceWeb.exceptions.AppException;
 import com.taivs.EcommerceWeb.exceptions.ErrorCode;
 import com.taivs.EcommerceWeb.utils.AuthUtils;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.core.context.SecurityContextHolder;
+
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -38,7 +38,7 @@ public class SearchHistoryServiceImpl implements SearchHistoryService {
 
         Optional<SearchHistory> existing = searchHistoryRepository.findByUserIdAndKeyword(userId, trimmed);
         if (existing.isPresent()) {
-            existing.get().setSearchedAt(LocalDateTime.now());
+            existing.get().setCreatedAt(LocalDateTime.now());
             searchHistoryRepository.save(existing.get());
             return;
         }

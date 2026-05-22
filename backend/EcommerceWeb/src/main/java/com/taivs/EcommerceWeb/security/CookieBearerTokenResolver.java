@@ -57,6 +57,17 @@ public class CookieBearerTokenResolver implements BearerTokenResolver {
 
             if (path.startsWith(publicPath) || 
                 (publicPath.endsWith("/") && path.startsWith(publicPath.substring(0, publicPath.length() - 1)))) {
+                
+                // Do NOT skip token resolution for state-mutating requests (POST, PUT, DELETE, PATCH)
+                // on resource catalog endpoints (categories, products, reviews, coupons)
+                String method = request.getMethod();
+                if (("POST".equalsIgnoreCase(method) || "PUT".equalsIgnoreCase(method) || 
+                     "DELETE".equalsIgnoreCase(method) || "PATCH".equalsIgnoreCase(method)) && 
+                    (path.startsWith("/api/categories") || path.startsWith("/api/products") || 
+                     path.startsWith("/api/reviews") || path.startsWith("/api/coupons/shop"))) {
+                    continue;
+                }
+
                 log.debug("Skipping token resolution for public endpoint: {}", request.getRequestURI());
                 return null;
             }

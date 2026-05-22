@@ -7,12 +7,9 @@ import { shopService, productService, searchService } from "@/services"
 import { normalizeProduct } from "@/redux/features/product/productSlice"
 import { useAuth } from "@/hooks/useAuth"
 import { Link } from "@/utils/compat"
+import api from "@/api/api"
 
 const PAGE_SIZE = 16
-
-const FAMOUS_BRANDS = [
-  'Nike', 'Apple', 'Samsung', 'Adidas', 'Sony', "L'Oreal", 'Asus', 'Zara', 'Lego', 'Disney', 'Xiaomi', 'H&M'
-]
 
 function ShopContent() {
 
@@ -37,6 +34,13 @@ function ShopContent() {
     const [totalPages, setTotalPages] = useState(0)
     const [totalElements, setTotalElements] = useState(0)
     const [currentPage, setCurrentPage] = useState(0)
+    const [brands, setBrands] = useState([])
+
+    useEffect(() => {
+        api.get('/products/brands')
+            .then(res => setBrands(res.result || []))
+            .catch(() => {})
+    }, [])
 
     const [sortBy, setSortBy] = useState(() => {
         const allowed = ['relevance', 'newest', 'best_selling', 'top_rated', 'price_asc', 'price_desc']
@@ -230,6 +234,16 @@ function ShopContent() {
         router.push(`/shop${params.toString() ? '?' + params.toString() : ''}`)
     }
 
+    const handleTabChange = (newTab) => {
+        const params = new URLSearchParams()
+        if (search) params.set('search', search)
+        if (categoryId) params.set('categoryId', categoryId)
+        if (brand) params.set('brand', brand)
+        params.set('tab', newTab)
+        router.push(`/shop?${params.toString()}`)
+        setActiveTab(newTab)
+    }
+
     const handleSortClick = (value) => {
         if (value === 'price') {
             setPriceDropdownOpen(v => !v)
@@ -276,7 +290,7 @@ function ShopContent() {
                     </h1>
                     <div className="flex items-center gap-2">
                         <button
-                            onClick={() => setActiveTab('products')}
+                            onClick={() => handleTabChange('products')}
                             className={`flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-medium transition ${
                                 activeTab === 'products'
                                     ? 'bg-slate-800 text-white'
@@ -287,7 +301,7 @@ function ShopContent() {
                             Products
                         </button>
                         <button
-                            onClick={() => setActiveTab('stores')}
+                            onClick={() => handleTabChange('stores')}
                             className={`flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-medium transition ${
                                 activeTab === 'stores'
                                     ? 'bg-slate-800 text-white'
@@ -345,7 +359,7 @@ function ShopContent() {
                                 <div>
                                     <h3 className="text-sm font-semibold text-slate-800 mb-3">By Brand</h3>
                                     <div className="space-y-1 max-h-48 overflow-y-auto pr-1 scrollbar-thin">
-                                        {FAMOUS_BRANDS.map(b => (
+                                        {brands.map(b => (
                                             <label
                                                 key={b}
                                                 className="flex items-center gap-2.5 py-1.5 cursor-pointer group"

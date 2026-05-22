@@ -26,4 +26,6 @@ public interface MessageService {
     void markAsRead(String roomId);
 
     Map<String, Long> getUnreadCounts();
+
+    List<com.taivs.EcommerceWeb.dto.response.chat.ChatContactResponse> searchContacts(String query);
 }

@@ -13,19 +13,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 
-/**
- * Asynchronous behavior tracking service.
- *
- * De-duplication rules (per event type):
- *   VIEW      — max 1 event per user+product per 30 minutes
- *   CLICK     — max 1 event per user+product per 5 minutes
- *   WISHLIST  — always recorded (user intent is strong)
- *   CART_ADD  — always recorded (user intent is very strong)
- *
- * All writes are fire-and-forget via @Async. If the DB is temporarily
- * unavailable the event is silently dropped — this is acceptable because
- * behavior data is statistical, not transactional.
- */
 @Service
 @RequiredArgsConstructor
 @Slf4j

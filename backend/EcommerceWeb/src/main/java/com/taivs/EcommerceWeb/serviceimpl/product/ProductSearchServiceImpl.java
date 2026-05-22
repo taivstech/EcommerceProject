@@ -283,11 +283,10 @@ public class ProductSearchServiceImpl implements ProductSearchService {
         if (sortBy != null && !sortBy.isBlank()) {
             SortOrder order = "asc".equalsIgnoreCase(sortDir) ? SortOrder.Asc : SortOrder.Desc;
             String sortField = switch (sortBy.toLowerCase()) {
-                case "price" -> "minPrice";
-                case "name" -> "name.keyword";
-                case "sold" -> "totalSold";
-                case "newest" -> "createdAt";
-                case "rating" -> "avgRating";
+                case "price", "minprice" -> "minPrice";
+                case "sold", "best_selling", "totalsold" -> "totalSold";
+                case "rating", "top_rated", "avgrating" -> "avgRating";
+                case "newest", "createdat" -> "createdAt";
                 default -> "_score";
             };
 

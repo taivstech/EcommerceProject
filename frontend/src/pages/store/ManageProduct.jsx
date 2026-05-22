@@ -67,6 +67,7 @@ export default function StoreManageProducts() {
                     <thead className="bg-slate-50 text-gray-700 uppercase tracking-wider text-xs">
                         <tr>
                             <th className="px-4 py-3">Product</th>
+                            <th className="px-4 py-3 hidden md:table-cell">Brand</th>
                             <th className="px-4 py-3 hidden md:table-cell">Base Price</th>
                             <th className="px-4 py-3">Variants</th>
                             <th className="px-4 py-3 hidden lg:table-cell">Stock</th>
@@ -93,6 +94,9 @@ export default function StoreManageProducts() {
                                             )}
                                             <span className="line-clamp-2 max-w-[200px]">{product.name}</span>
                                         </div>
+                                    </td>
+                                    <td className="px-4 py-3 hidden md:table-cell text-slate-500">
+                                        {product.brand || '-'}
                                     </td>
                                     <td className="px-4 py-3 hidden md:table-cell text-slate-800 font-medium font-num">
                                         {product.price ? `${currency}${Number(product.price).toFixed(2)}` : '-'}

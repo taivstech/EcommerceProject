@@ -58,4 +58,6 @@ public interface ProductService {
     void softDeleteBySeller(String productId);
 
     void recalculateProductStats(String productId);
+
+    List<String> getBrands();
 }

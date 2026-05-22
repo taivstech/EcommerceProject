@@ -26,6 +26,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -193,6 +194,7 @@ public class SellerOrderServiceImpl implements SellerOrderService {
     }
 
     private OrderResponse mapToResponse(Order order) {
+        String sellerId = currentUserId();
 
         ShippingAddressResponse shippingResp = null;
         if (order.getShippingAddress() != null) {
@@ -211,9 +213,13 @@ public class SellerOrderServiceImpl implements SellerOrderService {
                     .build();
         }
 
-        List<OrderShopGroupResponse> groupResponses = order.getOrderShopGroups() == null
-                ? Collections.emptyList()
-                : order.getOrderShopGroups().stream().map(g -> {
+        List<OrderShopGroup> myGroups = order.getOrderShopGroups() == null 
+                ? Collections.emptyList() 
+                : order.getOrderShopGroups().stream()
+                        .filter(g -> g.getShop() != null && g.getShop().getUser() != null && sellerId.equals(g.getShop().getUser().getId()))
+                        .toList();
+
+        List<OrderShopGroupResponse> groupResponses = myGroups.stream().map(g -> {
 
             List<OrderItemResponse> itemResponses = g.getOrderItems() == null
                     ? Collections.emptyList()
@@ -234,10 +240,10 @@ public class SellerOrderServiceImpl implements SellerOrderService {
             return OrderShopGroupResponse.builder()
                     .id(g.getId())
                     .shopId(g.getShop() == null ? null : g.getShop().getId())
-                    .subtotal(g.getSubtotal())
-                    .shippingFee(g.getShippingFee())
-                    .totalDiscount(g.getTotalDiscount())
-                    .total(g.getTotal())
+                    .subtotal(g.getSubtotal() != null ? g.getSubtotal() : BigDecimal.ZERO)
+                    .shippingFee(g.getShippingFee() != null ? g.getShippingFee() : BigDecimal.ZERO)
+                    .totalDiscount(g.getTotalDiscount() != null ? g.getTotalDiscount() : BigDecimal.ZERO)
+                    .total(g.getTotal() != null ? g.getTotal() : BigDecimal.ZERO)
                     .shipment(g.getShipment())
                     .warehouseId(g.getWarehouse() == null ? null : g.getWarehouse().getId())
                     .warehouseName(g.getWarehouse() == null ? null : g.getWarehouse().getName())
@@ -245,19 +251,24 @@ public class SellerOrderServiceImpl implements SellerOrderService {
                     .build();
         }).toList();
 
+        BigDecimal mySubtotal = groupResponses.stream().map(OrderShopGroupResponse::getSubtotal).reduce(BigDecimal.ZERO, BigDecimal::add);
+        BigDecimal myShippingFee = groupResponses.stream().map(OrderShopGroupResponse::getShippingFee).reduce(BigDecimal.ZERO, BigDecimal::add);
+        BigDecimal myTotalDiscount = groupResponses.stream().map(OrderShopGroupResponse::getTotalDiscount).reduce(BigDecimal.ZERO, BigDecimal::add);
+        BigDecimal myTotal = groupResponses.stream().map(OrderShopGroupResponse::getTotal).reduce(BigDecimal.ZERO, BigDecimal::add);
+
         return OrderResponse.builder()
                 .id(order.getId())
                 .status(order.getStatus())
                 .payment(order.getPayment())
                 .isPaid(order.getIsPaid())
                 .note(order.getNote())
-                .subtotal(order.getSubtotal())
-                .shippingFee(order.getShippingFee())
-                .discountAmount(order.getDiscountAmount())
-                .shopDiscountAmount(order.getShopDiscountAmount())
-                .shippingDiscountAmount(order.getShippingDiscountAmount())
-                .totalDiscount(order.getTotalDiscount())
-                .total(order.getTotal())
+                .subtotal(mySubtotal)
+                .shippingFee(myShippingFee)
+                .discountAmount(BigDecimal.ZERO)
+                .shopDiscountAmount(BigDecimal.ZERO)
+                .shippingDiscountAmount(BigDecimal.ZERO)
+                .totalDiscount(myTotalDiscount)
+                .total(myTotal)
                 .createdAt(order.getCreatedAt())
                 .shippingAddress(shippingResp)
                 .shopGroups(groupResponses)

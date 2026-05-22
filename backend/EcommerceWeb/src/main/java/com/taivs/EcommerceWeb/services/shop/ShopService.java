@@ -42,4 +42,6 @@ public interface ShopService {
     boolean isFollowing(String shopId);
 
     List<ShopFollowerResponse> getMyFollowedShops();
+
+    com.taivs.EcommerceWeb.dto.response.shop.SellerDashboardStats getDashboardStatsByUserId(String userId);
 }

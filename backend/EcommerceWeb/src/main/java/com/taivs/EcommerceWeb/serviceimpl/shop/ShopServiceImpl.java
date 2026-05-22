@@ -64,6 +64,8 @@ public class ShopServiceImpl implements ShopService {
     private final FileStorageService fileStorageService;
     private final WarehouseRepository warehouseRepository;
     private final WarehouseServiceImpl warehouseService;
+    private final com.taivs.EcommerceWeb.repositories.product.ProductRepository productRepository;
+    private final com.taivs.EcommerceWeb.repositories.order.OrderRepository orderRepository;
 
     @Override
     @Transactional
@@ -407,5 +409,36 @@ public class ShopServiceImpl implements ShopService {
 
             userRoleRepository.save(userRole);
         }
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public com.taivs.EcommerceWeb.dto.response.shop.SellerDashboardStats getDashboardStatsByUserId(String userId) {
+        String shopId = getShopIdByUserId(userId);
+
+        long totalProducts = productRepository.countByShop_Id(shopId);
+        long totalFollowers = getFollowerCount(shopId);
+
+        List<com.taivs.EcommerceWeb.models.order.Order> orders = orderRepository.findBySellerUserIdOrderByCreatedAtDesc(userId);
+        long totalOrders = orders.size();
+
+        java.math.BigDecimal totalEarnings = java.math.BigDecimal.ZERO;
+        for (com.taivs.EcommerceWeb.models.order.Order o : orders) {
+            if (!"CANCELLED".equals(o.getStatus().name())) {
+                totalEarnings = totalEarnings.add(o.getTotal() != null ? o.getTotal() : java.math.BigDecimal.ZERO);
+            }
+        }
+
+        java.math.BigDecimal totalCommission = totalEarnings.multiply(new java.math.BigDecimal("0.05"));
+        java.math.BigDecimal netEarnings = totalEarnings.subtract(totalCommission);
+
+        return com.taivs.EcommerceWeb.dto.response.shop.SellerDashboardStats.builder()
+                .totalProducts(totalProducts)
+                .totalOrders(totalOrders)
+                .totalFollowers(totalFollowers)
+                .totalGmv(totalEarnings)
+                .totalEarnings(netEarnings)
+                .totalCommission(totalCommission)
+                .build();
     }
 }

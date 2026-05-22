@@ -789,4 +789,9 @@ public class ProductServiceImpl implements ProductService {
         }
     }
 
+    @Override
+    public List<String> getBrands() {
+        return productRepository.findDistinctBrands();
+    }
+
 }

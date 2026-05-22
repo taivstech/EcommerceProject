@@ -24,6 +24,8 @@ public interface ProductRepository extends JpaRepository<Product, String> {
 
     Optional<Product> findById(String productId);
 
+    long countByShop_Id(String shopId);
+
     @Query(value = """
                 SELECT p.id FROM Product p
                 WHERE p.deletedAt IS NULL
@@ -143,6 +145,7 @@ public interface ProductRepository extends JpaRepository<Product, String> {
     @Query("""
             SELECT p.id FROM Product p
             WHERE p.deletedAt IS NULL
+            AND p.totalSold > 0
             ORDER BY p.totalSold DESC
             """)
     Slice<String> findTopSellingProductIds(Pageable pageable);
@@ -151,6 +154,7 @@ public interface ProductRepository extends JpaRepository<Product, String> {
             SELECT p.id FROM Product p
             WHERE p.deletedAt IS NULL
             AND p.shop.id = :shopId
+            AND p.totalSold > 0
             ORDER BY p.totalSold DESC
             """)
     Slice<String> findTopSellingProductIdsByShop(
@@ -161,6 +165,7 @@ public interface ProductRepository extends JpaRepository<Product, String> {
             SELECT p.id FROM Product p
             WHERE p.deletedAt IS NULL
             AND p.category.id = :categoryId
+            AND p.totalSold > 0
             ORDER BY p.totalSold DESC
             """)
     Slice<String> findTopSellingProductIdsByCategory(
@@ -277,6 +282,9 @@ public interface ProductRepository extends JpaRepository<Product, String> {
                 WHERE pv.product.id = :productId
             """)
     BigDecimal findAvgRatingByProductId(@Param("productId") String productId);
+
+    @Query("SELECT DISTINCT p.brand FROM Product p WHERE p.brand IS NOT NULL AND p.brand != '' AND p.deletedAt IS NULL ORDER BY p.brand ASC")
+    List<String> findDistinctBrands();
 
     /**
      * Count total reviews for a product across all variants.

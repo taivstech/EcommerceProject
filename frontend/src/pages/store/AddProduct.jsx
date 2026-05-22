@@ -24,6 +24,7 @@ export default function StoreAddProduct() {
     const [existingImageUrls, setExistingImageUrls] = useState([])
     const [productInfo, setProductInfo] = useState({
         name: "",
+        brand: "",
         description: "",
         price: "",
         categoryId: "",
@@ -64,6 +65,7 @@ export default function StoreAddProduct() {
 
                         setProductInfo({
                             name: product.name || "",
+                            brand: product.brand || "",
                             description: product.description || "",
                             price: product.price?.toString() || product.min_price?.toString() || "",
                             categoryId: product.category_id || "",
@@ -357,6 +359,7 @@ export default function StoreAddProduct() {
 
             const payload = {
                 name: productInfo.name,
+                brand: productInfo.brand || null,
                 description: productInfo.description,
                 price: Number(productInfo.price) || 0,
                 category_id: productInfo.categoryId || null,
@@ -431,12 +434,40 @@ export default function StoreAddProduct() {
                 <textarea name="description" onChange={onChangeHandler} value={productInfo.description} placeholder="Enter product description" rows={5} className="w-full max-w-lg p-2 px-4 outline-none border border-slate-200 rounded resize-none" required />
             </label>
 
-            <div className="flex gap-5">
-                <label className="flex flex-col gap-2">
-                    <span className="font-medium text-slate-700">Base Price</span>
-                    <input type="number" step="0.01" name="price" onChange={onChangeHandler} value={productInfo.price} placeholder="0.00" className="w-40 p-2 px-4 outline-none border border-slate-200 rounded [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none [-moz-appearance:textfield]" required />
-                </label>
-            </div>
+            <label className="flex flex-col gap-2 my-6">
+                <span className="font-medium text-slate-700">Brand</span>
+                <input type="text" name="brand" onChange={onChangeHandler} value={productInfo.brand} placeholder="Enter brand name" className="w-full max-w-lg p-2 px-4 outline-none border border-slate-200 rounded" />
+            </label>
+
+            {attributes.length === 0 && (
+                <div className="my-8 border border-slate-200 rounded-lg p-5 bg-white">
+                    <h2 className="text-lg font-semibold text-slate-800 mb-4">Goods Information (No variants)</h2>
+                    <div className="flex gap-5 flex-wrap">
+                        <label className="flex flex-col gap-2">
+                            <span className="font-medium text-slate-700">Base Price</span>
+                            <input type="number" step="0.01" name="price" onChange={onChangeHandler} value={productInfo.price} placeholder="0.00" className="w-40 p-2 px-4 outline-none border border-slate-200 rounded [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none [-moz-appearance:textfield]" required />
+                        </label>
+                        <label className="flex flex-col gap-2">
+                            <span className="font-medium text-slate-700">Stock</span>
+                            <input type="number" onChange={(e) => updateVariant(0, 'stock', e.target.value)} value={variants[0]?.stock || ""} placeholder="0" className="w-40 p-2 px-4 outline-none border border-slate-200 rounded" required />
+                        </label>
+                        <label className="flex flex-col gap-2">
+                            <span className="font-medium text-slate-700">SKU</span>
+                            <input type="text" onChange={(e) => updateVariant(0, 'sku', e.target.value)} value={variants[0]?.sku || ""} placeholder="e.g. TSHIRT-001" className="w-48 p-2 px-4 outline-none border border-slate-200 rounded" />
+                        </label>
+                    </div>
+                </div>
+            )}
+            
+            {attributes.length > 0 && (
+                <div className="flex gap-5">
+                    <label className="flex flex-col gap-2">
+                        <span className="font-medium text-slate-700">Base Price (applies to variants)</span>
+                        <input type="number" step="0.01" name="price" onChange={onChangeHandler} value={productInfo.price} placeholder="0.00" className="w-40 p-2 px-4 outline-none border border-slate-200 rounded [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none [-moz-appearance:textfield]" required />
+                    </label>
+                </div>
+            )}
+
 
             <select onChange={e => {
                 const catId = e.target.value

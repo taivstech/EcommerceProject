@@ -161,6 +161,41 @@ public class WarehouseSelectionServiceImpl implements WarehouseSelectionService 
         return results;
     }
 
+    private Integer determineServiceTypeId(Integer fromDistrictId, Integer toDistrictId) {
+        try {
+            Map<String, Object> servicesResponse = ghnService.getAvailableService(fromDistrictId, toDistrictId);
+            if (servicesResponse != null && servicesResponse.containsKey("data")) {
+                Object dataObj = servicesResponse.get("data");
+                if (dataObj instanceof List) {
+                    List<?> list = (List<?>) dataObj;
+                    List<Integer> availableTypeIds = new ArrayList<>();
+                    for (Object item : list) {
+                        if (item instanceof Map) {
+                            Map<?, ?> map = (Map<?, ?>) item;
+                            Object typeIdObj = map.get("service_type_id");
+                            if (typeIdObj instanceof Number) {
+                                availableTypeIds.add(((Number) typeIdObj).intValue());
+                            }
+                        }
+                    }
+                    if (!availableTypeIds.isEmpty()) {
+                        // Prefer service_type_id = 2 (Standard/Hàng nhẹ) if available
+                        if (availableTypeIds.contains(2)) {
+                            return 2;
+                        }
+                        // Fall back to first available service (could be 5 for heavy, or 1 for express, 3 for savings)
+                        return availableTypeIds.get(0);
+                    }
+                }
+            }
+        } catch (Exception e) {
+            log.warn("Failed to fetch available GHN services between district {} and {}: {}", 
+                    fromDistrictId, toDistrictId, e.getMessage());
+        }
+        // Absolute fallback
+        return 2;
+    }
+
     private BigDecimal calculateShippingFee(Warehouse warehouse, CheckoutRequest request, BigDecimal weight) {
         Integer toDistrictId = request.getDistrictId();
         String toWardCode = request.getWardCode();
@@ -180,8 +215,11 @@ public class WarehouseSelectionServiceImpl implements WarehouseSelectionService 
                 : 300;
         weightGrams = Math.max(1, weightGrams);
 
+        // Dynamically determine service_type_id based on route availability
+        Integer serviceTypeId = determineServiceTypeId(warehouse.getDistrictId(), toDistrictId);
+
         ShippingFeeRequest feeRequest = ShippingFeeRequest.builder()
-                .serviceTypeId(2)
+                .serviceTypeId(serviceTypeId)
                 .fromDistrictId(warehouse.getDistrictId())
                 .fromWardCode(warehouse.getWardCode() != null ? warehouse.getWardCode() : "")
                 .toDistrictId(toDistrictId)

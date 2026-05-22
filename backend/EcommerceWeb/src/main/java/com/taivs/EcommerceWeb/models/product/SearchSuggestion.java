@@ -34,26 +34,17 @@ public class SearchSuggestion {
     @Column(length = 36)
     private String id;
 
-    /** The suggested search term (e.g. "áo phông nam", "giày thể thao"). */
     @Column(nullable = false, length = 200, unique = true)
     private String keyword;
 
-    /**
-     * Denotes how often this term has been searched.
-     * Used for ranking — higher = shown first.
-     */
     @Column(name = "search_count", nullable = false)
     @Builder.Default
     private Long searchCount = 0L;
 
-    /**
-     * Optional category hint — used to group suggestions (e.g. "fashion", "tech").
-     * Can be null for general terms.
-     */
     @Column(length = 100)
     private String category;
 
-    /** Soft-toggle to hide terms without deleting them. */
+
     @Column(name = "is_active", nullable = false)
     @Builder.Default
     private Boolean isActive = true;

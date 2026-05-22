@@ -1,5 +1,6 @@
 package com.taivs.EcommerceWeb.models.admin;
 
+import com.taivs.EcommerceWeb.models.common.BaseEntity;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
@@ -20,7 +21,7 @@ import com.taivs.EcommerceWeb.models.product.Product;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class ActivityLog {
+public class ActivityLog extends BaseEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     @Column(length = 36)
@@ -40,8 +41,4 @@ public class ActivityLog {
 
     @Column(name = "ip_address", length = 50)
     private String ipAddress;
-
-    @CreationTimestamp
-    @Column(name = "created_at", updatable = false)
-    private LocalDateTime createdAt;
 }

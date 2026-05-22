@@ -2,7 +2,7 @@ import { useEffect } from 'react'
 import { useDispatch } from 'react-redux'
 import { fetchPublicProducts } from '@/redux/features/product/productSlice'
 import { fetchCategories } from '@/redux/features/category/categorySlice'
-import { fetchCartItems } from '@/redux/features/cart/cartSlice'
+import { fetchCartItems, mergeCart } from '@/redux/features/cart/cartSlice'
 import { fetchAddresses } from '@/redux/features/address/addressSlice'
 import { authService } from '@/utils/auth'
 import { useAuth } from '@/hooks/useAuth'
@@ -22,8 +22,10 @@ export default function DataBootstrap() {
     try {
       // Fetch user-specific data whenever auth state becomes authenticated
       if (isAuthenticated || authService.isAuthenticated()) {
-        dispatch(fetchCartItems())
+        dispatch(mergeCart())
         dispatch(fetchAddresses())
+      } else {
+        dispatch(fetchCartItems())
       }
     } catch (err) {
       console.error('Error bootstrapping private data:', err)
