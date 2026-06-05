@@ -4,8 +4,10 @@ import com.taivs.EcommerceWeb.dto.ApiResponse;
 import com.taivs.EcommerceWeb.dto.request.admin.CommissionRateRequest;
 import com.taivs.EcommerceWeb.dto.response.admin.CommissionRateResponse;
 import com.taivs.EcommerceWeb.dto.response.admin.CommissionRevenueResponse;
+import com.taivs.EcommerceWeb.dto.response.admin.PlatformCommissionResponse;
 import com.taivs.EcommerceWeb.services.order.CommissionService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
@@ -45,5 +47,20 @@ public class AdminCommissionController {
         return ApiResponse.<CommissionRevenueResponse>builder()
                 .result(commissionService.getRevenueSummary(days))
                 .build();
+    }
+
+    @GetMapping("/history")
+    public ApiResponse<Page<PlatformCommissionResponse>> history(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        return ApiResponse.<Page<PlatformCommissionResponse>>builder()
+                .result(commissionService.getCommissionHistory(page, size))
+                .build();
+    }
+
+    @PostMapping("/dump-data")
+    public ApiResponse<String> dumpData() {
+        commissionService.dumpCommissionData();
+        return ApiResponse.<String>builder().result("Dumped successfully").build();
     }
 }

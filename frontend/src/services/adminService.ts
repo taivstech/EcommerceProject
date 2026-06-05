@@ -45,8 +45,12 @@ export const adminService = {
 
   getAllShops: async (status?: string): Promise<ShopResponse[]> => {
     const query = status ? `?status=${encodeURIComponent(status)}` : ""
-    const res = await api.get<ShopResponse[]>(`/admin/shops${query}`)
-    return res.result || []
+    const res = await api.get<any>(`/admin/shops${query}`)
+    const data = res.result
+    if (data && data.content && Array.isArray(data.content)) {
+      return data.content
+    }
+    return Array.isArray(data) ? data : []
   },
 
   approveShop: async (id: string): Promise<void> => {
@@ -172,6 +176,11 @@ export const adminService = {
   getCategoryRevenue: async (days = 30): Promise<any[]> => {
     const res = await api.get<any[]>(`/admin/stats/category-revenue?days=${days}`)
     return res.result || []
+  },
+
+  getCommissionHistory: async (page = 0, size = 10): Promise<any> => {
+    const res = await api.get<any>(`/admin/commission/history?page=${page}&size=${size}`)
+    return res.result || { content: [], totalPages: 0, totalElements: 0 }
   },
 }
 

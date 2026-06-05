@@ -2,8 +2,10 @@ package com.taivs.EcommerceWeb.services.order;
 
 import com.taivs.EcommerceWeb.dto.response.admin.CommissionRateResponse;
 import com.taivs.EcommerceWeb.dto.response.admin.CommissionRevenueResponse;
+import com.taivs.EcommerceWeb.dto.response.admin.PlatformCommissionResponse;
 import com.taivs.EcommerceWeb.dto.request.admin.CommissionRateRequest;
 import com.taivs.EcommerceWeb.models.order.OrderShopGroup;
+import org.springframework.data.domain.Page;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -32,4 +34,9 @@ public interface CommissionService {
 
     /** Admin: platform revenue summary */
     CommissionRevenueResponse getRevenueSummary(int days);
+
+    Page<PlatformCommissionResponse> getCommissionHistory(int page, int size);
+
+    /** Admin: temporary endpoint to dump missing commissions for completed orders */
+    void dumpCommissionData();
 }

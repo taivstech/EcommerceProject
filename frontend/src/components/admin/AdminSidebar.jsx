@@ -4,6 +4,7 @@ import { Link } from "@/utils/compat"
 
 const sidebarLinks = [
     { name: 'Dashboard',     href: '/admin',          icon: LayoutDashboard },
+    { name: 'Cash Flow',     href: '/admin/cash-flow',icon: BarChart3 },
     { name: 'Stores',        href: '/admin/stores',   icon: Store },
     { name: 'Approve Store', href: '/admin/approve',  icon: ShieldCheck },
     { name: 'Users',         href: '/admin/users',    icon: Users },

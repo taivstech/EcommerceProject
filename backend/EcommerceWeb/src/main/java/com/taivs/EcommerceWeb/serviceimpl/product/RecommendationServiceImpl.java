@@ -251,7 +251,7 @@ public class RecommendationServiceImpl implements RecommendationService {
         List<Product> products = productRepository.findAllBasicByIds(productIds);
 
         Map<String, Product> productMap = products.stream()
-                .collect(Collectors.toMap(Product::getId, p -> p));
+                .collect(Collectors.toMap(Product::getId, p -> p, (existing, replacement) -> existing));
 
         return productIds.stream()
                 .map(productMap::get)

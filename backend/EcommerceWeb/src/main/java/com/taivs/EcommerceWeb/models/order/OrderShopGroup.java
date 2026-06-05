@@ -6,6 +6,8 @@ import com.taivs.EcommerceWeb.models.common.BaseEntity;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.NotFound;
+import org.hibernate.annotations.NotFoundAction;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -63,6 +65,7 @@ public class OrderShopGroup extends BaseEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "shop_id", nullable = false)
+    @NotFound(action = NotFoundAction.IGNORE)
     private Shop shop;
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -71,6 +74,7 @@ public class OrderShopGroup extends BaseEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "warehouse_id")
+    @NotFound(action = NotFoundAction.IGNORE)
     private Warehouse warehouse;
 
     @Builder.Default

@@ -309,7 +309,7 @@ export default function Dashboard() {
 
         const totalRevenue = activeOrders.reduce((sum, o) => sum + (o.total || 0), 0)
         const totalItems = activeOrders.reduce((sum, o) => {
-            const items = (o?.shop_groups || []).flatMap(g => g?.items || [])
+            const items = (o?.shop_groups || o?.shopGroups || []).flatMap(g => g?.items || [])
             return sum + items.reduce((s, item) => s + (item.quantity || 0), 0)
         }, 0)
 
@@ -327,16 +327,57 @@ export default function Dashboard() {
     // ── Top selling products ──
     const topProducts = useMemo(() => {
         const products = dashboardData.products || []
+        
+        const soldMap = {}
+        const productInfoMap = {}
+        
+        filteredOrders.filter(o => o.status !== 'CANCELLED').forEach(o => {
+            const items = (o?.shop_groups || o?.shopGroups || []).flatMap(g => g?.items || [])
+            items.forEach(item => {
+                const pId = item.productId || item.product_id;
+                if (pId) {
+                    soldMap[pId] = (soldMap[pId] || 0) + (item.quantity || 0)
+                    if (!productInfoMap[pId]) {
+                        productInfoMap[pId] = {
+                            id: pId,
+                            name: item.productName || item.product_name,
+                            image: item.productImage || item.product_image
+                        }
+                    }
+                }
+            })
+        })
+
+        let productsWithSold = []
+        if (Object.keys(soldMap).length > 0) {
+            productsWithSold = Object.keys(soldMap).map(pid => {
+                const info = productInfoMap[pid] || {}
+                return {
+                    id: pid,
+                    name: info.name || "Unknown Product",
+                    image: info.image || null,
+                    periodSold: soldMap[pid]
+                }
+            })
+        } else {
+            productsWithSold = products.map(p => ({
+                id: p.id,
+                name: p.name,
+                image: p.images?.find(img => img.isMain)?.url || p.images?.[0]?.url || null,
+                periodSold: 0
+            }))
+        }
+
         if (topProductsTab === 'high_returns') {
-            return [...products]
-                .sort((a, b) => (b.totalSold || b.total_sold || 0) - (a.totalSold || a.total_sold || 0))
-                .slice(0, 10).map(p => ({ ...p, metricValue: Math.floor((p.totalSold || 0) * 0.1) })) // Mock returns
+            return [...productsWithSold]
+                .sort((a, b) => b.periodSold - a.periodSold)
+                .slice(0, 10).map(p => ({ ...p, metricValue: Math.floor(p.periodSold * 0.1) })) // Mock returns
                 .sort((a, b) => b.metricValue - a.metricValue)
         }
-        return [...products]
-            .sort((a, b) => (b.totalSold || b.total_sold || 0) - (a.totalSold || a.total_sold || 0))
-            .slice(0, 10).map(p => ({ ...p, metricValue: p.totalSold || p.total_sold || 0 }))
-    }, [dashboardData.products, topProductsTab])
+        return [...productsWithSold]
+            .sort((a, b) => b.periodSold - a.periodSold)
+            .slice(0, 10).map(p => ({ ...p, metricValue: p.periodSold }))
+    }, [dashboardData.products, topProductsTab, filteredOrders])
 
     // ── Donut chart data ──
     const donutData = useMemo(() => [
@@ -669,6 +710,7 @@ export default function Dashboard() {
                     { label: 'Net Earnings', value: `${currency}${Number(dashboardData.totalEarnings || 0).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`, icon: CircleDollarSignIcon, color: 'text-green-600 bg-green-50' },
                     { label: 'Platform Fee (5%)', value: `-${currency}${Number(dashboardData.totalCommission || 0).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`, icon: TrendingUpIcon, color: 'text-red-500 bg-red-50' },
                     { label: 'Products', value: dashboardData.totalProducts, icon: PackageIcon, color: 'text-orange-600 bg-orange-50' },
+                    { label: 'Items Sold', value: orderStats.totalItems, icon: ActivityIcon, color: 'text-indigo-600 bg-indigo-50' },
                     { label: 'Orders', value: dashboardData.totalOrders, icon: ShoppingBasketIcon, color: 'text-indigo-600 bg-indigo-50' },
                     { label: 'Followers', value: dashboardData.totalFollowers, icon: UsersIcon, color: 'text-pink-600 bg-pink-50' },
                 ].map((card, index) => (

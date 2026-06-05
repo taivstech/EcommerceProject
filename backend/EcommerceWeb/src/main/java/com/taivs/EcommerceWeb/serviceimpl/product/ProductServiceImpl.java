@@ -327,7 +327,8 @@ public class ProductServiceImpl implements ProductService {
                 products.stream()
                         .collect(Collectors.toMap(
                                 Product::getId,
-                                p -> p
+                                p -> p,
+                                (existing, replacement) -> existing
                         ));
 
         List<ProductResponse> responses =
@@ -358,7 +359,7 @@ public class ProductServiceImpl implements ProductService {
 
         Map<String, Product> map =
                 products.stream()
-                        .collect(Collectors.toMap(Product::getId, p -> p));
+                        .collect(Collectors.toMap(Product::getId, p -> p, (existing, replacement) -> existing));
 
         List<ProductResponse> responses =
                 idSlice.getContent().stream()

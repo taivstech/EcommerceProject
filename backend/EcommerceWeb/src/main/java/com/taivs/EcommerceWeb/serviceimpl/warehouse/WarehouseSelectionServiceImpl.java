@@ -161,7 +161,7 @@ public class WarehouseSelectionServiceImpl implements WarehouseSelectionService 
         return results;
     }
 
-    private Integer determineServiceTypeId(Integer fromDistrictId, Integer toDistrictId) {
+    private Integer determineServiceTypeId(Integer fromDistrictId, Integer toDistrictId, int weightGrams) {
         try {
             Map<String, Object> servicesResponse = ghnService.getAvailableService(fromDistrictId, toDistrictId);
             if (servicesResponse != null && servicesResponse.containsKey("data")) {
@@ -179,6 +179,10 @@ public class WarehouseSelectionServiceImpl implements WarehouseSelectionService 
                         }
                     }
                     if (!availableTypeIds.isEmpty()) {
+                        // If weight > 30kg (30000 grams), prefer heavy service (service_type_id = 5) if available
+                        if (weightGrams > 30000 && availableTypeIds.contains(5)) {
+                            return 5;
+                        }
                         // Prefer service_type_id = 2 (Standard/Hàng nhẹ) if available
                         if (availableTypeIds.contains(2)) {
                             return 2;
@@ -215,8 +219,8 @@ public class WarehouseSelectionServiceImpl implements WarehouseSelectionService 
                 : 300;
         weightGrams = Math.max(1, weightGrams);
 
-        // Dynamically determine service_type_id based on route availability
-        Integer serviceTypeId = determineServiceTypeId(warehouse.getDistrictId(), toDistrictId);
+        // Dynamically determine service_type_id based on route availability and weight
+        Integer serviceTypeId = determineServiceTypeId(warehouse.getDistrictId(), toDistrictId, weightGrams);
 
         ShippingFeeRequest feeRequest = ShippingFeeRequest.builder()
                 .serviceTypeId(serviceTypeId)

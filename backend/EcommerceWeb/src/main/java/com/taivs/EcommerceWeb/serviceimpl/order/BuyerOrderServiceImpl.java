@@ -150,6 +150,12 @@ public class BuyerOrderServiceImpl implements BuyerOrderService {
 
         validateStock(variants, qtyByVariant);
 
+        for (ProductVariant v : variants) {
+            long currentSold = v.getSoldCount() != null ? v.getSoldCount() : 0L;
+            int qty = qtyByVariant.getOrDefault(v.getId(), 0);
+            v.setSoldCount(currentSold + qty);
+        }
+
         Map<String, ProductVariant> lockedVariantMap = variants.stream()
                 .collect(Collectors.toMap(ProductVariant::getId, v -> v));
 
@@ -433,6 +439,19 @@ public class BuyerOrderServiceImpl implements BuyerOrderService {
 
         restoreStock(order, variantMap);
 
+        for (OrderShopGroup group : order.getOrderShopGroups()) {
+            for (OrderItem item : group.getOrderItems()) {
+                if (item.getProductVariant() != null) {
+                    ProductVariant v = variantMap.get(item.getProductVariant().getId());
+                    if (v != null) {
+                        long currentSold = v.getSoldCount() != null ? v.getSoldCount() : 0L;
+                        long qty = item.getQuantity();
+                        v.setSoldCount(Math.max(0, currentSold - qty));
+                    }
+                }
+            }
+        }
+
         Set<String> affectedProductIds = variants.stream()
                 .map(v -> v.getProduct().getId())
                 .collect(Collectors.toSet());
@@ -559,8 +578,7 @@ public class BuyerOrderServiceImpl implements BuyerOrderService {
                             ? Collections.emptyList()
                             : g.getOrderItems().stream().map(i -> OrderItemResponse.builder()
                                     .id(i.getId())
-                                    .productVariantId(
-                                            i.getProductVariant() == null ? null : i.getProductVariant().getId())
+                                    .productVariantId(i.getProductVariantIdSafely())
                                     .quantity(i.getQuantity())
                                     .price(i.getPrice())
                                     .productId(i.getProductId())

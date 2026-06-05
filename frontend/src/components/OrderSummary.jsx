@@ -73,6 +73,16 @@ const OrderSummary = ({ totalPrice, items, shopId, isHorizontal = false, showPla
             const shopAddrMap = {};
             shopAddresses.forEach(sa => { shopAddrMap[sa.id] = sa; });
 
+            // 1.2 Group items by shop to calculate per-shop weight (needed for service selection)
+            const weightByShop = {};
+            items.forEach(item => {
+                const itemShopId = item.shop_id || item.product?.shop_id || item.shopId;
+                if (!itemShopId) return;
+                const weight = (item.product?.weight || 0.3) * 1000; // kg → grams, default 300g
+                const qty = item.quantity || 1;
+                weightByShop[itemShopId] = (weightByShop[itemShopId] || 0) + (weight * qty);
+            });
+
             // 1.5 Fetch available shipping services (using first shop's district)
             const firstShopAddr = shopAddresses[0];
             const firstFromDistrict = firstShopAddr?.district_id || firstShopAddr?.districtId;
@@ -84,8 +94,14 @@ const OrderSummary = ({ totalPrice, items, shopId, isHorizontal = false, showPla
                         selectedAddress.district_id
                     );
                     setAvailableServices(services);
+                    
+                    const firstShopWeight = weightByShop[shopIds[0]] || 300;
+                    const hasHeavy = services.some(s => s.service_type_id === 5);
                     const hasStandard = services.some(s => s.service_type_id === 2);
-                    if (hasStandard) {
+
+                    if (firstShopWeight > 30000 && hasHeavy) {
+                        serviceTypeToUse = 5;
+                    } else if (hasStandard) {
                         serviceTypeToUse = 2;
                     } else if (services.length > 0) {
                         serviceTypeToUse = services[0].service_type_id;
@@ -98,16 +114,6 @@ const OrderSummary = ({ totalPrice, items, shopId, isHorizontal = false, showPla
                     setAvailableServices([]);
                 }
             }
-
-            // 2. Group items by shop to calculate per-shop weight
-            const weightByShop = {};
-            items.forEach(item => {
-                const itemShopId = item.shop_id || item.product?.shop_id || item.shopId;
-                if (!itemShopId) return;
-                const weight = (item.product?.weight || 0.3) * 1000; // kg → grams, default 300g
-                const qty = item.quantity || 1;
-                weightByShop[itemShopId] = (weightByShop[itemShopId] || 0) + (weight * qty);
-            });
 
             // 3. Calculate shipping fee per shop via GHN API
             let totalFee = 0;

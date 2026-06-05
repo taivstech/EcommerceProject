@@ -15,6 +15,10 @@ public interface PlatformCommissionRepository extends JpaRepository<PlatformComm
 
     List<PlatformCommission> findByShopIdOrderByCreatedAtDesc(String shopId);
 
+    List<PlatformCommission> findByOrderId(String orderId);
+
+    boolean existsByOrderId(String orderId);
+
     /** Total platform revenue in a date range */
     @Query("""
         SELECT COALESCE(SUM(pc.commissionAmount), 0)

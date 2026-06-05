@@ -225,7 +225,7 @@ public class SellerOrderServiceImpl implements SellerOrderService {
                     ? Collections.emptyList()
                     : g.getOrderItems().stream().map(i -> OrderItemResponse.builder()
                             .id(i.getId())
-                            .productVariantId(i.getProductVariant() == null ? null : i.getProductVariant().getId())
+                            .productVariantId(i.getProductVariantIdSafely())
                             .quantity(i.getQuantity())
                             .price(i.getPrice())
                             .productId(i.getProductId())

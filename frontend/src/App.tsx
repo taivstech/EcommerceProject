@@ -36,6 +36,7 @@ import Coupons from '@/pages/admin/Coupons'
 import AdminStores from '@/pages/admin/Stores'
 import Users from '@/pages/admin/Users'
 import AdminChat from '@/pages/admin/AdminChat'
+import AdminCashFlow from '@/pages/admin/AdminCashFlow'
 
 import StoreDashboard from '@/pages/store/StoreDashboard'
 import AddProduct from '@/pages/store/AddProduct'
@@ -101,6 +102,7 @@ export default function App() {
           <Route path="stores" element={<AdminStores />} />
           <Route path="users" element={<Users />} />
           <Route path="chat" element={<AdminChat />} />
+          <Route path="cash-flow" element={<AdminCashFlow />} />
         </Route>
 
         {/* ── Store routes ─────────────────────────────────── */}

@@ -6,6 +6,8 @@ import com.taivs.EcommerceWeb.models.common.BaseEntity;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.NotFound;
+import org.hibernate.annotations.NotFoundAction;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -55,11 +57,22 @@ public class OrderItem extends BaseEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "product_variant_id", nullable = false)
+    @NotFound(action = NotFoundAction.IGNORE)
     private ProductVariant productVariant;
 
     @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true)
     @JoinColumn(name = "customer_review_id")
     private CustomerReview customerReview;
 
+    public String getProductVariantIdSafely() {
+        try {
+            if (this.productVariant != null) {
+                return this.productVariant.getId();
+            }
+        } catch (Exception e) {
+            // Catch EntityNotFoundException / ObjectNotFoundException for dangling DB references
+        }
+        return null;
+    }
 }
 

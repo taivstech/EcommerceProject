@@ -3,15 +3,22 @@ package com.taivs.EcommerceWeb.serviceimpl.order;
 import com.taivs.EcommerceWeb.dto.request.admin.CommissionRateRequest;
 import com.taivs.EcommerceWeb.dto.response.admin.CommissionRateResponse;
 import com.taivs.EcommerceWeb.dto.response.admin.CommissionRevenueResponse;
+import com.taivs.EcommerceWeb.dto.response.admin.PlatformCommissionResponse;
+import com.taivs.EcommerceWeb.enums.order.OrderStatus;
 import com.taivs.EcommerceWeb.models.order.CommissionRate;
+import com.taivs.EcommerceWeb.models.order.Order;
 import com.taivs.EcommerceWeb.models.order.OrderShopGroup;
 import com.taivs.EcommerceWeb.models.order.PlatformCommission;
 import com.taivs.EcommerceWeb.repositories.order.CommissionRateRepository;
 import com.taivs.EcommerceWeb.repositories.order.OrderRepository;
 import com.taivs.EcommerceWeb.repositories.order.PlatformCommissionRepository;
+import com.taivs.EcommerceWeb.repositories.shop.ShopRepository;
 import com.taivs.EcommerceWeb.services.order.CommissionService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -34,6 +41,7 @@ public class CommissionServiceImpl implements CommissionService {
     private final CommissionRateRepository commissionRateRepository;
     private final PlatformCommissionRepository platformCommissionRepository;
     private final OrderRepository orderRepository;
+    private final ShopRepository shopRepository;
 
     @Override
     public BigDecimal resolveRate(String categoryId) {
@@ -62,6 +70,10 @@ public class CommissionServiceImpl implements CommissionService {
             // Idempotent: skip if already settled
             if (platformCommissionRepository.existsByOrderShopGroupId(group.getId())) {
                 log.debug("Commission already settled for group {}", group.getId());
+                continue;
+            }
+            if (group.getShop() == null || group.getShop().getId() == null) {
+                log.warn("Skipping commission settlement for group {}: shop is null", group.getId());
                 continue;
             }
 
@@ -187,6 +199,41 @@ public class CommissionServiceImpl implements CommissionService {
                 .days(days)
                 .dailyBreakdown(daily)
                 .build();
+    }
+
+    @Override
+    public Page<PlatformCommissionResponse> getCommissionHistory(int page, int size) {
+        return platformCommissionRepository.findAll(PageRequest.of(page, size, Sort.by("createdAt").descending()))
+                .map(pc -> {
+                    String shopName = shopRepository.findById(pc.getShopId())
+                            .map(shop -> shop.getName())
+                            .orElse("Unknown Shop");
+                    
+                    return PlatformCommissionResponse.builder()
+                            .id(pc.getId())
+                            .orderId(pc.getOrderId())
+                            .shopId(pc.getShopId())
+                            .shopName(shopName)
+                            .grossAmount(pc.getGrossAmount())
+                            .commissionRate(pc.getCommissionRate())
+                            .commissionAmount(pc.getCommissionAmount())
+                            .netAmount(pc.getNetAmount())
+                            .createdAt(pc.getCreatedAt())
+                            .build();
+                });
+    }
+
+    @Override
+    @Transactional
+    public void dumpCommissionData() {
+        List<Order> completedOrders = orderRepository.findAllWithShippingAndGroupsByStatusOrderByCreatedAtDesc(OrderStatus.COMPLETED);
+        for (Order order : completedOrders) {
+            // Check if commissions already exist
+            boolean exists = platformCommissionRepository.existsByOrderId(order.getId());
+            if (!exists) {
+                settleOrderCommission(order.getId());
+            }
+        }
     }
 
     private CommissionRateResponse toResponse(CommissionRate r) {
