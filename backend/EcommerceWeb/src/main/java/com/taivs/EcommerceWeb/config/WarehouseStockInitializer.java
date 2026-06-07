@@ -13,11 +13,12 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Set;
 import java.util.HashSet;
+import java.util.Map;
+import java.util.HashMap;
 
 @Component
 @RequiredArgsConstructor
@@ -30,7 +31,6 @@ public class WarehouseStockInitializer implements ApplicationRunner {
     private final WarehouseStockRepository warehouseStockRepository;
 
     @Override
-    @Transactional
     public void run(ApplicationArguments args) {
         log.info("Initializing WarehouseStock for variants that do not have any stock records...");
         
@@ -53,6 +53,7 @@ public class WarehouseStockInitializer implements ApplicationRunner {
 
             log.info("Found {} unsynced variants. Initializing warehouse stock...", unsyncedVariants.size());
             int successCount = 0;
+            Map<String, Warehouse> defaultWarehouseCache = new HashMap<>();
             
             for (ProductVariant v : unsyncedVariants) {
                 try {
@@ -61,63 +62,67 @@ public class WarehouseStockInitializer implements ApplicationRunner {
                         continue;
                     }
                     
-                    Warehouse defaultWarehouse = warehouseRepository.findDefaultByShopId(shop.getId())
-                            .or(() -> warehouseRepository.findActiveByShopId(shop.getId()).stream().findFirst())
-                            .orElse(null);
-                            
+                    Warehouse defaultWarehouse = defaultWarehouseCache.get(shop.getId());
                     if (defaultWarehouse == null) {
-                        log.info("Creating default warehouse for shop: {} ({})", shop.getName(), shop.getId());
-                        
-                        String whName = "Kho mac dinh " + shop.getName();
-                        if (whName.length() > 100) whName = whName.substring(0, 100);
-                        
-                        String whContactName = "Chu Shop " + shop.getName();
-                        if (whContactName.length() > 100) whContactName = whContactName.substring(0, 100);
+                        defaultWarehouse = warehouseRepository.findDefaultByShopId(shop.getId())
+                                .or(() -> warehouseRepository.findActiveByShopId(shop.getId()).stream().findFirst())
+                                .orElse(null);
+                                
+                        if (defaultWarehouse == null) {
+                            log.info("Creating default warehouse for shop: {} ({})", shop.getName(), shop.getId());
+                            
+                            String whName = "Kho mac dinh " + shop.getName();
+                            if (whName.length() > 100) whName = whName.substring(0, 100);
+                            
+                            String whContactName = "Chu Shop " + shop.getName();
+                            if (whContactName.length() > 100) whContactName = whContactName.substring(0, 100);
 
-                        String whContactPhone = "0999999999";
-                        String whFullAddress = "Ha Noi, Viet Nam";
-                        String whDetailAddress = "Ha Noi, Viet Nam";
-                        String whProvince = "Ha Noi";
-                        String whProvinceId = "201";
-                        String whDistrict = "Quan Ba Dinh";
-                        Integer whDistrictId = 1482;
-                        String whWard = "Phuong Cong Vi";
-                        String whWardCode = "1A0807";
-                        
-                        if (shop.getShopAddress() != null) {
-                            var sa = shop.getShopAddress();
-                            if (sa.getPhoneNumber() != null) whContactPhone = sa.getPhoneNumber();
-                            if (sa.getFullAddress() != null) whFullAddress = sa.getFullAddress();
-                            if (sa.getDetailAddress() != null) whDetailAddress = sa.getDetailAddress();
-                            if (sa.getProvince() != null) whProvince = sa.getProvince();
-                            if (sa.getProvinceId() != null) whProvinceId = sa.getProvinceId();
-                            if (sa.getDistrict() != null) whDistrict = sa.getDistrict();
-                            if (sa.getDistrictId() != null) whDistrictId = sa.getDistrictId();
-                            if (sa.getWard() != null) whWard = sa.getWard();
-                            if (sa.getWardCode() != null) whWardCode = sa.getWardCode();
-                        } else if (shop.getAddress() != null && !shop.getAddress().trim().isEmpty()) {
-                            whFullAddress = shop.getAddress();
-                            whDetailAddress = shop.getAddress();
+                            String whContactPhone = "0999999999";
+                            String whFullAddress = "Ha Noi, Viet Nam";
+                            String whDetailAddress = "Ha Noi, Viet Nam";
+                            String whProvince = "Ha Noi";
+                            String whProvinceId = "201";
+                            String whDistrict = "Quan Ba Dinh";
+                            Integer whDistrictId = 1482;
+                            String whWard = "Phuong Cong Vi";
+                            String whWardCode = "1A0807";
+                            
+                            if (shop.getShopAddress() != null) {
+                                var sa = shop.getShopAddress();
+                                if (sa.getPhoneNumber() != null) whContactPhone = sa.getPhoneNumber();
+                                if (sa.getFullAddress() != null) whFullAddress = sa.getFullAddress();
+                                if (sa.getDetailAddress() != null) whDetailAddress = sa.getDetailAddress();
+                                if (sa.getProvince() != null) whProvince = sa.getProvince();
+                                if (sa.getProvinceId() != null) whProvinceId = sa.getProvinceId();
+                                if (sa.getDistrict() != null) whDistrict = sa.getDistrict();
+                                if (sa.getDistrictId() != null) whDistrictId = sa.getDistrictId();
+                                if (sa.getWard() != null) whWard = sa.getWard();
+                                if (sa.getWardCode() != null) whWardCode = sa.getWardCode();
+                            } else if (shop.getAddress() != null && !shop.getAddress().trim().isEmpty()) {
+                                whFullAddress = shop.getAddress();
+                                whDetailAddress = shop.getAddress();
+                            }
+                            
+                            defaultWarehouse = Warehouse.builder()
+                                    .name(whName)
+                                    .contactName(whContactName)
+                                    .contactPhone(whContactPhone)
+                                    .fullAddress(whFullAddress)
+                                    .detailAddress(whDetailAddress)
+                                    .province(whProvince)
+                                    .provinceId(whProvinceId)
+                                    .district(whDistrict)
+                                    .districtId(whDistrictId)
+                                    .ward(whWard)
+                                    .wardCode(whWardCode)
+                                    .status("ACTIVE")
+                                    .isDefault(true)
+                                    .shop(shop)
+                                    .build();
+                            
+                            defaultWarehouse = warehouseRepository.save(defaultWarehouse);
                         }
-                        
-                        defaultWarehouse = Warehouse.builder()
-                                .name(whName)
-                                .contactName(whContactName)
-                                .contactPhone(whContactPhone)
-                                .fullAddress(whFullAddress)
-                                .detailAddress(whDetailAddress)
-                                .province(whProvince)
-                                .provinceId(whProvinceId)
-                                .district(whDistrict)
-                                .districtId(whDistrictId)
-                                .ward(whWard)
-                                .wardCode(whWardCode)
-                                .status("ACTIVE")
-                                .isDefault(true)
-                                .shop(shop)
-                                .build();
-                        
-                        defaultWarehouse = warehouseRepository.save(defaultWarehouse);
+                        defaultWarehouseCache.put(shop.getId(), defaultWarehouse);
                     }
                     
                     warehouseStockService.updateStockQuantity(
