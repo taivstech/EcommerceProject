@@ -45,7 +45,8 @@ public class VnpayServiceImpl implements VnpayService, PaymentGateway {
         String vnp_Version = "2.1.0";
         String vnp_Command = "pay";
         String vnp_TmnCode = vnpayConfig.getTmnCode();
-        String vnp_Amount = String.valueOf(amount.multiply(new BigDecimal("100")).longValue());
+        long amountVal = amount.longValue();
+        String vnp_Amount = String.valueOf(amountVal * 100);
         String vnp_CurrCode = "VND";
         String vnp_TxnRef = orderId;
         String vnp_OrderInfo = orderInfo != null && !orderInfo.isEmpty() ? orderInfo : "Thanh toan don hang:" + orderId;
@@ -209,7 +210,7 @@ public class VnpayServiceImpl implements VnpayService, PaymentGateway {
                     String vnpAmountStr = params.get("vnp_Amount");
                     if (vnpAmountStr != null) {
                         long receivedAmountCents = Long.parseLong(vnpAmountStr);
-                        long expectedAmountCents = order.getTotal().multiply(new BigDecimal("100")).longValue();
+                        long expectedAmountCents = order.getTotal().longValue() * 100;
                         if (receivedAmountCents != expectedAmountCents) {
                             log.error("VNPay amount mismatch for order {} - expected: {}, received: {}", orderId, expectedAmountCents, receivedAmountCents);
                             cancelAndRestoreStock(orderId, "Payment amount mismatch");
