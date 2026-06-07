@@ -1,41 +1,41 @@
 import { api } from './api';
 
 export interface ShippingAddressResponse {
-  receiverName: string;
-  phoneNumber: string;
-  fullAddress: string;
-  detailAddress?: string;
+  receiver_name: string;
+  phone_number: string;
+  full_address: string;
+  detail_address?: string;
   ward?: string;
-  wardCode?: string;
+  ward_code?: string;
   district?: string;
-  districtId?: number;
+  district_id?: number;
   province?: string;
-  provinceId?: string;
+  province_id?: string;
 }
 
 export interface OrderItemResponse {
   id: string;
-  productVariantId?: string;
+  product_variant_id?: string;
   quantity: number;
   price: number;
-  productId: string;
-  productName: string;
-  productImage?: string;
-  variantName?: string;
-  variantSku?: string;
-  hasReview: boolean;
+  product_id: string;
+  product_name: string;
+  product_image?: string;
+  variant_name?: string;
+  variant_sku?: string;
+  has_review?: boolean;
 }
 
 export interface OrderShopGroupResponse {
   id: string;
-  shopId?: string;
+  shop_id?: string;
   subtotal: number;
-  shippingFee: number;
-  totalDiscount: number;
+  shipping_fee: number;
+  total_discount: number;
   total: number;
   shipment?: string;
-  warehouseId?: string;
-  warehouseName?: string;
+  warehouse_id?: string;
+  warehouse_name?: string;
   items: OrderItemResponse[];
 }
 
@@ -43,18 +43,18 @@ export interface OrderResponse {
   id: string;
   status: 'PENDING' | 'AWAITING_PAYMENT' | 'PROCESSING' | 'SHIPPED' | 'DELIVERED' | 'COMPLETED' | 'CANCELLED' | 'RETURNED';
   payment: string;
-  isPaid: boolean;
+  is_paid: boolean;
   note?: string;
   subtotal: number;
-  shippingFee: number;
-  discountAmount: number;
-  shopDiscountAmount: number;
-  shippingDiscountAmount: number;
-  totalDiscount: number;
+  shipping_fee: number;
+  discount_amount?: number;
+  shop_discount_amount?: number;
+  shipping_discount_amount?: number;
+  total_discount: number;
   total: number;
-  createdAt: string;
-  shippingAddress?: ShippingAddressResponse;
-  shopGroups: OrderShopGroupResponse[];
+  created_at: string;
+  shipping_address?: ShippingAddressResponse;
+  shop_groups: OrderShopGroupResponse[];
 }
 
 export interface CheckoutRequest {

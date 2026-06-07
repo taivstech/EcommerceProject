@@ -13,7 +13,7 @@ const getApiBaseUrl = () => {
 };
 
 export const API_BASE_URL = getApiBaseUrl();
-export const CLOUDFLARE_BACKUP_URL = 'https://feeds-hull-jaguar-dreams.trycloudflare.com/api';
+export const CLOUDFLARE_BACKUP_URL = 'https://ecommerce.pro.vn/api';
 
 // Lưu trữ token trong bộ nhớ tạm thời của ứng dụng
 let accessToken: string | null = null;

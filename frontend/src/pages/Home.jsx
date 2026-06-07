@@ -13,7 +13,6 @@ import ProductCard from "@/components/ProductCard";
 // Home components
 import HeroBanner from "@/components/home/HeroBanner";
 import CategoryGrid from "@/components/home/CategoryGrid";
-import BrandMall from "@/components/home/BrandMall";
 import CategoryShowcase from "@/components/home/CategoryShowcase";
 import NewArrivals from "@/components/home/NewArrivals";
 
@@ -51,9 +50,6 @@ export default function Home() {
 
                 {/* 3. Amazon-style Category Showcase boxes */}
                 <CategoryShowcase />
-
-                {/* 4. Official Brand Mall — ẩn nếu không có shop có logo */}
-                <BrandMall />
 
                 {/* 5. Best Sellers */}
                 {bestSellers.length > 0 && (

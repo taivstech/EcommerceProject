@@ -200,3 +200,31 @@ export const authService = {
     authStore.clear();
   }
 };
+
+export interface CreateReviewRequest {
+  orderItemId: string;
+  rating: number;
+  comment?: string;
+}
+
+export const reviewService = {
+  createReview: async (data: CreateReviewRequest): Promise<any> => {
+    try {
+      const res = await api.post<any>('/reviews', data);
+      return res.result || null;
+    } catch (err) {
+      console.error('Lỗi khi tạo đánh giá sản phẩm:', err);
+      throw err;
+    }
+  },
+
+  getProductReviews: async (productId: string): Promise<any[]> => {
+    try {
+      const res = await api.get<any[]>(`/reviews/product/${productId}`);
+      return res.result || [];
+    } catch (err) {
+      console.error(`Lỗi khi lấy đánh giá của sản phẩm ${productId}:`, err);
+      return [];
+    }
+  }
+};

@@ -35,10 +35,10 @@ def main():
     reindex_resp = post_json(f"{BACKEND_URL}/search/reindex")
 
     if reindex_resp and reindex_resp.get("result"):
-        print(f"\n  ✓ {reindex_resp['result']}")
+        print(f"\n  [SUCCESS] {reindex_resp['result']}")
         print("\n  Elasticsearch index is ready! Search should now work correctly.")
     else:
-        print(f"\n  ✗ Reindex failed. Make sure Backend is running and SecurityConfig is updated.")
+        print(f"\n  [FAILED] Reindex failed. Make sure Backend is running and SecurityConfig is updated.")
 
     print("=" * 50)
 

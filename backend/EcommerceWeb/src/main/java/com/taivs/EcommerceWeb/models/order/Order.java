@@ -108,6 +108,7 @@ public class Order {
             throw new AppException(ErrorCode.INVALID_ORDER_STATUS);
         }
         this.status = OrderStatus.COMPLETED;
+        this.isPaid = true;
     }
 
     public void changeStatus(OrderStatus target) {
@@ -139,8 +140,16 @@ public class Order {
             default -> throw new AppException(ErrorCode.INVALID_ORDER_STATUS);
         }
 
+        if (target == OrderStatus.COMPLETED) {
+            this.isPaid = true;
+        }
         this.status = target;
     }
 
+    public Boolean getIsPaid() {
+        return isPaid != null && (isPaid || status == OrderStatus.COMPLETED);
+    }
+
 }
+
 

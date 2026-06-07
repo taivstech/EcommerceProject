@@ -51,6 +51,7 @@ class OrderTest {
         Order order = orderWithStatus(OrderStatus.DELIVERED);
         order.confirmReceipt();
         assertThat(order.getStatus()).isEqualTo(OrderStatus.COMPLETED);
+        assertThat(order.getIsPaid()).isTrue();
     }
 
     @Test
@@ -60,6 +61,27 @@ class OrderTest {
         assertThatThrownBy(order::confirmReceipt)
                 .isInstanceOf(AppException.class);
     }
+
+    @Test
+    @DisplayName("getIsPaid: returns true when status is COMPLETED even if isPaid was false")
+    void getIsPaid_completedStatus() {
+        Order order = Order.builder()
+                .status(OrderStatus.COMPLETED)
+                .isPaid(false)
+                .build();
+        assertThat(order.getIsPaid()).isTrue();
+    }
+
+    @Test
+    @DisplayName("getIsPaid: returns true when isPaid is true even if status is not COMPLETED")
+    void getIsPaid_isPaidTrue() {
+        Order order = Order.builder()
+                .status(OrderStatus.PENDING)
+                .isPaid(true)
+                .build();
+        assertThat(order.getIsPaid()).isTrue();
+    }
+
 
     @Test
     @DisplayName("changeStatus: COMPLETED is terminal state")

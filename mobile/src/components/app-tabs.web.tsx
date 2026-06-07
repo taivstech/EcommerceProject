@@ -30,6 +30,9 @@ export default function AppTabs() {
           <TabTrigger name="cart" href="/cart" asChild>
             <TabButton>Cart</TabButton>
           </TabTrigger>
+          <TabTrigger name="chat" href={"/chat" as any} asChild>
+            <TabButton>Chat</TabButton>
+          </TabTrigger>
           <TabTrigger name="profile" href="/profile" asChild>
             <TabButton>Profile</TabButton>
           </TabTrigger>

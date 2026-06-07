@@ -6,7 +6,8 @@ import {
   ScrollView, 
   TouchableOpacity, 
   ActivityIndicator, 
-  Dimensions 
+  Dimensions,
+  Alert
 } from 'react-native';
 import { Image } from 'expo-image';
 import { useLocalSearchParams, router } from 'expo-router';
@@ -14,6 +15,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { productService, ProductResponse } from '../../services/productService';
 import { cartService } from '../../services/cartService';
+import { authStore } from '../../services/api';
+import { messageService } from '../../services/messageService';
 import ProductCard from '../../components/ui/productCard';
 
 const { width } = Dimensions.get('window');
@@ -96,6 +99,45 @@ export default function ProductDetailScreen() {
       router.back();
     } catch {
       alert('Thao tác giỏ hàng lỗi, xin thử lại.');
+    }
+  };
+
+  const handleChatWithShop = async () => {
+    if (!product || !product.shop_id) {
+      Alert.alert('Thông báo', 'Sản phẩm này không trực thuộc cửa hàng nào.');
+      return;
+    }
+
+    const currentUser = authStore.getUser();
+    if (!currentUser) {
+      Alert.alert(
+        'Yêu cầu đăng nhập',
+        'Vui lòng đăng nhập trước khi nhắn tin cho cửa hàng.',
+        [
+          { text: 'Hủy', style: 'cancel' },
+          { text: 'Đăng nhập', onPress: () => router.push('/profile') }
+        ]
+      );
+      return;
+    }
+
+    if (product.shop_id === currentUser.id) {
+      Alert.alert('Thông báo', 'Bạn không thể tự chat với chính mình.');
+      return;
+    }
+
+    try {
+      const chat = await messageService.createOrGetPrivateChat(product.shop_id);
+      if (chat && chat.room_id) {
+        router.push({
+          pathname: '/chat/[roomId]' as any,
+          params: { roomId: chat.room_id, otherUserName: product.shop_name || chat.other_user_name }
+        });
+      } else {
+        Alert.alert('Lỗi', 'Không thể tạo hoặc tìm phòng chat với cửa hàng này.');
+      }
+    } catch (err) {
+      Alert.alert('Lỗi', 'Không thể kết nối phòng chat.');
     }
   };
 
@@ -244,9 +286,18 @@ export default function ProductDetailScreen() {
 
       {/* Footer chứa nút mua/thêm giỏ hàng */}
       <View style={styles.bottomBar}>
-        <TouchableOpacity style={styles.addToCartBtn} onPress={handleAddToCart}>
+        {product.shop_id ? (
+          <TouchableOpacity style={styles.chatShopBtn} onPress={handleChatWithShop}>
+            <Ionicons name="chatbubble-ellipses-outline" size={20} color="#10b981" />
+            <Text style={styles.chatShopBtnText}>Chat với Shop</Text>
+          </TouchableOpacity>
+        ) : null}
+        <TouchableOpacity 
+          style={[styles.addToCartBtn, product.shop_id ? { flex: 1.2, marginLeft: 10 } : { flex: 1 }]} 
+          onPress={handleAddToCart}
+        >
           <Ionicons name="cart" size={20} color="#fff" style={{ marginRight: 8 }} />
-          <Text style={styles.addToCartBtnText}>Thêm Vào Giỏ Hàng</Text>
+          <Text style={styles.addToCartBtnText}>Thêm Vào Giỏ</Text>
         </TouchableOpacity>
       </View>
     </SafeAreaView>
@@ -449,6 +500,25 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: '#f1f5f9',
     backgroundColor: '#fff',
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  chatShopBtn: {
+    borderColor: '#10b981',
+    borderWidth: 1.5,
+    height: 48,
+    borderRadius: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 12,
+    flex: 0.8,
+  },
+  chatShopBtnText: {
+    color: '#10b981',
+    fontSize: 12,
+    fontWeight: '700',
+    marginLeft: 6,
   },
   addToCartBtn: {
     backgroundColor: '#10b981',
