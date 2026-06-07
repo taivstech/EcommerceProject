@@ -1,16 +1,6 @@
 import api from "@/api/api"
 import type { InventorySummary, StockAlert, ProductAging } from "./inventoryService"
 
-export interface WarehouseEmployeeResponse {
-  id: string
-  userId: string
-  username: string
-  fullName: string
-  email: string
-  phone?: string
-  role: string
-}
-
 export interface WarehouseResponse {
   id: string
   name: string
@@ -31,7 +21,6 @@ export interface WarehouseResponse {
   shopName: string
   createdAt: string
   updatedAt: string
-  employees: WarehouseEmployeeResponse[]
 }
 
 export interface WarehouseCreateRequest {
@@ -65,19 +54,6 @@ export interface WarehouseUpdateRequest {
   status?: string
 }
 
-export interface AssignEmployeeRequest {
-  usernameOrEmail: string
-  role?: string
-}
-
-export interface CreateWarehouseEmployeeRequest {
-  username: string
-  password: string
-  fullName: string
-  email?: string
-  phone?: string
-}
-
 export const warehouseService = {
   getMyWarehouses: async (): Promise<WarehouseResponse[]> => {
     const res = await api.get<WarehouseResponse[]>("/warehouses/my")
@@ -101,24 +77,6 @@ export const warehouseService = {
 
   delete: async (id: string): Promise<void> => {
     await api.del<void>(`/warehouses/${id}`)
-  },
-
-  createWarehouseEmployee: async (warehouseId: string, data: CreateWarehouseEmployeeRequest): Promise<any> => {
-    const res = await api.post<any>(`/warehouses/${warehouseId}/employees/create`, data)
-    return res.result
-  },
-
-  assignEmployee: async (warehouseId: string, data: AssignEmployeeRequest): Promise<void> => {
-    await api.post<void>(`/warehouses/${warehouseId}/employees`, data)
-  },
-
-  removeEmployee: async (warehouseId: string, userId: string): Promise<void> => {
-    await api.del<void>(`/warehouses/${warehouseId}/employees/${userId}`)
-  },
-
-  getAssignedWarehouses: async (): Promise<WarehouseResponse[]> => {
-    const res = await api.get<WarehouseResponse[]>("/warehouses/assigned")
-    return res.result || []
   },
 
   /**

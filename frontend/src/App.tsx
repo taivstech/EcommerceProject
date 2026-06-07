@@ -5,7 +5,7 @@ import Navbar from '@/components/layout/Navbar'
 import Footer from '@/components/layout/Footer'
 import AdminLayout from '@/components/admin/AdminLayout'
 import StoreLayout from '@/components/store/StoreLayout'
-import WarehouseLayout from '@/components/warehouse/WarehouseLayout'
+
 
 import Home from '@/pages/Home'
 import Shop from '@/pages/Shop'
@@ -50,11 +50,8 @@ import StoreWarehouseDashboard from '@/pages/store/WarehouseDashboard'
 import Warehouses from '@/pages/store/Warehouses'
 import WarehouseDetail from '@/pages/store/WarehouseDetail'
 import WarehouseOrders from '@/pages/store/WarehouseOrders'
-import WarehouseEmployees from '@/pages/store/WarehouseEmployees'
 import WarehouseInventory from '@/pages/store/WarehouseInventory'
 import WarehouseReports from '@/pages/store/WarehouseReports'
-
-import WarehousePage from '@/pages/warehouse/WarehousePage'
 
 function PublicLayoutRoute() {
   return (
@@ -119,14 +116,11 @@ export default function App() {
           <Route path="warehouses" element={<Warehouses />} />
           <Route path="warehouses/:id" element={<WarehouseDetail />} />
           <Route path="warehouses/:id/orders" element={<WarehouseOrders />} />
-          <Route path="warehouses/:id/employees" element={<WarehouseEmployees />} />
+
           <Route path="warehouses/:id/inventory" element={<WarehouseInventory />} />
           <Route path="warehouses/:id/reports" element={<WarehouseReports />} />
         </Route>
 
-        <Route path="/warehouse" element={<WarehouseLayout><Outlet /></WarehouseLayout>}>
-          <Route index element={<WarehousePage />} />
-        </Route>
       </Routes>
     </HelmetProvider>
   )

@@ -120,12 +120,7 @@ export default function WarehouseDetailPage() {
                     </div>
                 </div>
                 <div className="flex items-center gap-2 shrink-0">
-                    <button
-                        onClick={() => router.push(`/store/warehouses/${warehouseId}/employees`)}
-                        className="flex items-center gap-1.5 px-3 py-2 border border-slate-200 rounded-lg text-sm text-slate-600 hover:bg-slate-50 transition"
-                    >
-                        <Users size={14} /> Manage Staff
-                    </button>
+
                     <button
                         onClick={() => toast('Edit warehouse coming soon')}
                         className="flex items-center gap-1.5 px-3 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm transition"
@@ -173,12 +168,7 @@ export default function WarehouseDetailPage() {
                         description="View & update stock levels"
                         onClick={() => router.push(`/store/warehouses/${warehouseId}/inventory`)}
                     />
-                    <QuickAction
-                        icon={Users} color="bg-green-50 text-green-600"
-                        title="Staff"
-                        description="Manage warehouse employees"
-                        onClick={() => router.push(`/store/warehouses/${warehouseId}/employees`)}
-                    />
+
                     <QuickAction
                         icon={ShoppingCart} color="bg-purple-50 text-purple-500"
                         title="Orders"

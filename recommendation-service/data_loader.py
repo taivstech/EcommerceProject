@@ -105,6 +105,7 @@ def load_user_ratings() -> pd.DataFrame:
     Load explicit ratings: user → product → avg rating.
 
     Reviews are on product_variants, so we join to get the parent product_id.
+    Optimized by fetching tables separately and merging/aggregating in Pandas to avoid slow database filesort.
 
     Returns DataFrame with columns:
       user_id, product_id, avg_rating
@@ -113,25 +114,35 @@ def load_user_ratings() -> pd.DataFrame:
     try:
         with conn.cursor() as cur:
             cur.execute("""
-                SELECT cr.user_id,
-                       pv.product_id,
-                       AVG(cr.rating) AS avg_rating
-                FROM customer_reviews cr
-                JOIN product_variants pv ON cr.product_variant_id = pv.id
-                WHERE cr.deleted_at IS NULL
-                  AND pv.deleted_at IS NULL
-                GROUP BY cr.user_id, pv.product_id
+                SELECT user_id, product_variant_id, rating
+                FROM customer_reviews
+                WHERE deleted_at IS NULL
             """)
-            rows = cur.fetchall()
+            reviews_rows = cur.fetchall()
+
+        with conn.cursor() as cur:
+            cur.execute("""
+                SELECT id AS product_variant_id, product_id
+                FROM product_variants
+                WHERE deleted_at IS NULL
+            """)
+            variants_rows = cur.fetchall()
     finally:
         conn.close()
 
-    if not rows:
+    if not reviews_rows or not variants_rows:
         return pd.DataFrame(columns=["user_id", "product_id", "avg_rating"])
 
-    df = pd.DataFrame(rows)
+    df_reviews = pd.DataFrame(reviews_rows)
+    df_variants = pd.DataFrame(variants_rows)
+
+    # Merge and group by in Pandas
+    df = pd.merge(df_reviews, df_variants, on="product_variant_id")
+    df = df.groupby(["user_id", "product_id"], as_index=False)["rating"].mean()
+    df.rename(columns={"rating": "avg_rating"}, inplace=True)
     df["avg_rating"] = pd.to_numeric(df["avg_rating"], errors="coerce").fillna(0)
-    logger.info("Loaded %d user-product ratings", len(df))
+
+    logger.info("Loaded %d user-product ratings via Pandas merge", len(df))
     return df
 
 

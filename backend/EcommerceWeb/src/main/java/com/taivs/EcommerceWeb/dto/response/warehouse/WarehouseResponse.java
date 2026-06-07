@@ -4,7 +4,6 @@ import lombok.*;
 import lombok.experimental.FieldDefaults;
 
 import java.time.LocalDateTime;
-import java.util.List;
 
 @Getter
 @Setter
@@ -36,6 +35,4 @@ public class WarehouseResponse {
 
     LocalDateTime createdAt;
     LocalDateTime updatedAt;
-
-    List<WarehouseEmployeeResponse> employees;
 }

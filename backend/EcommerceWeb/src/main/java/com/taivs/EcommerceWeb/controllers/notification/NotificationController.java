@@ -25,7 +25,7 @@ public class NotificationController {
     }
 
     @GetMapping("/unread-count")
-    @PreAuthorize("hasAuthority('notification:read') or hasRole('USER') or hasRole('SELLER') or hasRole('ADMIN') or hasRole('WAREHOUSE_EMPLOYEE')")
+    @PreAuthorize("hasAuthority('notification:read') or hasRole('USER') or hasRole('SELLER') or hasRole('ADMIN')")
     public ApiResponse<Long> myUnreadCount() {
         return ApiResponse.<Long>builder()
                 .result(notificationService.getMyUnreadCount())
@@ -33,7 +33,7 @@ public class NotificationController {
     }
 
     @GetMapping("/unread-order-count")
-    @PreAuthorize("hasAuthority('notification:read') or hasRole('USER') or hasRole('SELLER') or hasRole('ADMIN') or hasRole('WAREHOUSE_EMPLOYEE')")
+    @PreAuthorize("hasAuthority('notification:read') or hasRole('USER') or hasRole('SELLER') or hasRole('ADMIN')")
     public ApiResponse<Long> myUnreadOrderCount() {
         return ApiResponse.<Long>builder()
                 .result(notificationService.getMyUnreadOrderCount())

@@ -1,31 +1,14 @@
 package com.taivs.EcommerceWeb.serviceimpl.warehouse;
 
-import com.taivs.EcommerceWeb.models.notification.Notification;
-import com.taivs.EcommerceWeb.dto.response.user.UserResponse;
-import com.taivs.EcommerceWeb.models.auth.Role;
-import com.taivs.EcommerceWeb.models.user.User;
-import com.taivs.EcommerceWeb.models.auth.UserRole;
-import com.taivs.EcommerceWeb.models.auth.UserRoleId;
-import com.taivs.EcommerceWeb.mappers.user.UserMapper;
-import com.taivs.EcommerceWeb.repositories.auth.RoleRepository;
-import com.taivs.EcommerceWeb.repositories.user.UserRepository;
-import com.taivs.EcommerceWeb.repositories.auth.UserRoleRepository;
-import com.taivs.EcommerceWeb.dto.request.warehouse.CreateWarehouseEmployeeRequest;
-import com.taivs.EcommerceWeb.services.notification.NotificationService;
+import com.taivs.EcommerceWeb.dto.request.warehouse.WarehouseCreateRequest;
+import com.taivs.EcommerceWeb.dto.request.warehouse.WarehouseUpdateRequest;
+import com.taivs.EcommerceWeb.dto.response.warehouse.WarehouseResponse;
+import com.taivs.EcommerceWeb.models.warehouse.Warehouse;
 import com.taivs.EcommerceWeb.services.warehouse.GhnService;
 import com.taivs.EcommerceWeb.models.shop.Shop;
 import com.taivs.EcommerceWeb.repositories.shop.ShopRepository;
-import com.taivs.EcommerceWeb.dto.request.warehouse.AssignEmployeeRequest;
-import com.taivs.EcommerceWeb.dto.request.warehouse.WarehouseCreateRequest;
-import com.taivs.EcommerceWeb.dto.request.warehouse.WarehouseUpdateRequest;
-import com.taivs.EcommerceWeb.dto.response.warehouse.WarehouseEmployeeResponse;
-import com.taivs.EcommerceWeb.dto.response.warehouse.WarehouseResponse;
-import com.taivs.EcommerceWeb.models.warehouse.Warehouse;
-import com.taivs.EcommerceWeb.models.warehouse.WarehouseEmployee;
-import com.taivs.EcommerceWeb.repositories.warehouse.WarehouseEmployeeRepository;
 import com.taivs.EcommerceWeb.repositories.warehouse.WarehouseRepository;
 import com.taivs.EcommerceWeb.services.warehouse.WarehouseService;
-import com.taivs.EcommerceWeb.constants.PredefinedRole;
 import com.taivs.EcommerceWeb.exceptions.AppException;
 import com.taivs.EcommerceWeb.exceptions.ErrorCode;
 import lombok.RequiredArgsConstructor;
@@ -49,15 +32,8 @@ import java.util.stream.Collectors;
 public class WarehouseServiceImpl implements WarehouseService {
 
     private final WarehouseRepository warehouseRepository;
-    private final WarehouseEmployeeRepository warehouseEmployeeRepository;
     private final ShopRepository shopRepository;
-    private final UserRepository userRepository;
     private final GhnService ghnService;
-    private final RoleRepository roleRepository;
-    private final UserRoleRepository userRoleRepository;
-    private final NotificationService notificationService;
-    private final UserMapper userMapper;
-    private final org.springframework.security.crypto.password.PasswordEncoder passwordEncoder;
 
     @Override
     @Transactional
@@ -191,117 +167,6 @@ public class WarehouseServiceImpl implements WarehouseService {
         return saved;
     }
 
-    @Override
-    @Transactional
-    public void assignEmployee(String warehouseId, AssignEmployeeRequest request) {
-        Warehouse warehouse = getWarehouseForOwner(warehouseId);
-
-        User user = userRepository.findByUsername(request.getUsernameOrEmail())
-                .or(() -> userRepository.findByEmail(request.getUsernameOrEmail()))
-                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
-
-        if (warehouseEmployeeRepository.existsByWarehouse_IdAndUser_Id(warehouseId, user.getId())) {
-            throw new AppException(ErrorCode.ALREADY_EXISTS);
-        }
-
-        String role = StringUtils.hasText(request.getRole()) ? request.getRole() : "EMPLOYEE";
-
-        WarehouseEmployee employee = WarehouseEmployee.builder()
-                .warehouse(warehouse)
-                .user(user)
-                .role(role)
-                .build();
-
-        warehouseEmployeeRepository.save(employee);
-        log.info("Assigned user {} to warehouse {} with role {}", user.getId(), warehouseId, role);
-
-        ensureWarehouseEmployeeRole(user);
-
-        notificationService.createAndPush(
-                user.getId(),
-                "WAREHOUSE_ASSIGNED",
-                "Ban da duoc them vao kho hang",
-                "Ban da duoc gan vao kho \"" + warehouse.getName() + "\" voi vai tro " + role,
-                warehouseId,
-                "WAREHOUSE"
-        );
-    }
-
-    @Override
-    @Transactional
-    public UserResponse createWarehouseEmployee(String warehouseId, CreateWarehouseEmployeeRequest request) {
-
-        Warehouse warehouse = getWarehouseForOwner(warehouseId);
-
-        if (userRepository.existsByUsername(request.getUsername())) {
-            throw new AppException(ErrorCode.USER_EXISTED);
-        }
-
-        if (request.getEmail() != null && !request.getEmail().isBlank() 
-                && userRepository.existsByEmail(request.getEmail())) {
-            throw new AppException(ErrorCode.EMAIL_EXISTED);
-        }
-
-        User user = User.builder()
-                .username(request.getUsername())
-                .password(passwordEncoder.encode(request.getPassword()))
-                .email(request.getEmail())
-                .fullName(request.getFullName())
-                .phone(request.getPhone())
-                .active(true)
-                .build();
-
-        User savedUser = userRepository.save(user);
-        log.info("Created warehouse employee account: userId={}, username={}", savedUser.getId(), savedUser.getUsername());
-
-        ensureWarehouseEmployeeRole(savedUser);
-
-
-        WarehouseEmployee employee = WarehouseEmployee.builder()
-                .warehouse(warehouse)
-                .user(savedUser)
-                .role("EMPLOYEE")
-                .build();
-
-        warehouseEmployeeRepository.save(employee);
-        log.info("Assigned warehouse employee {} to warehouse {}", savedUser.getId(), warehouseId);
-
-
-        notificationService.createAndPush(
-                savedUser.getId(),
-                "WAREHOUSE_ASSIGNED",
-                "Bạn đã được tạo tài khoản quản lý kho",
-                String.format("Tài khoản của bạn đã được tạo và gán vào kho \"%s\". Bạn có thể đăng nhập ngay bây giờ.", warehouse.getName()),
-                warehouseId,
-                "WAREHOUSE"
-        );
-
-        return userMapper.toUserResponse(savedUser);
-    }
-
-    @Override
-    @Transactional
-    public void removeEmployee(String warehouseId, String userId) {
-        getWarehouseForOwner(warehouseId);
-
-        WarehouseEmployee employee = warehouseEmployeeRepository
-                .findByWarehouse_IdAndUser_Id(warehouseId, userId)
-                .orElseThrow(() -> new AppException(ErrorCode.ENTITY_NOT_FOUND));
-
-        warehouseEmployeeRepository.delete(employee);
-        log.info("Removed user {} from warehouse {}", userId, warehouseId);
-    }
-
-    @Override
-    public List<WarehouseResponse> getMyAssignedWarehouses() {
-        String userId = currentUserId();
-        return warehouseRepository.findByEmployeeUserId(userId)
-                .stream()
-                .map(this::mapToResponse)
-                .collect(Collectors.toList());
-    }
-
-
     @Async
     @Transactional
     public void registerWithGhnAsync(String warehouseId) {
@@ -361,18 +226,6 @@ public class WarehouseServiceImpl implements WarehouseService {
     }
 
     private WarehouseResponse mapToResponse(Warehouse w) {
-        List<WarehouseEmployeeResponse> employeeResponses = w.getEmployees() == null
-                ? Collections.emptyList()
-                : w.getEmployees().stream().map(e -> WarehouseEmployeeResponse.builder()
-                .id(e.getId())
-                .userId(e.getUser().getId())
-                .username(e.getUser().getUsername())
-                .fullName(e.getUser().getFullName())
-                .email(e.getUser().getEmail())
-                .role(e.getRole())
-                .build()
-        ).collect(Collectors.toList());
-
         return WarehouseResponse.builder()
                 .id(w.getId())
                 .name(w.getName())
@@ -393,30 +246,7 @@ public class WarehouseServiceImpl implements WarehouseService {
                 .shopName(w.getShop().getName())
                 .createdAt(w.getCreatedAt())
                 .updatedAt(w.getUpdatedAt())
-                .employees(employeeResponses)
                 .build();
-    }
-
-    private void ensureWarehouseEmployeeRole(User user) {
-        Role whRole = roleRepository.findByName(PredefinedRole.WAREHOUSE_EMPLOYEE).orElse(null);
-        if (whRole == null) {
-            log.warn("WAREHOUSE_EMPLOYEE role not found in database");
-            return;
-        }
-
-        boolean alreadyHas = user.getUserRoles().stream()
-                .anyMatch(ur -> ur.getRole().getId().equals(whRole.getId()));
-
-        if (!alreadyHas) {
-            UserRoleId urId = new UserRoleId(user.getId(), whRole.getId());
-            UserRole userRole = UserRole.builder()
-                    .id(urId)
-                    .user(user)
-                    .role(whRole)
-                    .build();
-            userRoleRepository.save(userRole);
-            log.info("Auto-assigned WAREHOUSE_EMPLOYEE role to user {}", user.getId());
-        }
     }
 
     @Override
@@ -433,3 +263,4 @@ public class WarehouseServiceImpl implements WarehouseService {
                 .getName();
     }
 }
+

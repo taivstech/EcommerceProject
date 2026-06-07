@@ -13,8 +13,6 @@ public interface WarehouseRepository extends JpaRepository<Warehouse, String> {
     @Query("""
         SELECT w FROM Warehouse w
         LEFT JOIN FETCH w.shop
-        LEFT JOIN FETCH w.employees e
-        LEFT JOIN FETCH e.user
         WHERE w.shop.id = :shopId
         AND w.deletedAt IS NULL
         ORDER BY w.isDefault DESC, w.createdAt ASC
@@ -33,22 +31,10 @@ public interface WarehouseRepository extends JpaRepository<Warehouse, String> {
     @Query("""
         SELECT w FROM Warehouse w
         LEFT JOIN FETCH w.shop
-        LEFT JOIN FETCH w.employees e
-        LEFT JOIN FETCH e.user
         WHERE w.id = :id
         AND w.deletedAt IS NULL
     """)
     Optional<Warehouse> findByIdWithEmployees(@Param("id") String id);
-
-    @Query("""
-        SELECT w FROM Warehouse w
-        LEFT JOIN FETCH w.shop
-        LEFT JOIN FETCH w.employees e
-        LEFT JOIN FETCH e.user
-        WHERE e.user.id = :userId
-        AND w.deletedAt IS NULL
-    """)
-    List<Warehouse> findByEmployeeUserId(@Param("userId") String userId);
 
     @Query("SELECT COUNT(w) FROM Warehouse w WHERE w.shop.id = :shopId AND w.deletedAt IS NULL")
     long countByShopId(@Param("shopId") String shopId);

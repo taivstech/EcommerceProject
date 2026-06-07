@@ -16,7 +16,6 @@ function getRedirectPath(user: any): string {
   const roleNames = roles.map((r: any) => (r?.name || '').toUpperCase())
 
   if (roleNames.includes('ADMIN')) return '/admin'
-  if (roleNames.includes('WAREHOUSE_EMPLOYEE')) return '/warehouse'
   // Seller and User both go to home; seller can navigate to /store from navbar
   return '/'
 }

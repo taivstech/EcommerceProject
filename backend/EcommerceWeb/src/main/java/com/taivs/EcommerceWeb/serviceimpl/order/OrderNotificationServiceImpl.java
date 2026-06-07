@@ -1,19 +1,13 @@
 package com.taivs.EcommerceWeb.serviceimpl.order;
 
 import com.taivs.EcommerceWeb.models.order.Order;
-import com.taivs.EcommerceWeb.models.warehouse.WarehouseEmployee;
 import com.taivs.EcommerceWeb.repositories.order.OrderRepository;
-import com.taivs.EcommerceWeb.repositories.warehouse.WarehouseEmployeeRepository;
 import com.taivs.EcommerceWeb.services.notification.NotificationService;
 import com.taivs.EcommerceWeb.services.order.OrderNotificationService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.List;
-import java.util.Set;
-
 
 @Service
 @RequiredArgsConstructor
@@ -22,7 +16,6 @@ public class OrderNotificationServiceImpl implements OrderNotificationService {
 
     private final NotificationService notificationService;
     private final OrderRepository orderRepository;
-    private final WarehouseEmployeeRepository warehouseEmployeeRepository;
 
     @Override
     @Transactional(readOnly = true)
@@ -39,7 +32,6 @@ public class OrderNotificationServiceImpl implements OrderNotificationService {
         }
     }
 
-
     @Override
     @Transactional(readOnly = true)
     public void notifyOrderStatusChanged(String orderId, String buyerUserId,
@@ -51,7 +43,6 @@ public class OrderNotificationServiceImpl implements OrderNotificationService {
             log.error("Failed to send status-change notifications: orderId={}", orderId, e);
         }
     }
-
 
     private void notifyNewOrder(Order order) {
         if (order.getOrderShopGroups() == null || order.getOrderShopGroups().isEmpty()) {
@@ -71,21 +62,6 @@ public class OrderNotificationServiceImpl implements OrderNotificationService {
             } catch (Exception e) {
                 log.error("Failed to notify seller for order {}", order.getId(), e);
             }
-
-            if (group.getWarehouse() == null) return;
-            try {
-                Set<WarehouseEmployee> employees =
-                        warehouseEmployeeRepository.findByWarehouse_Id(group.getWarehouse().getId());
-                for (WarehouseEmployee emp : employees) {
-                    notificationService.createAndPush(
-                            emp.getUser().getId(), "NEW_ORDER",
-                            "Đơn hàng mới cần xử lý",
-                            "Đơn hàng #" + shortId(order.getId()) + " đã được gán vào kho của bạn",
-                            order.getId(), "ORDER");
-                }
-            } catch (Exception e) {
-                log.error("Failed to notify warehouse employees for order {}", order.getId(), e);
-            }
         });
     }
 
@@ -104,9 +80,6 @@ public class OrderNotificationServiceImpl implements OrderNotificationService {
                 notifySellerForStatus(orderId, "ORDER_STATUS",
                         "Bạn đã xác nhận đơn hàng",
                         "Đơn hàng #" + shortId + "... đã được xác nhận. Vui lòng chuẩn bị hàng");
-                notifyWarehouseManagersForStatus(orderId, "ORDER_CONFIRMED",
-                        "Đơn hàng đã xác nhận, vui lòng chuẩn bị",
-                        "Đơn hàng #" + shortId + "... chuyển sang trạng thái chuẩn bị. Vui lòng bắt đầu sơ xủa và chuẩn bị hàng");
             }
             case "SHIPPING" -> {
                 title   = "Đơn hàng đang giao";
@@ -161,26 +134,8 @@ public class OrderNotificationServiceImpl implements OrderNotificationService {
         );
     }
 
-    private void notifyWarehouseManagersForStatus(String orderId, String type, String title, String message) {
-        orderRepository.findByIdForNotification(orderId).ifPresent(order -> {
-            if (order.getOrderShopGroups() == null) return;
-            order.getOrderShopGroups().forEach(group -> {
-                if (group.getWarehouse() == null) return;
-                try {
-                    Set<WarehouseEmployee> employees =
-                            warehouseEmployeeRepository.findByWarehouse_Id(group.getWarehouse().getId());
-                    for (WarehouseEmployee emp : employees) {
-                        notificationService.createAndPush(
-                                emp.getUser().getId(), type, title, message, orderId, "ORDER");
-                    }
-                } catch (Exception e) {
-                    log.error("Failed to notify warehouse managers for order {}", orderId, e);
-                }
-            });
-        });
-    }
-
     private String shortId(String id) {
         return id != null && id.length() > 8 ? id.substring(0, 8) : id;
     }
 }
+

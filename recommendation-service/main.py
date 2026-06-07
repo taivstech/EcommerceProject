@@ -43,7 +43,8 @@ async def _periodic_refresh():
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    await asyncio.to_thread(engine.build)
+    # Start the build in the background so FastAPI starts up immediately and healthcheck passes
+    build_task = asyncio.create_task(asyncio.to_thread(engine.build))
     task = asyncio.create_task(_periodic_refresh())
     yield
     task.cancel()

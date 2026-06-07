@@ -88,8 +88,4 @@ public class Warehouse extends BaseEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "shop_id", nullable = false)
     private Shop shop;
-
-    @Builder.Default
-    @OneToMany(mappedBy = "warehouse", cascade = CascadeType.ALL, orphanRemoval = true)
-        private Set<WarehouseEmployee> employees = new HashSet<>();
 }

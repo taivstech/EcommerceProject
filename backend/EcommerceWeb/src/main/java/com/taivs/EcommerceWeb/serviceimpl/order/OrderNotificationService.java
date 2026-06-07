@@ -4,14 +4,10 @@ import com.taivs.EcommerceWeb.services.notification.NotificationService;
 import com.taivs.EcommerceWeb.models.order.Order;
 import com.taivs.EcommerceWeb.enums.order.OrderStatus;
 import com.taivs.EcommerceWeb.models.shop.Shop;
-import com.taivs.EcommerceWeb.models.warehouse.WarehouseEmployee;
-import com.taivs.EcommerceWeb.repositories.warehouse.WarehouseEmployeeRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
-
-import java.util.Set;
 
 @Service
 @RequiredArgsConstructor
@@ -19,7 +15,6 @@ import java.util.Set;
 public class OrderNotificationService {
 
     private final NotificationService notificationService;
-    private final WarehouseEmployeeRepository warehouseEmployeeRepository;
 
     @Async
     public void notifyNewOrder(Order order) {
@@ -37,16 +32,6 @@ public class OrderNotificationService {
                             order.getId(),
                             "ORDER"
                     );
-
-                    if (group.getWarehouse() != null) {
-                        notifyWarehouseEmployees(
-                                group.getWarehouse().getId(),
-                                "NEW_ORDER",
-                                "Don hang moi can xu ly",
-                                "Don hang #" + order.getId().substring(0, 8) + "... da duoc gan vao kho cua ban",
-                                order.getId()
-                        );
-                    }
                 }
             });
         } catch (Exception e) {
@@ -128,18 +113,5 @@ public class OrderNotificationService {
             }
         });
     }
-
-    private void notifyWarehouseEmployees(String warehouseId, String type, String title,
-                                           String message, String orderId) {
-        try {
-            Set<WarehouseEmployee> employees = warehouseEmployeeRepository.findByWarehouse_Id(warehouseId);
-            for (WarehouseEmployee emp : employees) {
-                notificationService.createAndPush(
-                        emp.getUser().getId(), type, title, message, orderId, "ORDER"
-                );
-            }
-        } catch (Exception e) {
-            log.error("Failed to notify warehouse employees: {}", e.getMessage());
-        }
-    }
 }
+

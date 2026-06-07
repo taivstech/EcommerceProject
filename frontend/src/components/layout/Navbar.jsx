@@ -360,16 +360,12 @@ const Navbar = () => {
         return roles.some(r => (r?.name || '').toUpperCase() === 'ADMIN')
     }, [user])
 
-    const isWarehouseEmployee = useMemo(() => {
-        const roles = user?.roles || []
-        return roles.some(r => (r?.name || '').toUpperCase() === 'WAREHOUSE_EMPLOYEE')
-    }, [user])
+
 
     const handleMyStore = async () => {
         if (!isAuthenticated) return router.push('/login')
 
-        // Warehouse Employee → warehouse dashboard
-        if (isWarehouseEmployee) return router.push('/warehouse')
+
 
         // Admin → admin panel
         if (isAdmin) return router.push('/admin')
@@ -597,12 +593,7 @@ const Navbar = () => {
                             <span className="hidden lg:inline">My Store</span>
                         </button>
 
-                        {/* Warehouse Employee link */}
-                        {isWarehouseEmployee && (
-                            <Link href="/warehouse" className="flex items-center gap-2 hover:text-slate-800 transition">
-                                <span className="hidden lg:inline">Warehouse</span>
-                            </Link>
-                        )}
+
 
                         {/* Notification Bell with Dropdown */}
                         <NotificationPanel unreadCount={unreadCount} router={router} />
@@ -683,16 +674,7 @@ const Navbar = () => {
                                                 )}
                                             </button>
 
-                                            {/* Warehouse Employee */}
-                                            {isWarehouseEmployee && (
-                                                <button
-                                                    onClick={() => { setProfileOpen(false); router.push('/warehouse') }}
-                                                    className="w-full flex items-center gap-3 px-3 py-2 rounded-xl hover:bg-slate-50 text-slate-700"
-                                                >
-                                                    <Store size={18} className="text-slate-500" />
-                                                    <span className="text-sm">Warehouse Management</span>
-                                                </button>
-                                            )}
+
 
                                             {/* Only show My Store for non-admin users */}
                                             {!isAdmin && (
