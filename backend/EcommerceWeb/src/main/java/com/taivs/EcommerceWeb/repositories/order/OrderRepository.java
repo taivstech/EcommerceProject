@@ -20,6 +20,7 @@ import com.taivs.EcommerceWeb.models.order.OrderItem;
 import com.taivs.EcommerceWeb.models.product.Product;
 
 public interface OrderRepository extends JpaRepository<Order, String> {
+
     List<Order> findByUser_IdOrderByCreatedAtDesc(String userId);
 
     @Query("""
@@ -129,7 +130,7 @@ public interface OrderRepository extends JpaRepository<Order, String> {
         AND g.warehouse.id IN :warehouseIds
     """)
     Optional<Order> findByIdAndWarehouseIds(@Param("orderId") String orderId,
-                                             @Param("warehouseIds") List<String> warehouseIds);
+            @Param("warehouseIds") List<String> warehouseIds);
 
     @Query("""
         select distinct o from Order o
@@ -185,7 +186,7 @@ public interface OrderRepository extends JpaRepository<Order, String> {
         ORDER BY SUM(oi.price * oi.quantity) DESC
     """)
     List<Object[]> findTopProductsByRevenue(@Param("since") LocalDateTime since,
-                                            org.springframework.data.domain.Pageable pageable);
+            org.springframework.data.domain.Pageable pageable);
 
     @Query("""
         SELECT p.category.id, c.name,
@@ -220,5 +221,25 @@ public interface OrderRepository extends JpaRepository<Order, String> {
             @Param("orderId") String orderId,
             @Param("sellerUserId") String sellerUserId
     );
-}
+//
 
+    @Query("""
+        SELECT o.user.id, o.user.fullName, o.user.username, o.user.email, o.user.profilePicture, SUM(g.total)
+        FROM OrderShopGroup g
+        JOIN g.order o
+        JOIN g.shop s
+        WHERE s.user.id = :sellerUserId
+          AND o.status IN (com.taivs.EcommerceWeb.enums.order.OrderStatus.DELIVERED,
+                           com.taivs.EcommerceWeb.enums.order.OrderStatus.COMPLETED)
+          AND o.createdAt >= :startDate
+          AND o.createdAt <= :endDate
+        GROUP BY o.user.id, o.user.fullName, o.user.username, o.user.email, o.user.profilePicture
+        ORDER BY SUM(g.total) DESC
+    """)
+    List<Object[]> findTopCustomersBySpending(
+            @Param("sellerUserId") String sellerUserId,
+            @Param("startDate") LocalDateTime startDate,
+            @Param("endDate") LocalDateTime endDate,
+            org.springframework.data.domain.Pageable pageable
+    );
+}

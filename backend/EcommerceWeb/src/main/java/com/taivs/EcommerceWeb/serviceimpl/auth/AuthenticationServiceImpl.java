@@ -727,6 +727,9 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         saved.setUserRoles(userRoles);
         userRepository.save(user);
 
+        // Associate Google OAuth identity with the new user
+        createUserIdentity(saved, AuthProviderType.GOOGLE, googleId, email);
+
         if (saved.getEmail() != null && !saved.getEmail().isBlank()) {
             emailService.sendWelcomeEmail(saved.getEmail(), saved.getUsername());
         }

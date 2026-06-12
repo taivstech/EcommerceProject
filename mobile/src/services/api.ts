@@ -5,11 +5,8 @@ import { Platform } from 'react-native';
 // - 10.0.2.2:8088 cho trình mô phỏng Android
 // - Cấu hình Cloudflare tunnel dự phòng giống trên web
 const getApiBaseUrl = () => {
-  if (Platform.OS === 'android') {
-    return 'http://10.0.2.2:8088/api';
-  }
-  // Thử dùng địa chỉ Cloudflare tunnel nếu local không phản hồi (phù hợp kiểm thử thực tế)
-  return 'http://localhost:8088/api';
+  // Sử dụng IP mạng nội bộ của máy tính để cả giả lập lẫn thiết bị thật (cùng Wi-Fi) đều kết nối được
+  return 'http://172.18.36.64:8088/api';
 };
 
 export const API_BASE_URL = getApiBaseUrl();

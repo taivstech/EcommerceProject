@@ -327,10 +327,10 @@ export default function Dashboard() {
     // ── Top selling products ──
     const topProducts = useMemo(() => {
         const products = dashboardData.products || []
-        
+
         const soldMap = {}
         const productInfoMap = {}
-        
+
         filteredOrders.filter(o => o.status !== 'CANCELLED').forEach(o => {
             const items = (o?.shop_groups || o?.shopGroups || []).flatMap(g => g?.items || [])
             items.forEach(item => {
@@ -429,16 +429,16 @@ export default function Dashboard() {
                 totalFollowers = followers
             }
 
-            setDashboardData({ 
-                totalProducts, 
+            setDashboardData({
+                totalProducts,
                 totalGmv: totalEarnings,
                 totalCommission: totalEarnings * 0.05, // Mock 5% commission
-                totalEarnings: totalEarnings * 0.95, 
-                totalOrders, 
-                totalFollowers, 
-                shopInfo, 
-                recentOrders, 
-                products 
+                totalEarnings: totalEarnings * 0.95,
+                totalOrders,
+                totalFollowers,
+                shopInfo,
+                recentOrders,
+                products
             })
         } catch (err) {
             console.error('Failed to load dashboard:', err)
@@ -514,11 +514,10 @@ export default function Dashboard() {
                             <button
                                 key={p.value}
                                 onClick={() => { setDateFilter(p.value); setShowCustomDate(false) }}
-                                className={`px-4 py-2.5 text-sm font-medium transition border-r border-slate-100 last:border-r-0 ${
-                                    dateFilter === p.value
-                                        ? 'bg-green-600 text-white first:rounded-l-lg last:rounded-r-lg'
-                                        : 'text-slate-600 hover:bg-green-50 hover:text-green-700 first:rounded-l-lg last:rounded-r-lg'
-                                }`}
+                                className={`px-4 py-2.5 text-sm font-medium transition border-r border-slate-100 last:border-r-0 ${dateFilter === p.value
+                                    ? 'bg-green-600 text-white first:rounded-l-lg last:rounded-r-lg'
+                                    : 'text-slate-600 hover:bg-green-50 hover:text-green-700 first:rounded-l-lg last:rounded-r-lg'
+                                    }`}
                             >
                                 {p.label}
                             </button>
@@ -527,11 +526,10 @@ export default function Dashboard() {
                         <div className="relative border-l border-slate-100">
                             <button
                                 onClick={() => setShowCustomDate(!showCustomDate)}
-                                className={`px-4 py-2.5 text-sm font-medium transition flex items-center gap-1.5 rounded-r-lg ${
-                                    dateFilter === 'custom'
-                                        ? 'bg-green-600 text-white'
-                                        : 'text-slate-600 hover:bg-green-50 hover:text-green-700'
-                                }`}
+                                className={`px-4 py-2.5 text-sm font-medium transition flex items-center gap-1.5 rounded-r-lg ${dateFilter === 'custom'
+                                    ? 'bg-green-600 text-white'
+                                    : 'text-slate-600 hover:bg-green-50 hover:text-green-700'
+                                    }`}
                             >
                                 <CalendarIcon size={14} /> Custom
                             </button>
@@ -668,12 +666,12 @@ export default function Dashboard() {
                     <div className="flex items-center justify-between mb-4">
                         <h3 className="font-bold text-slate-800">Top Products</h3>
                         <div className="flex bg-slate-100 rounded-lg p-0.5">
-                            <button 
+                            <button
                                 onClick={() => setTopProductsTab('best_selling')}
                                 className={`px-3 py-1 text-xs font-medium rounded-md transition ${topProductsTab === 'best_selling' ? 'bg-white text-green-700 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}>
                                 Best Selling
                             </button>
-                            <button 
+                            <button
                                 onClick={() => setTopProductsTab('high_returns')}
                                 className={`px-3 py-1 text-xs font-medium rounded-md transition ${topProductsTab === 'high_returns' ? 'bg-white text-green-700 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}>
                                 High Returns
