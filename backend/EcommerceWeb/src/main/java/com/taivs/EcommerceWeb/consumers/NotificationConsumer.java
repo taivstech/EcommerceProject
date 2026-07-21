@@ -3,6 +3,7 @@ package com.taivs.EcommerceWeb.consumers;
 import com.taivs.EcommerceWeb.config.RabbitMQConfig;
 import com.taivs.EcommerceWeb.dto.request.notification.NotificationMessage;
 import com.taivs.EcommerceWeb.models.notification.Notification;
+import com.taivs.EcommerceWeb.models.notification.NotificationType;
 import com.taivs.EcommerceWeb.models.user.User;
 import com.taivs.EcommerceWeb.repositories.notification.NotificationRepository;
 import com.taivs.EcommerceWeb.repositories.user.UserRepository;
@@ -36,12 +37,28 @@ public class NotificationConsumer {
                 return;
             }
 
+            String title = msg.getTitle();
+            String message = msg.getMessage();
+
+            if ((message == null || message.isBlank()) && msg.getType() != null) {
+                NotificationType notiType = NotificationType.fromCode(msg.getType());
+                if (notiType != null) {
+                    title = notiType.getDefaultTitle();
+                    message = notiType.getMessageTemplate();
+                    if (msg.getOptions() != null) {
+                        for (java.util.Map.Entry<String, String> entry : msg.getOptions().entrySet()) {
+                            message = message.replace("{" + entry.getKey() + "}", entry.getValue() != null ? entry.getValue() : "");
+                        }
+                    }
+                }
+            }
+
             Notification n = Notification.builder()
                     .id(UUID.randomUUID().toString())
                     .user(user)
                     .type(msg.getType())
-                    .title(msg.getTitle())
-                    .message(msg.getMessage())
+                    .title(title)
+                    .message(message)
                     .status("UNREAD")
                     .referenceId(msg.getReferenceId())
                     .referenceType(msg.getReferenceType())

@@ -1,16 +1,23 @@
-package com.taivs.EcommerceWeb.services.product.validation.impl;
+package com.taivs.EcommerceWeb.services.product.strategy.impl;
 
 import com.taivs.EcommerceWeb.dto.request.product.ProductAttributeRequest;
 import com.taivs.EcommerceWeb.dto.request.product.ProductCreateRequest;
 import com.taivs.EcommerceWeb.exceptions.AppException;
 import com.taivs.EcommerceWeb.exceptions.ErrorCode;
-import com.taivs.EcommerceWeb.services.product.validation.ProductTypeValidationStrategy;
+import com.taivs.EcommerceWeb.models.product.Product;
+import com.taivs.EcommerceWeb.repositories.product.CategoryRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
+import java.util.List;
+
 @Component
 @Slf4j
-public class ElectronicsValidationStrategy implements ProductTypeValidationStrategy {
+public class ElectronicsProductStrategy extends AbstractProductStrategy {
+
+    public ElectronicsProductStrategy(CategoryRepository categoryRepository) {
+        super(categoryRepository);
+    }
 
     @Override
     public void validate(ProductCreateRequest request) {
@@ -43,5 +50,14 @@ public class ElectronicsValidationStrategy implements ProductTypeValidationStrat
         }
 
         log.info("Electronics attributes successfully validated for: {}", request.getName());
+    }
+
+    @Override
+    public void enrichProductData(Product product, ProductCreateRequest request) {
+        super.enrichProductData(product, request);
+        // Custom logic: Add an implicit tag if missing
+        if (!product.getTags().contains("hàng chính hãng")) {
+            product.getTags().add("hàng chính hãng");
+        }
     }
 }

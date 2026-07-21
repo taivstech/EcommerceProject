@@ -1,10 +1,10 @@
-package com.taivs.EcommerceWeb.services.product.validation.impl;
+package com.taivs.EcommerceWeb.services.product.strategy.impl;
 
 import com.taivs.EcommerceWeb.dto.request.product.ProductAttributeRequest;
 import com.taivs.EcommerceWeb.dto.request.product.ProductCreateRequest;
 import com.taivs.EcommerceWeb.exceptions.AppException;
 import com.taivs.EcommerceWeb.exceptions.ErrorCode;
-import com.taivs.EcommerceWeb.services.product.validation.ProductTypeValidationStrategy;
+import com.taivs.EcommerceWeb.repositories.product.CategoryRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
@@ -12,7 +12,7 @@ import java.util.List;
 
 @Component
 @Slf4j
-public class ClothingValidationStrategy implements ProductTypeValidationStrategy {
+public class FashionProductStrategy extends AbstractProductStrategy {
 
     private static final List<String> VALID_SIZES = List.of(
             "XS", "S", "M", "L", "XL", "XXL",
@@ -20,10 +20,14 @@ public class ClothingValidationStrategy implements ProductTypeValidationStrategy
             "28", "30", "32", "34", "36", "38"
     );
 
+    public FashionProductStrategy(CategoryRepository categoryRepository) {
+        super(categoryRepository);
+    }
+
     @Override
     public void validate(ProductCreateRequest request) {
         if (request.getBrand() == null || request.getBrand().isBlank()) {
-            throw new AppException(ErrorCode.INVALID_REQUEST, "Brand is required for clothing");
+            throw new AppException(ErrorCode.INVALID_REQUEST, "Brand is required for clothing/fashion");
         }
 
         if (request.getAttributes() == null || request.getAttributes().isEmpty()) {

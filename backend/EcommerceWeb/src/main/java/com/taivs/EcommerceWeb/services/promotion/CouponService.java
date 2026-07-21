@@ -27,6 +27,10 @@ public interface CouponService {
 
     Coupon validateAndLock(String couponCode, String userId, CouponType expectedType);
 
+    Coupon validateCoupon(String couponCode, String userId, CouponType expectedType);
+
+    List<CouponResponse> getAvailableCouponsForProduct(String productId);
+
     void incrementUsage(String couponId);
 
     void deactivate(String couponId);

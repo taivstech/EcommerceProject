@@ -21,4 +21,7 @@ public interface NotificationService {
 
     NotificationResponse createAndPush(String userId, String type, String title, String message,
                                         String referenceId, String referenceType);
+
+    NotificationResponse createAndPush(String userId, String type, java.util.Map<String, String> options,
+                                        String referenceId, String referenceType);
 }

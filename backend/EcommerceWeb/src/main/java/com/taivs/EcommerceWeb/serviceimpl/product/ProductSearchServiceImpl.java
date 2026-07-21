@@ -68,7 +68,7 @@ public class ProductSearchServiceImpl implements ProductSearchService {
             }
 
             Product product = productOpt.get();
-            if (product.getDeletedAt() != null) {
+            if (product.getDeletedAt() != null || !product.isPublished()) {
 
                 removeProduct(productId);
                 return;

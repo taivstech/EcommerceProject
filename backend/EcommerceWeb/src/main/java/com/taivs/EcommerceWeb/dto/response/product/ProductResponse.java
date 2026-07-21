@@ -49,6 +49,12 @@ public class ProductResponse {
     @JsonProperty("rating_count")
     Long ratingCount;
 
+    @JsonProperty("is_draft")
+    boolean isDraft;
+
+    @JsonProperty("is_published")
+    boolean isPublished;
+
     @Builder.Default
     List<ProductImageResponse> images = new ArrayList<>();
 

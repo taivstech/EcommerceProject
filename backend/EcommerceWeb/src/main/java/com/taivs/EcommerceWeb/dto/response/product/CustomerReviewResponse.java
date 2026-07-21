@@ -16,5 +16,7 @@ public class CustomerReviewResponse {
     private String userId;
     private String userName;
     private String userAvatar;
+    private String parentId;
+    private java.util.List<CustomerReviewResponse> replies;
     private LocalDateTime createdAt;
 }

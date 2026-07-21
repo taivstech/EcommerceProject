@@ -17,4 +17,5 @@ public class NotificationMessage implements Serializable {
     private String message;
     private String referenceId;
     private String referenceType;
+    private java.util.Map<String, String> options;
 }

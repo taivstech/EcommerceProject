@@ -19,7 +19,9 @@ import java.util.Set;
                 @Index(name = "idx_products_shop_id", columnList = "shop_id"),
                 @Index(name = "idx_products_category_id", columnList = "category_id"),
                 @Index(name = "idx_product_min_price", columnList = "min_price"),
-                @Index(name = "idx_product_total_sold", columnList = "total_sold")
+                @Index(name = "idx_product_total_sold", columnList = "total_sold"),
+                @Index(name = "idx_product_status", columnList = "is_published, deleted_at"),
+                @Index(name = "idx_product_shop_status", columnList = "shop_id, is_draft, is_published")
         }
 )
 @Getter
@@ -116,6 +118,14 @@ public class Product extends BaseEntity {
     )
     @Column(name = "tag", length = 100)
     private List<String> tags = new ArrayList<>();
+
+    @Column(name = "is_draft", nullable = false)
+    @Builder.Default
+    private boolean isDraft = true;
+
+    @Column(name = "is_published", nullable = false)
+    @Builder.Default
+    private boolean isPublished = false;
 
     @Override
     public boolean equals(Object o) {

@@ -14,6 +14,9 @@ import com.taivs.EcommerceWeb.dto.response.order.OrderItemResponse;
 import com.taivs.EcommerceWeb.dto.response.order.OrderResponse;
 import com.taivs.EcommerceWeb.dto.response.order.OrderShopGroupResponse;
 import com.taivs.EcommerceWeb.dto.response.order.ShippingAddressResponse;
+import com.taivs.EcommerceWeb.dto.response.order.CheckoutReviewResponse;
+import com.taivs.EcommerceWeb.dto.response.order.CheckoutShopGroupReview;
+import com.taivs.EcommerceWeb.dto.response.order.CheckoutItemReview;
 import com.taivs.EcommerceWeb.enums.promotion.CouponType;
 import com.taivs.EcommerceWeb.models.promotion.Coupon;
 import com.taivs.EcommerceWeb.models.promotion.CouponUsage;
@@ -47,9 +50,11 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.data.redis.core.RedisTemplate;
 
 import java.math.BigDecimal;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -74,6 +79,7 @@ public class BuyerOrderServiceImpl implements BuyerOrderService {
     private final OrderNotificationService orderNotificationService;
     private final CommissionService commissionService;
     private final RedisLockService redisLockService;
+    private final RedisTemplate<String, Object> redisTemplate;
 
     @Override
     public List<OrderResponse> getMyOrders() {
@@ -103,10 +109,27 @@ public class BuyerOrderServiceImpl implements BuyerOrderService {
 
     @Override
     @Transactional
-    public OrderResponse checkout(CheckoutRequest request) {
+    public OrderResponse checkout(CheckoutRequest request, String idempotencyKey) {
         String userId = AuthUtils.currentUserId();
+        String idempotencyRedisKey = null;
+
+        if (idempotencyKey != null && !idempotencyKey.isBlank()) {
+            idempotencyRedisKey = "idempotency:checkout:" + userId + ":" + idempotencyKey;
+            Object cachedResponse = redisTemplate.opsForValue().get(idempotencyRedisKey);
+            if (cachedResponse != null) {
+                if ("PROCESSING".equals(cachedResponse)) {
+                    throw new AppException(ErrorCode.INVALID_REQUEST, "Yêu cầu đặt hàng đang được xử lý, vui lòng không gửi trùng lặp.");
+                }
+                return (OrderResponse) cachedResponse;
+            }
+            redisTemplate.opsForValue().set(idempotencyRedisKey, "PROCESSING", 5, TimeUnit.MINUTES);
+        }
+
         List<CartItem> allCartItems = cartItemRepository.findByUserIdWithRelationsOrderByCreatedAtDesc(userId);
         if (allCartItems.isEmpty()) {
+            if (idempotencyRedisKey != null) {
+                redisTemplate.delete(idempotencyRedisKey);
+            }
             log.error("[CHECKOUT] Cart is empty for userId: {}", userId);
             throw new AppException(ErrorCode.INVALID_REQUEST);
         }
@@ -134,7 +157,16 @@ public class BuyerOrderServiceImpl implements BuyerOrderService {
                     lockedKeys.add(lockKey);
                 }
             }
-            return checkoutInternal(request);
+            OrderResponse response = checkoutInternal(request);
+            if (idempotencyRedisKey != null) {
+                redisTemplate.opsForValue().set(idempotencyRedisKey, response, 1, TimeUnit.HOURS);
+            }
+            return response;
+        } catch (Exception e) {
+            if (idempotencyRedisKey != null) {
+                redisTemplate.delete(idempotencyRedisKey);
+            }
+            throw e;
         } finally {
             for (String lockKey : lockedKeys) {
                 redisLockService.releaseLock(lockKey);
@@ -647,15 +679,9 @@ public class BuyerOrderServiceImpl implements BuyerOrderService {
 
         return OrderResponse.builder()
                 .id(order.getId())
-                .status(order.getStatus())
-                .payment(order.getPayment())
-                .isPaid(order.getIsPaid())
-                .note(order.getNote())
+                .userId(order.getUser().getId())
                 .subtotal(order.getSubtotal())
                 .shippingFee(order.getShippingFee())
-                .discountAmount(order.getDiscountAmount())
-                .shopDiscountAmount(order.getShopDiscountAmount())
-                .shippingDiscountAmount(order.getShippingDiscountAmount())
                 .totalDiscount(order.getTotalDiscount())
                 .total(order.getTotal())
                 .createdAt(order.getCreatedAt())
@@ -757,9 +783,172 @@ public class BuyerOrderServiceImpl implements BuyerOrderService {
                     List<OrderItem> items = itemsByGroupId.getOrDefault(group.getId(), Collections.emptyList());
                     group.getOrderItems().clear();
                     group.getOrderItems().addAll(items);
-                });
-            }
         });
+    }
+
+    @Override
+    public CheckoutReviewResponse checkoutReview(CheckoutRequest request) {
+        String userId = AuthUtils.currentUserId();
+        List<CartItem> allCartItems = cartItemRepository.findByUserIdWithRelationsOrderByCreatedAtDesc(userId);
+        if (allCartItems.isEmpty()) {
+            throw new AppException(ErrorCode.INVALID_REQUEST, "Cart is empty");
+        }
+
+        List<CartItem> cartItems = allCartItems;
+        if (request.getShopId() != null && !request.getShopId().isBlank()) {
+            cartItems = allCartItems.stream()
+                    .filter(ci -> {
+                        String shopId = ci.getProductVariant().getProduct().getShop().getId();
+                        return request.getShopId().equals(shopId);
+                    })
+                    .collect(Collectors.toList());
+        }
+
+        if (cartItems.isEmpty()) {
+            throw new AppException(ErrorCode.INVALID_REQUEST, "No items match checkout criteria");
+        }
+
+        Map<String, List<CartItem>> itemsByShop = new HashMap<>();
+        for (CartItem ci : cartItems) {
+            String shopId = ci.getProductVariant().getProduct().getShop().getId();
+            itemsByShop.computeIfAbsent(shopId, k -> new ArrayList<>()).add(ci);
+        }
+
+        BigDecimal totalSubtotal = BigDecimal.ZERO;
+        BigDecimal totalShippingFee = BigDecimal.ZERO;
+        BigDecimal totalDiscount = BigDecimal.ZERO;
+        List<CheckoutShopGroupReview> shopGroups = new ArrayList<>();
+
+        for (Map.Entry<String, List<CartItem>> shopEntry : itemsByShop.entrySet()) {
+            String shopId = shopEntry.getKey();
+            List<CartItem> shopItems = shopEntry.getValue();
+
+            ProductVariant firstVariant = shopItems.get(0).getProductVariant();
+            Shop shop = firstVariant.getProduct().getShop();
+
+            Map<String, Long> itemsMap = new HashMap<>();
+            Map<String, ProductVariant> variantMap = new HashMap<>();
+            Map<String, Integer> groupQtyMap = new HashMap<>();
+            List<ProductVariant> groupVariants = new ArrayList<>();
+
+            for (CartItem ci : shopItems) {
+                ProductVariant variant = ci.getProductVariant();
+                String variantId = variant.getId();
+                int qty = ci.getQuantity();
+
+                itemsMap.put(variantId, (long) qty);
+                variantMap.put(variantId, variant);
+                groupQtyMap.put(variantId, qty);
+                groupVariants.add(variant);
+            }
+
+            BigDecimal totalWeight = shippingService.calculateTotalWeight(groupVariants, groupQtyMap);
+
+            List<WarehouseSelectionService.WarehouseSelectionResult> warehouseSelections = warehouseSelectionService
+                    .selectWarehouses(shop.getId(), itemsMap, request, totalWeight);
+
+            if (warehouseSelections.isEmpty()) {
+                throw new AppException(ErrorCode.INSUFFICIENT_STOCK, "No warehouses available for shop " + shop.getName());
+            }
+
+            for (WarehouseSelectionService.WarehouseSelectionResult selection : warehouseSelections) {
+                BigDecimal groupSubtotal = BigDecimal.ZERO;
+                List<CheckoutItemReview> groupItems = new ArrayList<>();
+
+                for (Map.Entry<String, Long> entry : selection.itemQuantities().entrySet()) {
+                    String variantId = entry.getKey();
+                    Long qty = entry.getValue();
+                    ProductVariant variant = variantMap.get(variantId);
+
+                    if (variant == null) continue;
+
+                    BigDecimal price = Optional.ofNullable(variant.getPrice()).orElse(BigDecimal.ZERO);
+                    BigDecimal lineTotal = price.multiply(BigDecimal.valueOf(qty));
+
+                    if (!warehouseStockService.hasSufficientStock(selection.warehouse().getId(), variantId, qty)) {
+                        throw new AppException(ErrorCode.INSUFFICIENT_STOCK,
+                                String.format("Insufficient stock for %s in warehouse %s", variant.getName(),
+                                        selection.warehouse().getName()));
+                    }
+
+                    String productImage = variant.getProduct().getImages().stream()
+                            .filter(img -> Boolean.TRUE.equals(img.getIsMain()))
+                            .findFirst()
+                            .or(() -> variant.getProduct().getImages().stream().findFirst())
+                            .map(ProductImage::getUrl)
+                            .orElse(null);
+
+                    groupItems.add(CheckoutItemReview.builder()
+                            .productId(variant.getProduct().getId())
+                            .productName(variant.getProduct().getName())
+                            .variantId(variantId)
+                            .variantName(variant.getName())
+                            .sku(variant.getSku())
+                            .image(productImage)
+                            .price(price)
+                            .quantity(qty.intValue())
+                            .lineTotal(lineTotal)
+                            .build());
+
+                    groupSubtotal = groupSubtotal.add(lineTotal);
+                }
+
+                BigDecimal shopDiscount = BigDecimal.ZERO;
+                if (request.getShopCouponCode() != null && !request.getShopCouponCode().isBlank()) {
+                    try {
+                        Coupon shopCoupon = couponService.validateCoupon(request.getShopCouponCode(), userId, CouponType.SHOP);
+                        if (shopCoupon.getShop().getId().equals(shop.getId())) {
+                            shopDiscount = shopCoupon.calculateDiscount(groupSubtotal);
+                        }
+                    } catch (Exception e) {
+                        log.warn("Invalid shop coupon during review: {}", e.getMessage());
+                    }
+                }
+
+                CheckoutShopGroupReview groupReview = CheckoutShopGroupReview.builder()
+                        .shopId(shop.getId())
+                        .shopName(shop.getName())
+                        .subtotal(groupSubtotal)
+                        .shippingFee(selection.shippingFee())
+                        .discountAmount(shopDiscount)
+                        .total(groupSubtotal.add(selection.shippingFee()).subtract(shopDiscount).max(BigDecimal.ZERO))
+                        .warehouseId(selection.warehouse().getId())
+                        .warehouseName(selection.warehouse().getName())
+                        .items(groupItems)
+                        .build();
+
+                shopGroups.add(groupReview);
+                totalSubtotal = totalSubtotal.add(groupSubtotal);
+                totalShippingFee = totalShippingFee.add(selection.shippingFee());
+                totalDiscount = totalDiscount.add(shopDiscount);
+            }
+        }
+
+        BigDecimal platformDiscount = BigDecimal.ZERO;
+        if (request.getCouponCode() != null && !request.getCouponCode().isBlank()) {
+            try {
+                Coupon platformCoupon = couponService.validateCoupon(request.getCouponCode(), userId, CouponType.PLATFORM);
+                if (platformCoupon.getDiscountType() == DiscountType.FREE_SHIPPING) {
+                    platformDiscount = totalShippingFee.min(
+                            Optional.ofNullable(platformCoupon.getDiscountValue()).orElse(BigDecimal.ZERO));
+                } else {
+                    platformDiscount = platformCoupon.calculateDiscount(totalSubtotal);
+                }
+            } catch (Exception e) {
+                log.warn("Invalid platform coupon during review: {}", e.getMessage());
+            }
+        }
+        totalDiscount = totalDiscount.add(platformDiscount);
+
+        BigDecimal totalPay = totalSubtotal.add(totalShippingFee).subtract(totalDiscount).max(BigDecimal.ZERO);
+
+        return CheckoutReviewResponse.builder()
+                .subtotal(totalSubtotal)
+                .shippingFee(totalShippingFee)
+                .discountAmount(totalDiscount)
+                .totalPay(totalPay)
+                .shopGroups(shopGroups)
+                .build();
     }
 
 }

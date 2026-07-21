@@ -3,6 +3,7 @@ package com.taivs.EcommerceWeb.controllers.product;
 import com.taivs.EcommerceWeb.models.product.Product;
 import com.taivs.EcommerceWeb.models.user.User;
 import com.taivs.EcommerceWeb.dto.request.product.CreateReviewRequest;
+import com.taivs.EcommerceWeb.dto.request.product.CreateReplyRequest;
 import com.taivs.EcommerceWeb.dto.response.product.CustomerReviewResponse;
 import com.taivs.EcommerceWeb.dto.response.product.ProductRatingStats;
 import com.taivs.EcommerceWeb.services.product.CustomerReviewService;
@@ -44,6 +45,16 @@ public class CustomerReviewController {
     public ApiResponse<ProductRatingStats> getProductRatingStats(@PathVariable("productId") String productId) {
         return ApiResponse.<ProductRatingStats>builder()
                 .result(customerReviewService.getProductRatingStats(productId))
+                .build();
+    }
+
+    @PostMapping("/{id}/reply")
+    @PreAuthorize("hasAuthority('review:create') or hasRole('USER') or hasRole('SELLER') or hasRole('ADMIN')")
+    public ApiResponse<CustomerReviewResponse> replyReview(
+            @PathVariable("id") String id,
+            @RequestBody @Valid CreateReplyRequest request) {
+        return ApiResponse.<CustomerReviewResponse>builder()
+                .result(customerReviewService.replyToReview(id, request))
                 .build();
     }
 }

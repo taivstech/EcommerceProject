@@ -7,6 +7,7 @@ import com.taivs.EcommerceWeb.repositories.user.UserRepository;
 import com.taivs.EcommerceWeb.models.order.OrderItem;
 import com.taivs.EcommerceWeb.repositories.order.OrderItemRepository;
 import com.taivs.EcommerceWeb.dto.request.product.CreateReviewRequest;
+import com.taivs.EcommerceWeb.dto.request.product.CreateReplyRequest;
 import com.taivs.EcommerceWeb.dto.response.product.CustomerReviewResponse;
 import com.taivs.EcommerceWeb.dto.response.product.ProductRatingStats;
 import com.taivs.EcommerceWeb.models.product.CustomerReview;
@@ -120,11 +121,42 @@ public class CustomerReviewServiceImpl implements CustomerReviewService {
                 .build();
     }
 
+    @Override
+    @Transactional
+    public CustomerReviewResponse replyToReview(String reviewId, CreateReplyRequest request) {
+        String userId = currentUserId();
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
+
+        CustomerReview parent = customerReviewRepository.findById(reviewId)
+                .orElseThrow(() -> new AppException(ErrorCode.INVALID_REQUEST, "Parent review not found"));
+
+        CustomerReview reply = CustomerReview.builder()
+                .id(UUID.randomUUID().toString())
+                .rating(null)
+                .comment(request.getComment())
+                .productVariant(parent.getProductVariant())
+                .user(user)
+                .parent(parent)
+                .build();
+
+        CustomerReview saved = customerReviewRepository.save(reply);
+        return toResponse(saved);
+    }
+
     private String currentUserId() {
         return SecurityContextHolder.getContext().getAuthentication().getName();
     }
 
     private CustomerReviewResponse toResponse(CustomerReview review) {
+        String parentId = review.getParent() != null ? review.getParent().getId() : null;
+        List<CustomerReviewResponse> childReplies = null;
+        if (review.getReplies() != null && !review.getReplies().isEmpty()) {
+            childReplies = review.getReplies().stream()
+                    .map(this::toResponse)
+                    .collect(Collectors.toList());
+        }
+
         return CustomerReviewResponse.builder()
                 .id(review.getId())
                 .rating(review.getRating())
@@ -134,6 +166,8 @@ public class CustomerReviewServiceImpl implements CustomerReviewService {
                 .userId(review.getUser() != null ? review.getUser().getId() : null)
                 .userName(review.getUser() != null ? review.getUser().getFullName() : null)
                 .userAvatar(review.getUser() != null ? review.getUser().getProfilePicture() : null)
+                .parentId(parentId)
+                .replies(childReplies)
                 .createdAt(review.getCreatedAt())
                 .build();
     }

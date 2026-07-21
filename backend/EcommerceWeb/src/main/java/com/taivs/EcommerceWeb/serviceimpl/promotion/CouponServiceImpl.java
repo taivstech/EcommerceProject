@@ -12,6 +12,7 @@ import com.taivs.EcommerceWeb.repositories.promotion.CouponUsageRepository;
 import com.taivs.EcommerceWeb.services.promotion.CouponService;
 import com.taivs.EcommerceWeb.models.shop.Shop;
 import com.taivs.EcommerceWeb.repositories.shop.ShopRepository;
+import com.taivs.EcommerceWeb.repositories.product.ProductRepository;
 import com.taivs.EcommerceWeb.exceptions.AppException;
 import com.taivs.EcommerceWeb.exceptions.ErrorCode;
 import lombok.RequiredArgsConstructor;
@@ -30,6 +31,7 @@ public class CouponServiceImpl implements CouponService {
     private final CouponRepository couponRepository;
     private final ShopRepository shopRepository;
     private final CouponUsageRepository couponUsageRepository;
+    private final ProductRepository productRepository;
 
     @Override
     @Transactional
@@ -148,6 +150,67 @@ public class CouponServiceImpl implements CouponService {
         }
 
         return coupon;
+    }
+
+    @Override
+    public Coupon validateCoupon(String couponCode, String userId, CouponType expectedType) {
+        Coupon coupon = couponRepository
+                .findByCode(couponCode)
+                .orElseThrow(() -> new AppException(ErrorCode.COUPON_NOT_EXISTS));
+
+        if (expectedType != null && coupon.getCouponType() != expectedType) {
+            throw new AppException(ErrorCode.COUPON_TYPE_MISMATCH);
+        }
+
+        if (!Boolean.TRUE.equals(coupon.getIsActive())) {
+            throw new AppException(ErrorCode.COUPON_INACTIVE);
+        }
+
+        LocalDateTime now = LocalDateTime.now();
+        if (now.isBefore(coupon.getValidFrom())) {
+            throw new AppException(ErrorCode.COUPON_INACTIVE);
+        }
+        if (now.isAfter(coupon.getValidTo())) {
+            throw new AppException(ErrorCode.COUPON_EXPIRED);
+        }
+
+        if (coupon.getMaxUsage() != null && coupon.getCurrentUsage() >= coupon.getMaxUsage()) {
+            throw new AppException(ErrorCode.COUPON_USAGE_EXCEEDED);
+        }
+
+        if (userId != null) {
+            long userUsedCount = couponUsageRepository.countByCoupon_IdAndUser_Id(coupon.getId(), userId);
+            if (coupon.getMaxUsagePerUser() != null && userUsedCount >= coupon.getMaxUsagePerUser()) {
+                throw new AppException(ErrorCode.COUPON_USAGE_EXCEEDED);
+            }
+        }
+
+        return coupon;
+    }
+
+    @Override
+    public List<CouponResponse> getAvailableCouponsForProduct(String productId) {
+        Product product = productRepository.findById(productId)
+                .orElseThrow(() -> new AppException(ErrorCode.PRODUCT_NOT_FOUND));
+
+        String shopId = product.getShop().getId();
+        String userId = currentUserIdOrNull();
+        LocalDateTime now = LocalDateTime.now();
+
+        List<Coupon> shopCoupons = couponRepository.findActiveShopCoupons(shopId, now);
+        List<Coupon> platformCoupons = couponRepository.findActivePlatformCoupons(now);
+
+        return java.util.stream.Stream.concat(shopCoupons.stream(), platformCoupons.stream())
+                .map(c -> toResponseForUser(c, userId))
+                .collect(Collectors.toList());
+    }
+
+    private String currentUserIdOrNull() {
+        var auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null || "anonymousUser".equalsIgnoreCase(auth.getName())) {
+            return null;
+        }
+        return auth.getName();
     }
 
 
@@ -289,6 +352,9 @@ public class CouponServiceImpl implements CouponService {
     }
 
     private CouponResponse toResponseForUser(Coupon coupon, String userId) {
+        if (userId == null) {
+            return toResponse(coupon);
+        }
         int usedCount = (int) couponUsageRepository.countByCoupon_IdAndUser_Id(coupon.getId(), userId);
         boolean used = coupon.getMaxUsagePerUser() != null
             ? usedCount >= coupon.getMaxUsagePerUser()

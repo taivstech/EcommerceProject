@@ -2,6 +2,7 @@ package com.taivs.EcommerceWeb.controllers.order;
 
 import com.taivs.EcommerceWeb.dto.request.order.CheckoutRequest;
 import com.taivs.EcommerceWeb.dto.response.order.OrderResponse;
+import com.taivs.EcommerceWeb.dto.response.order.CheckoutReviewResponse;
 import com.taivs.EcommerceWeb.services.order.BuyerOrderService;
 import com.taivs.EcommerceWeb.dto.ApiResponse;
 import jakarta.validation.Valid;
@@ -35,9 +36,19 @@ public class OrderController {
 
     @PostMapping("/checkout")
     @PreAuthorize("hasAuthority('order:create') or hasRole('USER') or hasRole('SELLER') or hasRole('ADMIN')")
-    public ApiResponse<OrderResponse> checkout(@RequestBody @Valid CheckoutRequest request) {
+    public ApiResponse<OrderResponse> checkout(
+            @RequestHeader(value = "X-Idempotency-Key", required = false) String idempotencyKey,
+            @RequestBody @Valid CheckoutRequest request) {
         return ApiResponse.<OrderResponse>builder()
-                .result(buyerOrderService.checkout(request))
+                .result(buyerOrderService.checkout(request, idempotencyKey))
+                .build();
+    }
+
+    @PostMapping("/checkout-review")
+    @PreAuthorize("hasAuthority('order:create') or hasRole('USER') or hasRole('SELLER') or hasRole('ADMIN')")
+    public ApiResponse<CheckoutReviewResponse> checkoutReview(@RequestBody @Valid CheckoutRequest request) {
+        return ApiResponse.<CheckoutReviewResponse>builder()
+                .result(buyerOrderService.checkoutReview(request))
                 .build();
     }
 

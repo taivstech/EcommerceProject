@@ -25,6 +25,7 @@ import java.util.stream.Collectors;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import com.taivs.EcommerceWeb.config.RabbitMQConfig;
 import com.taivs.EcommerceWeb.dto.request.notification.NotificationMessage;
+import com.taivs.EcommerceWeb.models.notification.NotificationType;
 
 
 @Service
@@ -127,6 +128,58 @@ public class NotificationServiceImpl implements NotificationService {
             log.error("RabbitMQ send failed, falling back to synchronous notification delivery: {}", e.getMessage());
             return createAndPushSync(userId, type, title, message, referenceId, referenceType);
         }
+    }
+
+    @Override
+    public NotificationResponse createAndPush(String userId, String type, java.util.Map<String, String> options,
+                                               String referenceId, String referenceType) {
+        NotificationMessage msg = NotificationMessage.builder()
+                .userId(userId)
+                .type(type)
+                .options(options)
+                .referenceId(referenceId)
+                .referenceType(referenceType)
+                .build();
+
+        try {
+            rabbitTemplate.convertAndSend(
+                    RabbitMQConfig.NOTIFICATION_EXCHANGE,
+                    RabbitMQConfig.NOTIFICATION_ROUTING_KEY,
+                    msg
+            );
+            log.info("Published template notification to RabbitMQ for user: {}", userId);
+
+            NotificationType notiType = NotificationType.fromCode(type);
+            String title = notiType != null ? notiType.getDefaultTitle() : "Thông báo mới";
+            String message = notiType != null ? resolveTemplate(notiType.getMessageTemplate(), options) : "";
+
+            return NotificationResponse.builder()
+                    .userId(userId)
+                    .type(type)
+                    .title(title)
+                    .message(message)
+                    .status("UNREAD")
+                    .createdAt(LocalDateTime.now())
+                    .referenceId(referenceId)
+                    .referenceType(referenceType)
+                    .build();
+        } catch (Exception e) {
+            log.error("RabbitMQ send failed, falling back to synchronous notification delivery: {}", e.getMessage());
+            NotificationType notiType = NotificationType.fromCode(type);
+            String title = notiType != null ? notiType.getDefaultTitle() : "Thông báo mới";
+            String message = notiType != null ? resolveTemplate(notiType.getMessageTemplate(), options) : "";
+            return createAndPushSync(userId, type, title, message, referenceId, referenceType);
+        }
+    }
+
+    private String resolveTemplate(String template, java.util.Map<String, String> options) {
+        if (template == null) return "";
+        if (options == null || options.isEmpty()) return template;
+        String resolved = template;
+        for (java.util.Map.Entry<String, String> entry : options.entrySet()) {
+            resolved = resolved.replace("{" + entry.getKey() + "}", entry.getValue() != null ? entry.getValue() : "");
+        }
+        return resolved;
     }
 
     @Transactional

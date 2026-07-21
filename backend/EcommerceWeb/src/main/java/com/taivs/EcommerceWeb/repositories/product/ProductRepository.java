@@ -29,8 +29,29 @@ public interface ProductRepository extends JpaRepository<Product, String> {
     @Query(value = """
                 SELECT p.id FROM Product p
                 WHERE p.deletedAt IS NULL
-            """, countQuery = "SELECT count(p) FROM Product p WHERE p.deletedAt IS NULL")
+                AND p.isPublished = true
+            """, countQuery = "SELECT count(p) FROM Product p WHERE p.deletedAt IS NULL AND p.isPublished = true")
     Page<String> findPublicProductIds(Pageable pageable);
+
+    @Query("""
+                SELECT p.id FROM Product p
+                WHERE p.deletedAt IS NULL
+                AND p.shop.id = :shopId
+                AND p.isDraft = true
+            """)
+    Slice<String> findDraftProductIdsByShop(
+            @Param("shopId") String shopId,
+            Pageable pageable);
+
+    @Query("""
+                SELECT p.id FROM Product p
+                WHERE p.deletedAt IS NULL
+                AND p.shop.id = :shopId
+                AND p.isPublished = true
+            """)
+    Slice<String> findPublishedProductIdsByShop(
+            @Param("shopId") String shopId,
+            Pageable pageable);
 
     @Query("""
                 SELECT p.id FROM Product p
@@ -45,6 +66,7 @@ public interface ProductRepository extends JpaRepository<Product, String> {
             SELECT p.id
             FROM Product p
             WHERE p.deletedAt IS NULL
+            AND p.isPublished = true
             AND (:categoryId IS NULL OR :categoryId = '' OR p.category.id = :categoryId)
             AND (:shopId IS NULL OR :shopId = '' OR p.shop.id = :shopId)
             AND (:keyword IS NULL OR :keyword = ''
@@ -59,6 +81,7 @@ public interface ProductRepository extends JpaRepository<Product, String> {
             SELECT count(p)
             FROM Product p
             WHERE p.deletedAt IS NULL
+            AND p.isPublished = true
             AND (:categoryId IS NULL OR :categoryId = '' OR p.category.id = :categoryId)
             AND (:shopId IS NULL OR :shopId = '' OR p.shop.id = :shopId)
             AND (:keyword IS NULL OR :keyword = ''
@@ -124,6 +147,7 @@ public interface ProductRepository extends JpaRepository<Product, String> {
     @Query("""
                 SELECT p.id FROM Product p
                 WHERE p.deletedAt IS NULL
+                AND p.isPublished = true
                 ORDER BY p.createdAt DESC
             """)
     Slice<String> findNewestProductIds(Pageable pageable);
@@ -145,6 +169,7 @@ public interface ProductRepository extends JpaRepository<Product, String> {
     @Query("""
             SELECT p.id FROM Product p
             WHERE p.deletedAt IS NULL
+            AND p.isPublished = true
             AND p.totalSold > 0
             ORDER BY p.totalSold DESC
             """)
@@ -153,6 +178,7 @@ public interface ProductRepository extends JpaRepository<Product, String> {
     @Query("""
             SELECT p.id FROM Product p
             WHERE p.deletedAt IS NULL
+            AND p.isPublished = true
             AND p.shop.id = :shopId
             AND p.totalSold > 0
             ORDER BY p.totalSold DESC
@@ -164,6 +190,7 @@ public interface ProductRepository extends JpaRepository<Product, String> {
     @Query("""
             SELECT p.id FROM Product p
             WHERE p.deletedAt IS NULL
+            AND p.isPublished = true
             AND p.category.id = :categoryId
             AND p.totalSold > 0
             ORDER BY p.totalSold DESC
@@ -194,6 +221,7 @@ public interface ProductRepository extends JpaRepository<Product, String> {
     @Query("""
                 SELECT p.id FROM Product p
                 WHERE p.deletedAt IS NULL
+                AND p.isPublished = true
                 AND p.createdAt >= :createdAfter
                 ORDER BY p.totalSold DESC
             """)

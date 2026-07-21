@@ -26,6 +26,7 @@ public interface CustomerReviewRepository extends JpaRepository<CustomerReview, 
             join fetch pv.product p
             join fetch cr.user u
             where p.id = :productId
+            and cr.parent is null
             order by cr.createdAt desc
             """)
     List<CustomerReview> findByProductId(@Param("productId") String productId);

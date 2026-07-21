@@ -60,4 +60,12 @@ public interface ProductService {
     void recalculateProductStats(String productId);
 
     List<String> getBrands();
+
+    Page<ProductResponse> getMyDraftProducts(int page, int size);
+
+    Page<ProductResponse> getMyPublishedProducts(int page, int size);
+
+    void publishProductBySeller(String productId);
+
+    void unpublishProductBySeller(String productId);
 }

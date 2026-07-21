@@ -23,7 +23,7 @@ public class CustomerReview extends BaseEntity {
     @Column(length = 36)
     private String id;
 
-    @Column(nullable = false)
+    @Column(nullable = true)
     private Integer rating;
 
     @Column(columnDefinition = "TEXT")
@@ -36,4 +36,13 @@ public class CustomerReview extends BaseEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
     private User user;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "parent_id")
+    private CustomerReview parent;
+
+    @Builder.Default
+    @OneToMany(mappedBy = "parent", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OrderBy("createdAt ASC")
+    private java.util.List<CustomerReview> replies = new java.util.ArrayList<>();
 }

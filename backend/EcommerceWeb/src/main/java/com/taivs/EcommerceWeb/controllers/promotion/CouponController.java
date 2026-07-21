@@ -68,9 +68,16 @@ public class CouponController {
     }
 
     @GetMapping("/{code}")
-    public ApiResponse<CouponResponse> getByCode(@PathVariable("code") String code) {
+    public ApiResponse<CouponResponse> getByCouponCode(@PathVariable String code) {
         return ApiResponse.<CouponResponse>builder()
                 .result(couponService.getByCouponCode(code))
+                .build();
+    }
+
+    @GetMapping("/product/{productId}")
+    public ApiResponse<List<CouponResponse>> getCouponsForProduct(@PathVariable String productId) {
+        return ApiResponse.<List<CouponResponse>>builder()
+                .result(couponService.getAvailableCouponsForProduct(productId))
                 .build();
     }
 

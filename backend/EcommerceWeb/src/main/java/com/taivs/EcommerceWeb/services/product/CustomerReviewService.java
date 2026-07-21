@@ -1,6 +1,7 @@
 package com.taivs.EcommerceWeb.services.product;
 
 import com.taivs.EcommerceWeb.dto.request.product.CreateReviewRequest;
+import com.taivs.EcommerceWeb.dto.request.product.CreateReplyRequest;
 import com.taivs.EcommerceWeb.dto.response.product.CustomerReviewResponse;
 import com.taivs.EcommerceWeb.dto.response.product.ProductRatingStats;
 
@@ -13,4 +14,6 @@ public interface CustomerReviewService {
     List<CustomerReviewResponse> getProductReviews(String productId);
 
     ProductRatingStats getProductRatingStats(String productId);
+
+    CustomerReviewResponse replyToReview(String reviewId, CreateReplyRequest request);
 }

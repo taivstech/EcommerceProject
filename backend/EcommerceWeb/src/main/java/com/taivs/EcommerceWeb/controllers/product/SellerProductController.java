@@ -58,4 +58,38 @@ public class SellerProductController {
         productService.softDeleteBySeller(id);
         return ApiResponse.<Void>builder().build();
     }
+
+    @GetMapping("/drafts")
+    @PreAuthorize("hasAuthority('product:view_own') or hasAuthority('product:create') or hasRole('SELLER')")
+    public ApiResponse<Page<ProductResponse>> myDraftProducts(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        return ApiResponse.<Page<ProductResponse>>builder()
+                .result(productService.getMyDraftProducts(page, size))
+                .build();
+    }
+
+    @GetMapping("/published")
+    @PreAuthorize("hasAuthority('product:view_own') or hasAuthority('product:create') or hasRole('SELLER')")
+    public ApiResponse<Page<ProductResponse>> myPublishedProducts(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        return ApiResponse.<Page<ProductResponse>>builder()
+                .result(productService.getMyPublishedProducts(page, size))
+                .build();
+    }
+
+    @PostMapping("/{id}/publish")
+    @PreAuthorize("hasAuthority('product:create') or hasRole('SELLER')")
+    public ApiResponse<Void> publishProduct(@PathVariable("id") String id) {
+        productService.publishProductBySeller(id);
+        return ApiResponse.<Void>builder().build();
+    }
+
+    @PostMapping("/{id}/unpublish")
+    @PreAuthorize("hasAuthority('product:create') or hasRole('SELLER')")
+    public ApiResponse<Void> unpublishProduct(@PathVariable("id") String id) {
+        productService.unpublishProductBySeller(id);
+        return ApiResponse.<Void>builder().build();
+    }
 }

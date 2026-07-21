@@ -38,4 +38,11 @@ public interface ShopFollowerRepository extends JpaRepository<ShopFollower, Stri
             where sf.user.id = :userId and sf.shop.id = :shopId
             """)
     boolean existsByUserIdAndShopId(@Param("userId") String userId, @Param("shopId") String shopId);
+
+    @Query("""
+            select sf from ShopFollower sf
+            join fetch sf.user u
+            where sf.shop.id = :shopId
+            """)
+    List<ShopFollower> findByShopId(@Param("shopId") String shopId);
 }
