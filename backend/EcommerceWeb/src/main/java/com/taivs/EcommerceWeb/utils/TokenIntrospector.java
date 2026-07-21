@@ -87,9 +87,10 @@ public class TokenIntrospector {
 
         if (!accessToken) {
             String tokenKey = "refresh:" + userId;
-            Boolean isMember = redisTemplate.opsForSet().isMember(tokenKey,token);
-            if (isMember == null || !isMember){
-                log.warn("Refresh token has been blacklisted");
+            Boolean isMember = redisTemplate.opsForSet().isMember(tokenKey, token);
+            if (isMember == null || !isMember) {
+                log.warn("🚨 Security Alert: Used/Invalid Refresh Token detected for user {}! Revoking all sessions.", userId);
+                redisTemplate.delete(tokenKey);
                 throw new AppException(ErrorCode.UNAUTHENTICATED);
             }
         }

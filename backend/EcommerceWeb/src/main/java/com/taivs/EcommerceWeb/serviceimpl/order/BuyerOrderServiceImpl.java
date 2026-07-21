@@ -3,6 +3,7 @@ package com.taivs.EcommerceWeb.serviceimpl.order;
 import com.taivs.EcommerceWeb.services.order.BuyerOrderService;
 import com.taivs.EcommerceWeb.services.order.OrderNotificationService;
 import com.taivs.EcommerceWeb.services.order.CommissionService;
+import com.taivs.EcommerceWeb.services.order.RedisLockService;
 import com.taivs.EcommerceWeb.models.user.User;
 import com.taivs.EcommerceWeb.repositories.user.UserRepository;
 import com.taivs.EcommerceWeb.models.cart.CartItem;
@@ -72,6 +73,7 @@ public class BuyerOrderServiceImpl implements BuyerOrderService {
     private final WarehouseStockService warehouseStockService;
     private final OrderNotificationService orderNotificationService;
     private final CommissionService commissionService;
+    private final RedisLockService redisLockService;
 
     @Override
     public List<OrderResponse> getMyOrders() {
@@ -102,6 +104,46 @@ public class BuyerOrderServiceImpl implements BuyerOrderService {
     @Override
     @Transactional
     public OrderResponse checkout(CheckoutRequest request) {
+        String userId = AuthUtils.currentUserId();
+        List<CartItem> allCartItems = cartItemRepository.findByUserIdWithRelationsOrderByCreatedAtDesc(userId);
+        if (allCartItems.isEmpty()) {
+            log.error("[CHECKOUT] Cart is empty for userId: {}", userId);
+            throw new AppException(ErrorCode.INVALID_REQUEST);
+        }
+
+        List<CartItem> cartItems = allCartItems;
+        if (request.getShopId() != null && !request.getShopId().isBlank()) {
+            cartItems = allCartItems.stream()
+                    .filter(ci -> {
+                        String shopId = ci.getProductVariant().getProduct().getShop().getId();
+                        return request.getShopId().equals(shopId);
+                    })
+                    .collect(Collectors.toList());
+        }
+
+        List<String> lockedKeys = new ArrayList<>();
+        try {
+            for (CartItem ci : cartItems) {
+                String variantId = ci.getProductVariant().getId();
+                String lockKey = "lock:variant:" + variantId;
+                if (!lockedKeys.contains(lockKey)) {
+                    boolean locked = redisLockService.acquireLock(lockKey, 3000, 10, 50);
+                    if (!locked) {
+                        throw new AppException(ErrorCode.INSUFFICIENT_STOCK, "Could not acquire stock lock, please try again.");
+                    }
+                    lockedKeys.add(lockKey);
+                }
+            }
+            return checkoutInternal(request);
+        } finally {
+            for (String lockKey : lockedKeys) {
+                redisLockService.releaseLock(lockKey);
+            }
+        }
+    }
+
+    @Transactional
+    public OrderResponse checkoutInternal(CheckoutRequest request) {
 
         String userId = AuthUtils.currentUserId();
 

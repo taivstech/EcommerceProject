@@ -22,6 +22,9 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
+import com.taivs.EcommerceWeb.config.RabbitMQConfig;
+import com.taivs.EcommerceWeb.dto.request.notification.NotificationMessage;
 
 
 @Service
@@ -32,6 +35,7 @@ public class NotificationServiceImpl implements NotificationService {
     private final NotificationRepository notificationRepository;
     private final UserRepository userRepository;
     private final SimpMessagingTemplate messagingTemplate;
+    private final RabbitTemplate rabbitTemplate;
 
     @Override
     public List<NotificationResponse> getMyNotifications() {
@@ -85,15 +89,49 @@ public class NotificationServiceImpl implements NotificationService {
     }
 
     @Override
-    @Transactional
     public NotificationResponse createAndPush(String userId, String type, String title, String message) {
         return createAndPush(userId, type, title, message, null, null);
     }
 
     @Override
-    @Transactional
     public NotificationResponse createAndPush(String userId, String type, String title, String message,
                                                String referenceId, String referenceType) {
+        NotificationMessage msg = NotificationMessage.builder()
+                .userId(userId)
+                .type(type)
+                .title(title)
+                .message(message)
+                .referenceId(referenceId)
+                .referenceType(referenceType)
+                .build();
+
+        try {
+            rabbitTemplate.convertAndSend(
+                    RabbitMQConfig.NOTIFICATION_EXCHANGE,
+                    RabbitMQConfig.NOTIFICATION_ROUTING_KEY,
+                    msg
+            );
+            log.info("Published notification to RabbitMQ for user: {}", userId);
+
+            return NotificationResponse.builder()
+                    .userId(userId)
+                    .type(type)
+                    .title(title)
+                    .message(message)
+                    .status("UNREAD")
+                    .createdAt(LocalDateTime.now())
+                    .referenceId(referenceId)
+                    .referenceType(referenceType)
+                    .build();
+        } catch (Exception e) {
+            log.error("RabbitMQ send failed, falling back to synchronous notification delivery: {}", e.getMessage());
+            return createAndPushSync(userId, type, title, message, referenceId, referenceType);
+        }
+    }
+
+    @Transactional
+    public NotificationResponse createAndPushSync(String userId, String type, String title, String message,
+                                                   String referenceId, String referenceType) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
 

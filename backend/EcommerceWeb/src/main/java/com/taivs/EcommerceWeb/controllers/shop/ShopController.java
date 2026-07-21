@@ -21,12 +21,44 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
+import com.taivs.EcommerceWeb.dto.request.shop.VerifyEmailRequest;
+import com.taivs.EcommerceWeb.dto.request.shop.VerifyPhoneRequest;
+import com.taivs.EcommerceWeb.dto.response.shop.ShopRegisterSessionResponse;
+
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/shops")
 public class ShopController {
 
     private final ShopService shopService;
+
+    @PostMapping("/register/initiate")
+    public ApiResponse<ShopRegisterSessionResponse> initiateRegistration(@RequestBody @Valid ShopCreateRequest request) {
+        return ApiResponse.<ShopRegisterSessionResponse>builder()
+                .result(shopService.initiateRegistration(request))
+                .build();
+    }
+
+    @PostMapping("/register/verify-email")
+    public ApiResponse<ShopRegisterSessionResponse> verifyEmail(@RequestBody @Valid VerifyEmailRequest request) {
+        return ApiResponse.<ShopRegisterSessionResponse>builder()
+                .result(shopService.verifyEmail(request))
+                .build();
+    }
+
+    @PostMapping(value = "/register/verify-phone", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ApiResponse<String> verifyPhoneMultipart(
+            @RequestPart("verification") @Valid VerifyPhoneRequest request,
+            @RequestPart(value = "file", required = false) MultipartFile logoFile) {
+        shopService.verifyPhoneAndCreate(request, logoFile);
+        return ApiResponse.<String>builder().result("Verification successful and shop created").build();
+    }
+
+    @PostMapping(value = "/register/verify-phone", consumes = MediaType.APPLICATION_JSON_VALUE)
+    public ApiResponse<String> verifyPhoneJson(@RequestBody @Valid VerifyPhoneRequest request) {
+        shopService.verifyPhoneAndCreate(request, null);
+        return ApiResponse.<String>builder().result("Verification successful and shop created").build();
+    }
 
     @PostMapping(value = "/create", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ApiResponse<String> createMultipart(

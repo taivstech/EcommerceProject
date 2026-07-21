@@ -43,4 +43,13 @@ public class MediaController {
         fileStorageService.delete(fileId);
         return ApiResponse.<Void>builder().build();
     }
+
+    @GetMapping("/presigned-upload-url")
+    public ApiResponse<Map<String, String>> generatePresignedUploadUrl(
+            @RequestParam(value = "folder", defaultValue = "/ecommerce") String folder,
+            @RequestParam("filename") String filename,
+            @RequestParam("contentType") String contentType) {
+        Map<String, String> result = fileStorageService.generatePresignedUploadUrl(folder, filename, contentType);
+        return ApiResponse.<Map<String, String>>builder().result(result).build();
+    }
 }

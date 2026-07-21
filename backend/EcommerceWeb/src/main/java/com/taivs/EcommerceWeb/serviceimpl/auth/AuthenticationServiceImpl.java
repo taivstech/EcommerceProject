@@ -314,8 +314,34 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             throw new AppException(ErrorCode.INVALID_REQUEST);
         }
 
-        var user = userRepository.findByEmail(request.getEmail())
+        String email = request.getEmail().trim().toLowerCase();
+
+        String lockoutKey = "pwd_reset_locked:" + email;
+        if (Boolean.TRUE.equals(redisTemplate.hasKey(lockoutKey))) {
+            log.warn("Password reset is locked for email: {}", email);
+            throw new AppException(ErrorCode.TOO_MANY_REQUESTS, "Too many password reset requests. Please try again in 15 minutes.");
+        }
+
+        String limitKey = "forgot_pwd_limit:" + email;
+        Boolean hasRequestedRecently = redisTemplate.hasKey(limitKey);
+        if (Boolean.TRUE.equals(hasRequestedRecently)) {
+            log.warn("Rate limit exceeded for forgot password request: {}", email);
+            throw new AppException(ErrorCode.TOO_MANY_REQUESTS);
+        }
+
+        var user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
+
+        String attemptsKey = "forgot_pwd_attempts:" + email;
+        Long attempts = redisTemplate.opsForValue().increment(attemptsKey);
+        if (attempts != null && attempts == 1) {
+            redisTemplate.expire(attemptsKey, 15, TimeUnit.MINUTES);
+        }
+        if (attempts != null && attempts > 5) {
+            redisTemplate.opsForValue().set(lockoutKey, "1", 15, TimeUnit.MINUTES);
+            redisTemplate.delete(attemptsKey);
+            throw new AppException(ErrorCode.TOO_MANY_REQUESTS, "Too many password reset requests. Please try again in 15 minutes.");
+        }
 
         String rawToken = UUID.randomUUID().toString();
         String hashedToken = hashToken(rawToken);
@@ -328,6 +354,8 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                 passwordResetExpirationMinutes,
                 TimeUnit.MINUTES
         );
+
+        redisTemplate.opsForValue().set(limitKey, "1", 60, TimeUnit.SECONDS);
 
         emailService.sendPasswordResetEmail(
                 user.getEmail(),
@@ -371,8 +399,18 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
 
+        String email = user.getEmail().trim().toLowerCase();
+        String lockoutKey = "pwd_reset_locked:" + email;
+        if (Boolean.TRUE.equals(redisTemplate.hasKey(lockoutKey))) {
+            throw new AppException(ErrorCode.TOO_MANY_REQUESTS, "Password reset is locked for this email. Try again in 15 minutes.");
+        }
+
         user.setPassword(passwordEncoder.encode(request.getNewPassword()));
         userRepository.save(user);
+
+        redisTemplate.delete("forgot_pwd_attempts:" + email);
+        redisTemplate.delete(lockoutKey);
+        redisTemplate.delete("forgot_pwd_limit:" + email);
 
         redisTemplate.delete(key);
 

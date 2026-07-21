@@ -2,6 +2,7 @@ package com.taivs.EcommerceWeb.serviceimpl.product;
 
 import com.taivs.EcommerceWeb.services.product.ProductSearchService;
 import com.taivs.EcommerceWeb.models.product.Category;
+import com.taivs.EcommerceWeb.services.product.validation.ProductValidationStrategyFactory;
 import com.taivs.EcommerceWeb.repositories.product.CategoryRepository;
 import com.taivs.EcommerceWeb.services.media.FileStorageService;
 import com.taivs.EcommerceWeb.dto.request.product.DetailAttributeOptionRequest;
@@ -57,6 +58,7 @@ public class ProductServiceImpl implements ProductService {
     private final RedisCacheHelper cacheHelper;
     private final WarehouseRepository warehouseRepository;
     private final WarehouseStockService warehouseStockService;
+    private final ProductValidationStrategyFactory validationStrategyFactory;
 
     private static final String CACHE_PRODUCT_PREFIX = "product:detail:";
     private static final int CACHE_PRODUCT_TTL = 300;
@@ -183,6 +185,13 @@ public class ProductServiceImpl implements ProductService {
 
         Shop shop = requireApprovedShop();
 
+        if (request.getCategoryId() != null) {
+            Category category = categoryRepository.findById(request.getCategoryId())
+                    .orElseThrow(() -> new AppException(ErrorCode.CATEGORY_NOT_FOUND));
+            validationStrategyFactory.getStrategy(category.getName())
+                    .ifPresent(s -> s.validate(request));
+        }
+
         Product product = productMapper.toEntity(request);
         product.setShop(shop);
 
@@ -224,6 +233,16 @@ public class ProductServiceImpl implements ProductService {
                                 new AppException(ErrorCode.PRODUCT_NOT_FOUND));
 
         validateOwnership(product, shop);
+
+        if (request.getCategoryId() != null) {
+            Category category = categoryRepository.findById(request.getCategoryId())
+                    .orElseThrow(() -> new AppException(ErrorCode.CATEGORY_NOT_FOUND));
+            validationStrategyFactory.getStrategy(category.getName())
+                    .ifPresent(s -> s.validate(toCreateRequest(request)));
+        } else if (product.getCategory() != null) {
+            validationStrategyFactory.getStrategy(product.getCategory().getName())
+                    .ifPresent(s -> s.validate(toCreateRequest(request)));
+        }
 
         productMapper.updateEntity(product, request);
 
@@ -402,6 +421,23 @@ public class ProductServiceImpl implements ProductService {
                                 new AppException(ErrorCode.CATEGORY_NOT_FOUND));
 
         product.setCategory(category);
+    }
+
+    private ProductCreateRequest toCreateRequest(ProductUpdateRequest req) {
+        return ProductCreateRequest.builder()
+                .name(req.getName())
+                .brand(req.getBrand())
+                .description(req.getDescription())
+                .price(req.getPrice())
+                .categoryId(req.getCategoryId())
+                .weight(req.getWeight())
+                .length(req.getLength())
+                .width(req.getWidth())
+                .height(req.getHeight())
+                .attributes(req.getAttributes())
+                .variants(req.getVariants())
+                .tags(req.getTags())
+                .build();
     }
 
     /**

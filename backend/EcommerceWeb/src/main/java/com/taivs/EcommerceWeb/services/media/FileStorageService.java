@@ -25,4 +25,8 @@ public interface FileStorageService {
     }
 
     void delete(String fileId);
+
+    default Map<String, String> generatePresignedUploadUrl(String folder, String filename, String contentType) {
+        return Map.of();
+    }
 }

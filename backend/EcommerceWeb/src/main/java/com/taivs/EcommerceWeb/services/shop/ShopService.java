@@ -7,11 +7,20 @@ import com.taivs.EcommerceWeb.dto.response.shop.ShopResponse;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
+import com.taivs.EcommerceWeb.dto.request.shop.VerifyEmailRequest;
+import com.taivs.EcommerceWeb.dto.request.shop.VerifyPhoneRequest;
+import com.taivs.EcommerceWeb.dto.response.shop.ShopRegisterSessionResponse;
 import com.taivs.EcommerceWeb.models.shop.Shop;
 
 public interface ShopService {
 
     void create(ShopCreateRequest request, MultipartFile logoFile);
+
+    ShopRegisterSessionResponse initiateRegistration(ShopCreateRequest request);
+
+    ShopRegisterSessionResponse verifyEmail(VerifyEmailRequest request);
+
+    void verifyPhoneAndCreate(VerifyPhoneRequest request, MultipartFile logoFile);
 
     ShopResponse getMyShopInfo();
 

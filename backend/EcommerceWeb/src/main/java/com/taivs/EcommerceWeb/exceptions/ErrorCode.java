@@ -58,6 +58,7 @@ public enum ErrorCode {
     RETURN_WINDOW_EXPIRED(1058, "Return window has expired (30 days after delivery)", HttpStatus.BAD_REQUEST),
     EMAIL_NOT_VERIFIED(1059, "Email not verified. Please check your email and verify your account.", HttpStatus.FORBIDDEN),
     EMAIL_ALREADY_VERIFIED(1060, "Email is already verified", HttpStatus.BAD_REQUEST),
+    TOO_MANY_REQUESTS(1061, "Too many requests. Please try again later.", HttpStatus.TOO_MANY_REQUESTS),
 
     INTERNAL_SERVER_ERROR(500, "Internal server error", HttpStatus.INTERNAL_SERVER_ERROR);
 

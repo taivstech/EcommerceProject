@@ -13,7 +13,6 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.util.Map;
 
-@Service
 @RequiredArgsConstructor
 @Slf4j
 public class ImageKitStorageService implements FileStorageService {
@@ -71,5 +70,11 @@ public class ImageKitStorageService implements FileStorageService {
             log.error("ImageKit delete failed for fileId {}: {}", fileId, e.getMessage(), e);
             throw new RuntimeException("Failed to delete image: " + e.getMessage(), e);
         }
+    }
+
+    @Override
+    public Map<String, String> generatePresignedUploadUrl(String folder, String filename, String contentType) {
+        log.warn("Presigned upload URL is not supported by ImageKit. Returning empty map.");
+        return Map.of();
     }
 }
